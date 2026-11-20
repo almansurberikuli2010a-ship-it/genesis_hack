@@ -1,0 +1,191 @@
+{
+  "config_version": "3.0",
+  "split": "dev",
+  "description": "Открытые конфигурации и seed (dev). Закрытые seed жюри с ними не пересекаются.",
+  "episodes": [
+    {
+      "name": "чистая_компания",
+      "seed": 2001,
+      "config": {
+        "config_version": "3.0",
+        "errors": {
+          "duplicate_invoice": 0,
+          "payment_allocation": 0,
+          "fx_rate": 0,
+          "period_cutoff": 0
+        },
+        "interactions": {
+          "partial_fx_boundary": 0,
+          "masked_duplicate": 0
+        }
+      }
+    },
+    {
+      "name": "чистая_часовые_пояса",
+      "seed": 2002,
+      "config": {
+        "config_version": "3.0",
+        "errors": {
+          "duplicate_invoice": 0,
+          "payment_allocation": 0,
+          "fx_rate": 0,
+          "period_cutoff": 0
+        },
+        "interactions": {
+          "partial_fx_boundary": 0,
+          "masked_duplicate": 0
+        },
+        "foreign_share": 0.7,
+        "distractors": {
+          "split_payment": 4,
+          "multi_invoice_payment": 3,
+          "partial_open": 3,
+          "refund": 2,
+          "recurring_amount": 2,
+          "tz_boundary": 5,
+          "unremitted_payment": 2,
+          "next_period_doc": 3,
+          "same_day_repeat": 2,
+          "prior_period_doc": 2
+        }
+      }
+    },
+    {
+      "name": "один_дубль",
+      "seed": 2003,
+      "config": {
+        "config_version": "3.0",
+        "errors": {
+          "duplicate_invoice": 1,
+          "payment_allocation": 0,
+          "fx_rate": 0,
+          "period_cutoff": 0
+        },
+        "interactions": {
+          "partial_fx_boundary": 0,
+          "masked_duplicate": 0
+        }
+      }
+    },
+    {
+      "name": "один_курс",
+      "seed": 2004,
+      "config": {
+        "config_version": "3.0",
+        "errors": {
+          "duplicate_invoice": 0,
+          "payment_allocation": 0,
+          "fx_rate": 1,
+          "period_cutoff": 0
+        },
+        "interactions": {
+          "partial_fx_boundary": 0,
+          "masked_duplicate": 0
+        },
+        "foreign_share": 0.6
+      }
+    },
+    {
+      "name": "распределение_и_период",
+      "seed": 2005,
+      "config": {
+        "config_version": "3.0",
+        "errors": {
+          "duplicate_invoice": 0,
+          "payment_allocation": 2,
+          "fx_rate": 0,
+          "period_cutoff": 2
+        },
+        "interactions": {
+          "partial_fx_boundary": 0,
+          "masked_duplicate": 0
+        }
+      }
+    },
+    {
+      "name": "четыре_типа",
+      "seed": 2006,
+      "config": {
+        "config_version": "3.0",
+        "errors": {
+          "duplicate_invoice": 1,
+          "payment_allocation": 1,
+          "fx_rate": 1,
+          "period_cutoff": 1
+        },
+        "interactions": {
+          "partial_fx_boundary": 0,
+          "masked_duplicate": 0
+        }
+      }
+    },
+    {
+      "name": "взаимодействие_частичный_валютный_платёж",
+      "seed": 2007,
+      "config": {
+        "config_version": "3.0",
+        "errors": {
+          "duplicate_invoice": 1,
+          "payment_allocation": 0,
+          "fx_rate": 0,
+          "period_cutoff": 0
+        },
+        "interactions": {
+          "partial_fx_boundary": 1,
+          "masked_duplicate": 0
+        }
+      }
+    },
+    {
+      "name": "взаимодействие_замаскированный_дубль",
+      "seed": 2008,
+      "config": {
+        "config_version": "3.0",
+        "errors": {
+          "duplicate_invoice": 0,
+          "payment_allocation": 0,
+          "fx_rate": 1,
+          "period_cutoff": 0
+        },
+        "interactions": {
+          "partial_fx_boundary": 0,
+          "masked_duplicate": 1
+        }
+      }
+    },
+    {
+      "name": "оба_взаимодействия_смесь",
+      "seed": 2009,
+      "config": {
+        "config_version": "3.0",
+        "errors": {
+          "duplicate_invoice": 1,
+          "payment_allocation": 0,
+          "fx_rate": 0,
+          "period_cutoff": 1
+        },
+        "interactions": {
+          "partial_fx_boundary": 1,
+          "masked_duplicate": 1
+        }
+      }
+    },
+    {
+      "name": "нагрузка_12",
+      "seed": 2010,
+      "config": {
+        "config_version": "3.0",
+        "errors": {
+          "duplicate_invoice": 2,
+          "payment_allocation": 2,
+          "fx_rate": 3,
+          "period_cutoff": 3
+        },
+        "interactions": {
+          "partial_fx_boundary": 1,
+          "masked_duplicate": 0
+        }
+      }
+    }
+  ]
+}

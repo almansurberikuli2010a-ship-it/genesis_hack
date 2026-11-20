@@ -1,0 +1,77 @@
+{
+  "episode_id": "EP-XXQLCM4M37",
+  "schema_version": "3.0",
+  "base_currency": "USD",
+  "issues": [
+    {
+      "issue_id": "ISS-DUHECO7V",
+      "type": "fx_rate",
+      "affected_ids": [
+        "PAY-H6QYFD7"
+      ],
+      "expected_amount_minor": 82,
+      "currency": "USD",
+      "tolerance_minor": 1,
+      "evidence_sets": [
+        [
+          "DOC-GESPZAV6",
+          "FX-2025-06-30-CHF-USD",
+          "L-VFHZRQ7O"
+        ]
+      ],
+      "mutation_id": "M01"
+    },
+    {
+      "issue_id": "ISS-IIWKWEAE",
+      "type": "duplicate_invoice",
+      "affected_ids": [
+        "INV-2DYLHLH",
+        "INV-XWYBIUL"
+      ],
+      "expected_amount_minor": 449293,
+      "currency": "USD",
+      "tolerance_minor": 224,
+      "evidence_sets": [
+        [
+          "DOC-FHLLRZZK",
+          "DOC-Z72M7PXR",
+          "L-CWDPVJEE"
+        ],
+        [
+          "DOC-FHLLRZZK",
+          "DOC-Z72M7PXR",
+          "L-OBIDJO3O"
+        ],
+        [
+          "DOC-FHLLRZZK",
+          "DOC-Z72M7PXR",
+          "L-VD62NHGO"
+        ],
+        [
+          "DOC-FHLLRZZK",
+          "DOC-Z72M7PXR",
+          "L-AKMQURE4"
+        ]
+      ],
+      "mutation_id": "M02"
+    },
+    {
+      "issue_id": "ISS-XVSPWDX3",
+      "type": "payment_allocation",
+      "affected_ids": [
+        "INV-GKZZF4U",
+        "PAY-H6QYFD7"
+      ],
+      "expected_amount_minor": 33218,
+      "currency": "USD",
+      "tolerance_minor": 16,
+      "evidence_sets": [
+        [
+          "DOC-GESPZAV6",
+          "L-Q6NCT3PR"
+        ]
+      ],
+      "mutation_id": "M01"
+    }
+  ]
+}

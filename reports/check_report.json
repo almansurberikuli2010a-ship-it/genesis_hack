@@ -1,0 +1,711 @@
+{
+  "env_version": "3.0.0",
+  "generator_version": "3.0.0",
+  "python": "3.11.18",
+  "sections": {
+    "unit_tests": {
+      "passed": true,
+      "run": 63,
+      "failed": 0,
+      "failures": []
+    },
+    "determinism": {
+      "passed": true,
+      "episodes": 20,
+      "problems": []
+    },
+    "data_and_truth": {
+      "passed": true,
+      "episodes": 220,
+      "problems": [],
+      "ledger_rows": [
+        235,
+        735
+      ],
+      "journal_entries": [
+        109,
+        338
+      ],
+      "documents": [
+        80,
+        169
+      ],
+      "issues": [
+        0,
+        12
+      ]
+    },
+    "baselines": {
+      "passed": true,
+      "summary": {
+        "train": {
+          "flag_all": {
+            "episodes": 10,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "return": -1.0,
+            "experimental_return": -0.989,
+            "steps": 4.4,
+            "time_s": 0.031,
+            "tp": 0,
+            "fp": 300,
+            "fn": 39,
+            "invalid": 0
+          },
+          "oracle": {
+            "episodes": 10,
+            "precision": 0.8,
+            "recall": 0.8,
+            "f1": 1.0,
+            "return": 1.0,
+            "experimental_return": 1.0,
+            "steps": 1,
+            "time_s": 0.025,
+            "tp": 39,
+            "fp": 0,
+            "fn": 0,
+            "invalid": 0
+          },
+          "random": {
+            "episodes": 10,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.1,
+            "return": -0.804,
+            "experimental_return": -0.804,
+            "steps": 18.3,
+            "time_s": 0.036,
+            "tp": 0,
+            "fp": 10,
+            "fn": 39,
+            "invalid": 0
+          },
+          "reconciler": {
+            "episodes": 10,
+            "precision": 0.254,
+            "recall": 0.69,
+            "f1": 0.36,
+            "return": -0.307,
+            "experimental_return": -0.307,
+            "steps": 17.3,
+            "time_s": 0.039,
+            "tp": 34,
+            "fp": 87,
+            "fn": 5,
+            "invalid": 0
+          },
+          "rule_auditor": {
+            "episodes": 10,
+            "precision": 0.8,
+            "recall": 0.8,
+            "f1": 1.0,
+            "return": 0.967,
+            "experimental_return": 0.967,
+            "steps": 17.3,
+            "time_s": 0.039,
+            "tp": 39,
+            "fp": 0,
+            "fn": 0,
+            "invalid": 0
+          }
+        },
+        "dev": {
+          "flag_all": {
+            "episodes": 10,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "return": -1.0,
+            "experimental_return": -1.0,
+            "steps": 4.7,
+            "time_s": 0.036,
+            "tp": 0,
+            "fp": 300,
+            "fn": 34,
+            "invalid": 0
+          },
+          "oracle": {
+            "episodes": 10,
+            "precision": 0.8,
+            "recall": 0.8,
+            "f1": 1.0,
+            "return": 1.0,
+            "experimental_return": 1.0,
+            "steps": 1,
+            "time_s": 0.03,
+            "tp": 34,
+            "fp": 0,
+            "fn": 0,
+            "invalid": 0
+          },
+          "random": {
+            "episodes": 10,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.2,
+            "return": -0.607,
+            "experimental_return": -0.607,
+            "steps": 21.9,
+            "time_s": 0.043,
+            "tp": 0,
+            "fp": 12,
+            "fn": 34,
+            "invalid": 0
+          },
+          "reconciler": {
+            "episodes": 10,
+            "precision": 0.188,
+            "recall": 0.683,
+            "f1": 0.283,
+            "return": -0.461,
+            "experimental_return": -0.461,
+            "steps": 18.1,
+            "time_s": 0.044,
+            "tp": 28,
+            "fp": 106,
+            "fn": 6,
+            "invalid": 0
+          },
+          "rule_auditor": {
+            "episodes": 10,
+            "precision": 0.8,
+            "recall": 0.8,
+            "f1": 1.0,
+            "return": 0.966,
+            "experimental_return": 0.966,
+            "steps": 18.1,
+            "time_s": 0.046,
+            "tp": 34,
+            "fp": 0,
+            "fn": 0,
+            "invalid": 0
+          }
+        }
+      },
+      "problems": []
+    },
+    "no_leakage": {
+      "passed": true,
+      "observations_scanned": 1321,
+      "problems": []
+    },
+    "paired_checks": {
+      "passed": 30,
+      "total": 30,
+      "checks": [
+        {
+          "check": "повтор",
+          "name": "чистая_компания",
+          "passed": true
+        },
+        {
+          "check": "новые ID и порядок",
+          "name": "чистая_компания",
+          "passed": true,
+          "rewards": [
+            1.0,
+            0.964
+          ]
+        },
+        {
+          "check": "преобразование файлов",
+          "name": "чистая_компания",
+          "passed": true,
+          "rewards": {
+            "a": [
+              1.0,
+              0.964,
+              -1.0
+            ],
+            "b": [
+              1.0,
+              0.964,
+              -1.0
+            ]
+          }
+        },
+        {
+          "check": "повтор",
+          "name": "чистая_часовые_пояса",
+          "passed": true
+        },
+        {
+          "check": "новые ID и порядок",
+          "name": "чистая_часовые_пояса",
+          "passed": true,
+          "rewards": [
+            1.0,
+            0.966
+          ]
+        },
+        {
+          "check": "преобразование файлов",
+          "name": "чистая_часовые_пояса",
+          "passed": true,
+          "rewards": {
+            "a": [
+              1.0,
+              0.966,
+              -1.0
+            ],
+            "b": [
+              1.0,
+              0.966,
+              -1.0
+            ]
+          }
+        },
+        {
+          "check": "повтор",
+          "name": "один_дубль",
+          "passed": true
+        },
+        {
+          "check": "новые ID и порядок",
+          "name": "один_дубль",
+          "passed": true,
+          "rewards": [
+            1.0,
+            0.97
+          ]
+        },
+        {
+          "check": "преобразование файлов",
+          "name": "один_дубль",
+          "passed": true,
+          "rewards": {
+            "a": [
+              1.0,
+              0.97,
+              -0.5855555555555556
+            ],
+            "b": [
+              1.0,
+              0.97,
+              -0.5855555555555556
+            ]
+          }
+        },
+        {
+          "check": "повтор",
+          "name": "один_курс",
+          "passed": true
+        },
+        {
+          "check": "новые ID и порядок",
+          "name": "один_курс",
+          "passed": true,
+          "rewards": [
+            1.0,
+            0.97
+          ]
+        },
+        {
+          "check": "преобразование файлов",
+          "name": "один_курс",
+          "passed": true,
+          "rewards": {
+            "a": [
+              1.0,
+              0.97,
+              -0.7223076923076923
+            ],
+            "b": [
+              1.0,
+              0.97,
+              -0.7223076923076923
+            ]
+          }
+        },
+        {
+          "check": "повтор",
+          "name": "распределение_и_период",
+          "passed": true
+        },
+        {
+          "check": "новые ID и порядок",
+          "name": "распределение_и_период",
+          "passed": true,
+          "rewards": [
+            1.0,
+            0.964
+          ]
+        },
+        {
+          "check": "преобразование файлов",
+          "name": "распределение_и_период",
+          "passed": true,
+          "rewards": {
+            "a": [
+              1.0,
+              0.964,
+              0.030666666666666648
+            ],
+            "b": [
+              1.0,
+              0.964,
+              0.030666666666666648
+            ]
+          }
+        },
+        {
+          "check": "повтор",
+          "name": "четыре_типа",
+          "passed": true
+        },
+        {
+          "check": "новые ID и порядок",
+          "name": "четыре_типа",
+          "passed": true,
+          "rewards": [
+            1.0,
+            0.968
+          ]
+        },
+        {
+          "check": "преобразование файлов",
+          "name": "четыре_типа",
+          "passed": true,
+          "rewards": {
+            "a": [
+              1.0,
+              0.968,
+              -0.032
+            ],
+            "b": [
+              1.0,
+              0.968,
+              -0.032
+            ]
+          }
+        },
+        {
+          "check": "повтор",
+          "name": "взаимодействие_частичный_валютный_платёж",
+          "passed": true
+        },
+        {
+          "check": "новые ID и порядок",
+          "name": "взаимодействие_частичный_валютный_платёж",
+          "passed": true,
+          "rewards": [
+            1.0,
+            0.962
+          ]
+        },
+        {
+          "check": "преобразование файлов",
+          "name": "взаимодействие_частичный_валютный_платёж",
+          "passed": true,
+          "rewards": {
+            "a": [
+              1.0,
+              0.962,
+              -0.42261538461538456
+            ],
+            "b": [
+              1.0,
+              0.962,
+              -0.42261538461538456
+            ]
+          }
+        },
+        {
+          "check": "повтор",
+          "name": "взаимодействие_замаскированный_дубль",
+          "passed": true
+        },
+        {
+          "check": "новые ID и порядок",
+          "name": "взаимодействие_замаскированный_дубль",
+          "passed": true,
+          "rewards": [
+            1.0,
+            0.966
+          ]
+        },
+        {
+          "check": "преобразование файлов",
+          "name": "взаимодействие_замаскированный_дубль",
+          "passed": true,
+          "rewards": {
+            "a": [
+              1.0,
+              0.966,
+              -0.5895555555555556
+            ],
+            "b": [
+              1.0,
+              0.966,
+              -0.5895555555555556
+            ]
+          }
+        },
+        {
+          "check": "повтор",
+          "name": "оба_взаимодействия_смесь",
+          "passed": true
+        },
+        {
+          "check": "новые ID и порядок",
+          "name": "оба_взаимодействия_смесь",
+          "passed": true,
+          "rewards": [
+            1.0,
+            0.964
+          ]
+        },
+        {
+          "check": "преобразование файлов",
+          "name": "оба_взаимодействия_смесь",
+          "passed": true,
+          "rewards": {
+            "a": [
+              1.0,
+              0.964,
+              -0.27409523809523817
+            ],
+            "b": [
+              1.0,
+              0.964,
+              -0.27409523809523817
+            ]
+          }
+        },
+        {
+          "check": "повтор",
+          "name": "нагрузка_12",
+          "passed": true
+        },
+        {
+          "check": "новые ID и порядок",
+          "name": "нагрузка_12",
+          "passed": true,
+          "rewards": [
+            1.0,
+            0.964
+          ]
+        },
+        {
+          "check": "преобразование файлов",
+          "name": "нагрузка_12",
+          "passed": true,
+          "rewards": {
+            "a": [
+              1.0,
+              0.964,
+              -0.010358974358974454
+            ],
+            "b": [
+              1.0,
+              0.964,
+              -0.010358974358974454
+            ]
+          }
+        }
+      ]
+    },
+    "jury_rehearsal": {
+      "passed": true,
+      "score": 100.0,
+      "max": 100,
+      "failed": [],
+      "card": {
+        "Контракт и изоляция": "20/20",
+        "Данные и эталон": "20/20",
+        "Надёжность награды": "20/20",
+        "Воспроизводимость и обобщение": "20/20",
+        "Инженерия и объяснение": "5/5"
+      }
+    }
+  },
+  "failure_analysis": {
+    "train": {
+      "random": {
+        "fn_by_type": {
+          "payment_allocation": 12,
+          "duplicate_invoice": 9,
+          "period_cutoff": 7,
+          "fx_rate": 11
+        },
+        "fn_in_interaction": 8,
+        "fp_by_type": {
+          "duplicate_invoice": 4,
+          "fx_rate": 3,
+          "period_cutoff": 3
+        },
+        "fp_by_distractor": {
+          "ordinary_record": 7,
+          "tz_boundary": 1,
+          "split_payment": 1,
+          "multi_invoice_payment": 1
+        }
+      },
+      "reconciler": {
+        "fn_by_type": {
+          "fx_rate": 2,
+          "payment_allocation": 2,
+          "period_cutoff": 1
+        },
+        "fn_in_interaction": 4,
+        "fp_by_type": {
+          "duplicate_invoice": 34,
+          "period_cutoff": 22,
+          "payment_allocation": 11,
+          "fx_rate": 20
+        },
+        "fp_by_distractor": {
+          "same_day_repeat": 11,
+          "recurring_amount": 22,
+          "tz_boundary": 23,
+          "unremitted_payment": 11,
+          "ordinary_record": 13,
+          "refund": 2,
+          "multi_invoice_payment": 1,
+          "real_issue_wrong_fields": 2,
+          "split_payment": 2,
+          "prior_period_doc": 1
+        }
+      },
+      "flag_all": {
+        "fn_by_type": {
+          "payment_allocation": 12,
+          "duplicate_invoice": 9,
+          "period_cutoff": 7,
+          "fx_rate": 11
+        },
+        "fn_in_interaction": 8,
+        "fp_by_type": {
+          "duplicate_invoice": 80,
+          "payment_allocation": 80,
+          "fx_rate": 70,
+          "period_cutoff": 70
+        },
+        "fp_by_distractor": {
+          "ordinary_record": 212,
+          "prior_period_doc": 8,
+          "tz_boundary": 4,
+          "partial_open": 2,
+          "multi_invoice_payment": 4,
+          "recurring_amount": 20,
+          "split_payment": 4,
+          "refund": 4,
+          "same_day_repeat": 8,
+          "real_issue_wrong_fields": 26,
+          "unremitted_payment": 4,
+          "next_period_doc": 4
+        }
+      },
+      "oracle": {
+        "fn_by_type": {},
+        "fn_in_interaction": 0,
+        "fp_by_type": {},
+        "fp_by_distractor": {}
+      },
+      "rule_auditor": {
+        "fn_by_type": {},
+        "fn_in_interaction": 0,
+        "fp_by_type": {},
+        "fp_by_distractor": {}
+      }
+    },
+    "dev": {
+      "random": {
+        "fn_by_type": {
+          "duplicate_invoice": 8,
+          "fx_rate": 9,
+          "period_cutoff": 7,
+          "payment_allocation": 10
+        },
+        "fn_in_interaction": 10,
+        "fp_by_type": {
+          "fx_rate": 4,
+          "period_cutoff": 4,
+          "payment_allocation": 2,
+          "duplicate_invoice": 2
+        },
+        "fp_by_distractor": {
+          "ordinary_record": 9,
+          "multi_invoice_payment": 1,
+          "partial_open": 1,
+          "tz_boundary": 1
+        }
+      },
+      "reconciler": {
+        "fn_by_type": {
+          "fx_rate": 3,
+          "payment_allocation": 3
+        },
+        "fn_in_interaction": 6,
+        "fp_by_type": {
+          "duplicate_invoice": 33,
+          "period_cutoff": 25,
+          "payment_allocation": 10,
+          "fx_rate": 38
+        },
+        "fp_by_distractor": {
+          "recurring_amount": 23,
+          "same_day_repeat": 11,
+          "tz_boundary": 24,
+          "unremitted_payment": 10,
+          "multi_invoice_payment": 3,
+          "ordinary_record": 27,
+          "partial_open": 2,
+          "real_issue_wrong_fields": 5,
+          "split_payment": 1
+        }
+      },
+      "flag_all": {
+        "fn_by_type": {
+          "duplicate_invoice": 8,
+          "fx_rate": 9,
+          "period_cutoff": 7,
+          "payment_allocation": 10
+        },
+        "fn_in_interaction": 10,
+        "fp_by_type": {
+          "duplicate_invoice": 80,
+          "payment_allocation": 80,
+          "fx_rate": 70,
+          "period_cutoff": 70
+        },
+        "fp_by_distractor": {
+          "ordinary_record": 226,
+          "tz_boundary": 26,
+          "split_payment": 2,
+          "partial_open": 14,
+          "real_issue_wrong_fields": 2,
+          "next_period_doc": 12,
+          "recurring_amount": 14,
+          "refund": 4
+        }
+      },
+      "oracle": {
+        "fn_by_type": {},
+        "fn_in_interaction": 0,
+        "fp_by_type": {},
+        "fp_by_distractor": {}
+      },
+      "rule_auditor": {
+        "fn_by_type": {},
+        "fn_in_interaction": 0,
+        "fp_by_type": {},
+        "fp_by_distractor": {}
+      }
+    }
+  },
+  "resources": {
+    "max_episode_time_s": 0.0654,
+    "max_steps_used": 31,
+    "peak_rss_mb_orchestrator": 72.8,
+    "peak_rss_mb_env_process": 44.0,
+    "limits": {
+      "time_per_episode_s": 60,
+      "steps": 100,
+      "ram_gb": 4
+    }
+  },
+  "elapsed_s": 49.9,
+  "passed": true
+}

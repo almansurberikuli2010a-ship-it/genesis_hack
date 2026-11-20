@@ -1,0 +1,98 @@
+{
+  "episode_id": "EP-2RORGOCJ7U",
+  "schema_version": "3.0",
+  "base_currency": "KZT",
+  "issues": [
+    {
+      "issue_id": "ISS-DIUZ7CV6",
+      "type": "period_cutoff",
+      "affected_ids": [
+        "INV-PF4A4SX"
+      ],
+      "expected_amount_minor": 302890000,
+      "currency": "KZT",
+      "tolerance_minor": 151445,
+      "evidence_sets": [
+        [
+          "DOC-WHQYVB4A",
+          "L-6ZFQUWYM"
+        ],
+        [
+          "DOC-WHQYVB4A",
+          "L-GZJN7OEL"
+        ]
+      ],
+      "mutation_id": "M02"
+    },
+    {
+      "issue_id": "ISS-HXYDUK42",
+      "type": "duplicate_invoice",
+      "affected_ids": [
+        "INV-4KVJYXB",
+        "INV-7EQOIVY"
+      ],
+      "expected_amount_minor": 71700000,
+      "currency": "KZT",
+      "tolerance_minor": 35850,
+      "evidence_sets": [
+        [
+          "DOC-CPMH7I5M",
+          "DOC-ZB2F2VJI",
+          "L-V7PULWCF"
+        ],
+        [
+          "DOC-CPMH7I5M",
+          "DOC-ZB2F2VJI",
+          "L-CWFOME6Y"
+        ],
+        [
+          "DOC-CPMH7I5M",
+          "DOC-ZB2F2VJI",
+          "L-FPOS3P2G"
+        ],
+        [
+          "DOC-CPMH7I5M",
+          "DOC-ZB2F2VJI",
+          "L-Z7HLMG3J"
+        ]
+      ],
+      "mutation_id": "M03"
+    },
+    {
+      "issue_id": "ISS-M6AFBAWN",
+      "type": "fx_rate",
+      "affected_ids": [
+        "PAY-YUE5UUG"
+      ],
+      "expected_amount_minor": 268696,
+      "currency": "KZT",
+      "tolerance_minor": 134,
+      "evidence_sets": [
+        [
+          "DOC-KTGGWATR",
+          "FX-2025-05-24-JPY-KZT",
+          "L-RYIJD6HM"
+        ]
+      ],
+      "mutation_id": "M04"
+    },
+    {
+      "issue_id": "ISS-NMCVW2HM",
+      "type": "payment_allocation",
+      "affected_ids": [
+        "INV-5OAHIDT",
+        "PAY-HPQ4U7F"
+      ],
+      "expected_amount_minor": 271512213,
+      "currency": "KZT",
+      "tolerance_minor": 135756,
+      "evidence_sets": [
+        [
+          "DOC-Y5PUAYYS",
+          "L-24YAL3HN"
+        ]
+      ],
+      "mutation_id": "M01"
+    }
+  ]
+}

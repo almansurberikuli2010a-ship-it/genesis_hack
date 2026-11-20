@@ -1,0 +1,152 @@
+[
+  {
+    "name": "чистая_компания",
+    "seed": 2001,
+    "episode_id": "EP-KGBDJJ2LJA",
+    "digest": "c8f6dfacf4c423a357021323b8de77015de390c41a763f265f1869a10d41b470",
+    "n_issues": 0,
+    "counts": {
+      "ledger": 546,
+      "journal_entries": 261,
+      "invoices": 81,
+      "payments": 58,
+      "fx": 132,
+      "documents": 139
+    }
+  },
+  {
+    "name": "чистая_часовые_пояса",
+    "seed": 2002,
+    "episode_id": "EP-DSSDGJYLHC",
+    "digest": "33670039d08510fd6820231ff99df65edc3bea9d2ffc5af0ee33b41bfb17c8ed",
+    "n_issues": 0,
+    "counts": {
+      "ledger": 521,
+      "journal_entries": 238,
+      "invoices": 87,
+      "payments": 54,
+      "fx": 88,
+      "documents": 141
+    }
+  },
+  {
+    "name": "один_дубль",
+    "seed": 2003,
+    "episode_id": "EP-QON7IRQBKE",
+    "digest": "f0af7a9f4b6202ca9b4baad2911365a34d9504049abb52a124d1ffa3ec816542",
+    "n_issues": 1,
+    "counts": {
+      "ledger": 461,
+      "journal_entries": 215,
+      "invoices": 73,
+      "payments": 46,
+      "fx": 88,
+      "documents": 119
+    }
+  },
+  {
+    "name": "один_курс",
+    "seed": 2004,
+    "episode_id": "EP-JA3UPUGCZ6",
+    "digest": "b1c6803d18714a5b2e686dc0d3d2578398e2e0f90fcd3f11c54f1cb3742107f4",
+    "n_issues": 1,
+    "counts": {
+      "ledger": 460,
+      "journal_entries": 212,
+      "invoices": 72,
+      "payments": 47,
+      "fx": 86,
+      "documents": 119
+    }
+  },
+  {
+    "name": "распределение_и_период",
+    "seed": 2005,
+    "episode_id": "EP-HUN5BTZ5CC",
+    "digest": "3ae5f11802a9413b1b8d13794ed479fb6c31af8a01f5afe25a6717352d59a9a9",
+    "n_issues": 4,
+    "counts": {
+      "ledger": 591,
+      "journal_entries": 278,
+      "invoices": 99,
+      "payments": 62,
+      "fx": 88,
+      "documents": 161
+    }
+  },
+  {
+    "name": "четыре_типа",
+    "seed": 2006,
+    "episode_id": "EP-2RORGOCJ7U",
+    "digest": "3d19a39183703c2f55755564fe1a0efc7a0164582daaa89f41251147e73aedfc",
+    "n_issues": 4,
+    "counts": {
+      "ledger": 467,
+      "journal_entries": 221,
+      "invoices": 75,
+      "payments": 43,
+      "fx": 132,
+      "documents": 118
+    }
+  },
+  {
+    "name": "взаимодействие_частичный_валютный_платёж",
+    "seed": 2007,
+    "episode_id": "EP-XXQLCM4M37",
+    "digest": "051199be0ed4f4bcece6b3887cb90bc59efcf423052c89e0bfef7daca43416a2",
+    "n_issues": 3,
+    "counts": {
+      "ledger": 562,
+      "journal_entries": 264,
+      "invoices": 99,
+      "payments": 64,
+      "fx": 129,
+      "documents": 163
+    }
+  },
+  {
+    "name": "взаимодействие_замаскированный_дубль",
+    "seed": 2008,
+    "episode_id": "EP-S6UUXVVW42",
+    "digest": "5fbb468dc844768e29aae25464fb13bda7178300f02d472ecc10cbd773d66840",
+    "n_issues": 3,
+    "counts": {
+      "ledger": 548,
+      "journal_entries": 258,
+      "invoices": 97,
+      "payments": 63,
+      "fx": 86,
+      "documents": 160
+    }
+  },
+  {
+    "name": "оба_взаимодействия_смесь",
+    "seed": 2009,
+    "episode_id": "EP-QBGGCVPV6T",
+    "digest": "d7da214452102f54665a3b616f9f27f575d0ddb9ab5246825eed042ff186b2c1",
+    "n_issues": 6,
+    "counts": {
+      "ledger": 582,
+      "journal_entries": 276,
+      "invoices": 97,
+      "payments": 55,
+      "fx": 86,
+      "documents": 152
+    }
+  },
+  {
+    "name": "нагрузка_12",
+    "seed": 2010,
+    "episode_id": "EP-QMOTAGFQDP",
+    "digest": "2c9480dad0bebe49df152b7aee5c9359cae009b3d8b0dc568269894cdc3f8cdf",
+    "n_issues": 12,
+    "counts": {
+      "ledger": 577,
+      "journal_entries": 264,
+      "invoices": 95,
+      "payments": 58,
+      "fx": 86,
+      "documents": 153
+    }
+  }
+]

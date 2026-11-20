@@ -1,0 +1,2115 @@
+{
+  "episode_id": "EP-QCM75SRGKC",
+  "generator_version": "3.0.0",
+  "seed": 1010,
+  "config": {
+    "config_version": "3.0",
+    "n_customers": [
+      8,
+      16
+    ],
+    "n_invoices": [
+      60,
+      95
+    ],
+    "background_entries": [
+      95,
+      130
+    ],
+    "foreign_share": 0.45,
+    "errors": {
+      "duplicate_invoice": 3,
+      "payment_allocation": 3,
+      "fx_rate": 2,
+      "period_cutoff": 2
+    },
+    "interactions": {
+      "partial_fx_boundary": 0,
+      "masked_duplicate": 0
+    },
+    "distractors": {
+      "split_payment": 2,
+      "multi_invoice_payment": 2,
+      "partial_open": 2,
+      "refund": 1,
+      "recurring_amount": 1,
+      "tz_boundary": 2,
+      "unremitted_payment": 1,
+      "next_period_doc": 2,
+      "same_day_repeat": 1,
+      "prior_period_doc": 1
+    },
+    "id_salt": "default",
+    "order_seed": 0
+  },
+  "story_hash": "1fbb6c34c76dd8447d8be38a7fa7b4ae82d0c4757407d25b5dfd3c5d377d8582",
+  "generation_attempt": 0,
+  "steps": [
+    "настройка: база=USD, пояс=+01:00, период=[2026-02-01T00:00:00+01:00, 2026-03-01T00:00:00+01:00), валюты=EUR,GBP,KWD",
+    "история: 83 счетов, 48 платежей, 96 фоновых операций (без ошибок)",
+    "чистые проводки: 472 строк книги",
+    "внесение: 10 изменений, 10 ошибок",
+    "рендер: id_salt='default', order_seed=0"
+  ],
+  "mutations": [
+    {
+      "mutation_id": "M01",
+      "kind": "booking_override",
+      "issue_type": "fx_rate",
+      "variant": "inverted_rate",
+      "document": {
+        "kind": "inv",
+        "id": "INV-OYIW4HS",
+        "doc_id": "DOC-L3EFKVW5"
+      },
+      "rate_used": "0.768427",
+      "rate_policy": "1.30136",
+      "rate_date_policy": "2026-02-09",
+      "description": "курс применён «вверх ногами» (1 / курс)",
+      "postings_before": {
+        "INV-OYIW4HS": [
+          {
+            "row_id": "L-TWMY7NXG",
+            "timestamp": "2026-02-09T15:54:31+01:00",
+            "account": "1200 Дебиторская задолженность",
+            "debit_minor": 932672,
+            "credit_minor": 0,
+            "currency": "USD",
+            "entity_id": "C-5MIMSS",
+            "invoice_id": "INV-OYIW4HS",
+            "payment_id": null
+          },
+          {
+            "row_id": "L-GFTW3EEX",
+            "timestamp": "2026-02-09T15:54:31+01:00",
+            "account": "4000 Выручка",
+            "debit_minor": 0,
+            "credit_minor": 932672,
+            "currency": "USD",
+            "entity_id": "C-5MIMSS",
+            "invoice_id": "INV-OYIW4HS",
+            "payment_id": null
+          }
+        ]
+      },
+      "postings_after": {
+        "INV-OYIW4HS": [
+          {
+            "row_id": "L-GFTW3EEX",
+            "timestamp": "2026-02-09T15:54:31+01:00",
+            "account": "4000 Выручка",
+            "debit_minor": 0,
+            "credit_minor": 550724,
+            "currency": "USD",
+            "entity_id": "C-5MIMSS",
+            "invoice_id": "INV-OYIW4HS",
+            "payment_id": null
+          },
+          {
+            "row_id": "L-TWMY7NXG",
+            "timestamp": "2026-02-09T15:54:31+01:00",
+            "account": "1200 Дебиторская задолженность",
+            "debit_minor": 550724,
+            "credit_minor": 0,
+            "currency": "USD",
+            "entity_id": "C-5MIMSS",
+            "invoice_id": "INV-OYIW4HS",
+            "payment_id": null
+          }
+        ]
+      }
+    },
+    {
+      "mutation_id": "M02",
+      "kind": "booking_override",
+      "issue_type": "payment_allocation",
+      "variant": "missing",
+      "document": {
+        "kind": "pay",
+        "id": "PAY-UCQMTBN",
+        "doc_id": "DOC-5GU5KTEF"
+      },
+      "unapplied_minor": 808800,
+      "description": "платёж расписан на счёт, но не распределён: вся сумма осталась на 2900",
+      "postings_before": {
+        "PAY-UCQMTBN": [
+          {
+            "row_id": "L-CEOIRRJJ",
+            "timestamp": "2026-02-25T17:01:55+01:00",
+            "account": "1200 Дебиторская задолженность",
+            "debit_minor": 0,
+            "credit_minor": 808800,
+            "currency": "USD",
+            "entity_id": "C-YSO2KI",
+            "invoice_id": "INV-GBDHSK3",
+            "payment_id": "PAY-UCQMTBN"
+          },
+          {
+            "row_id": "L-TSPYADNX",
+            "timestamp": "2026-02-25T17:01:55+01:00",
+            "account": "1000 Денежные средства",
+            "debit_minor": 808800,
+            "credit_minor": 0,
+            "currency": "USD",
+            "entity_id": "C-YSO2KI",
+            "invoice_id": "INV-GBDHSK3",
+            "payment_id": "PAY-UCQMTBN"
+          }
+        ]
+      },
+      "postings_after": {
+        "PAY-UCQMTBN": [
+          {
+            "row_id": "L-TSPYADNX",
+            "timestamp": "2026-02-25T17:01:55+01:00",
+            "account": "1000 Денежные средства",
+            "debit_minor": 808800,
+            "credit_minor": 0,
+            "currency": "USD",
+            "entity_id": "C-YSO2KI",
+            "invoice_id": "INV-GBDHSK3",
+            "payment_id": "PAY-UCQMTBN"
+          },
+          {
+            "row_id": "L-W6DO7KJF",
+            "timestamp": "2026-02-25T17:01:55+01:00",
+            "account": "2900 Невыясненные поступления",
+            "debit_minor": 0,
+            "credit_minor": 808800,
+            "currency": "USD",
+            "entity_id": "C-YSO2KI",
+            "invoice_id": null,
+            "payment_id": "PAY-UCQMTBN"
+          },
+          {
+            "row_id": "L-CEOIRRJJ",
+            "timestamp": "2026-02-25T17:01:55+01:00",
+            "account": "1200 Дебиторская задолженность",
+            "debit_minor": 0,
+            "credit_minor": 0,
+            "currency": "USD",
+            "entity_id": "C-YSO2KI",
+            "invoice_id": "INV-GBDHSK3",
+            "payment_id": "PAY-UCQMTBN"
+          }
+        ]
+      }
+    },
+    {
+      "mutation_id": "M03",
+      "kind": "add_document_misdated_posting",
+      "issue_type": "period_cutoff",
+      "variant": "next_period",
+      "document": {
+        "kind": "inv",
+        "id": "INV-CWQC6WJ",
+        "doc_id": "DOC-HXZDNTAZ"
+      },
+      "description": "счёт следующего периода проведён задним числом",
+      "postings_before": {
+        "INV-CWQC6WJ": []
+      },
+      "postings_after": {
+        "INV-CWQC6WJ": [
+          {
+            "row_id": "L-JB7D3ZYX",
+            "timestamp": "2026-02-28T12:30:33+01:00",
+            "account": "1200 Дебиторская задолженность",
+            "debit_minor": 38836,
+            "credit_minor": 0,
+            "currency": "USD",
+            "entity_id": "C-VNSFDO",
+            "invoice_id": "INV-CWQC6WJ",
+            "payment_id": null
+          },
+          {
+            "row_id": "L-OZB6M3ZX",
+            "timestamp": "2026-02-28T12:30:33+01:00",
+            "account": "4000 Выручка",
+            "debit_minor": 0,
+            "credit_minor": 38836,
+            "currency": "USD",
+            "entity_id": "C-VNSFDO",
+            "invoice_id": "INV-CWQC6WJ",
+            "payment_id": null
+          }
+        ]
+      }
+    },
+    {
+      "mutation_id": "M04",
+      "kind": "booking_override",
+      "issue_type": "payment_allocation",
+      "variant": "partial",
+      "document": {
+        "kind": "pay",
+        "id": "PAY-V5QMUAK",
+        "doc_id": "DOC-5OXJKCHL"
+      },
+      "unapplied_minor": 338965,
+      "description": "платёж распределён частично: часть расписанной суммы осталась на 2900",
+      "postings_before": {
+        "PAY-V5QMUAK": [
+          {
+            "row_id": "L-B5WOSBQA",
+            "timestamp": "2026-02-27T11:06:30+01:00",
+            "account": "1000 Денежные средства",
+            "debit_minor": 797853,
+            "credit_minor": 0,
+            "currency": "USD",
+            "entity_id": "C-SPXLSF",
+            "invoice_id": "INV-T3YCIJM",
+            "payment_id": "PAY-V5QMUAK"
+          },
+          {
+            "row_id": "L-ZVBLUWLM",
+            "timestamp": "2026-02-27T11:06:30+01:00",
+            "account": "1200 Дебиторская задолженность",
+            "debit_minor": 0,
+            "credit_minor": 796036,
+            "currency": "USD",
+            "entity_id": "C-SPXLSF",
+            "invoice_id": "INV-T3YCIJM",
+            "payment_id": "PAY-V5QMUAK"
+          },
+          {
+            "row_id": "L-D5YRISDH",
+            "timestamp": "2026-02-27T11:06:30+01:00",
+            "account": "7800 Курсовые разницы",
+            "debit_minor": 0,
+            "credit_minor": 1817,
+            "currency": "USD",
+            "entity_id": "C-SPXLSF",
+            "invoice_id": "INV-T3YCIJM",
+            "payment_id": "PAY-V5QMUAK"
+          }
+        ]
+      },
+      "postings_after": {
+        "PAY-V5QMUAK": [
+          {
+            "row_id": "L-H6PIC7QT",
+            "timestamp": "2026-02-27T11:06:30+01:00",
+            "account": "2900 Невыясненные поступления",
+            "debit_minor": 0,
+            "credit_minor": 443526,
+            "currency": "USD",
+            "entity_id": "C-SPXLSF",
+            "invoice_id": null,
+            "payment_id": "PAY-V5QMUAK"
+          },
+          {
+            "row_id": "L-ZVBLUWLM",
+            "timestamp": "2026-02-27T11:06:30+01:00",
+            "account": "1200 Дебиторская задолженность",
+            "debit_minor": 0,
+            "credit_minor": 353520,
+            "currency": "USD",
+            "entity_id": "C-SPXLSF",
+            "invoice_id": "INV-T3YCIJM",
+            "payment_id": "PAY-V5QMUAK"
+          },
+          {
+            "row_id": "L-B5WOSBQA",
+            "timestamp": "2026-02-27T11:06:30+01:00",
+            "account": "1000 Денежные средства",
+            "debit_minor": 797853,
+            "credit_minor": 0,
+            "currency": "USD",
+            "entity_id": "C-SPXLSF",
+            "invoice_id": "INV-T3YCIJM",
+            "payment_id": "PAY-V5QMUAK"
+          },
+          {
+            "row_id": "L-D5YRISDH",
+            "timestamp": "2026-02-27T11:06:30+01:00",
+            "account": "7800 Курсовые разницы",
+            "debit_minor": 0,
+            "credit_minor": 807,
+            "currency": "USD",
+            "entity_id": "C-SPXLSF",
+            "invoice_id": "INV-T3YCIJM",
+            "payment_id": "PAY-V5QMUAK"
+          }
+        ]
+      }
+    },
+    {
+      "mutation_id": "M05",
+      "kind": "add_document",
+      "issue_type": "duplicate_invoice",
+      "document": {
+        "kind": "inv",
+        "id": "INV-OE66P4I",
+        "doc_id": "DOC-62DFXI3Q"
+      },
+      "copy_of": {
+        "kind": "inv",
+        "id": "INV-DJ7G4YY",
+        "doc_id": "DOC-D4RNLJB4"
+      },
+      "description": "счёт внесён повторно под новым номером (точная копия строк, суммы и даты)",
+      "postings_before": {
+        "INV-OE66P4I": []
+      },
+      "postings_after": {
+        "INV-OE66P4I": [
+          {
+            "row_id": "L-J4WCN72L",
+            "timestamp": "2026-02-17T10:36:19+01:00",
+            "account": "4000 Выручка",
+            "debit_minor": 0,
+            "credit_minor": 888515,
+            "currency": "USD",
+            "entity_id": "C-ZLQUV2",
+            "invoice_id": "INV-OE66P4I",
+            "payment_id": null
+          },
+          {
+            "row_id": "L-UBWFUKQ4",
+            "timestamp": "2026-02-17T10:36:19+01:00",
+            "account": "1200 Дебиторская задолженность",
+            "debit_minor": 888515,
+            "credit_minor": 0,
+            "currency": "USD",
+            "entity_id": "C-ZLQUV2",
+            "invoice_id": "INV-OE66P4I",
+            "payment_id": null
+          }
+        ]
+      }
+    },
+    {
+      "mutation_id": "M06",
+      "kind": "add_document_misdated_posting",
+      "issue_type": "period_cutoff",
+      "variant": "next_period",
+      "document": {
+        "kind": "inv",
+        "id": "INV-PUCZTRJ",
+        "doc_id": "DOC-VLQ6JMVM"
+      },
+      "description": "счёт следующего периода проведён задним числом",
+      "postings_before": {
+        "INV-PUCZTRJ": []
+      },
+      "postings_after": {
+        "INV-PUCZTRJ": [
+          {
+            "row_id": "L-JOGTY354",
+            "timestamp": "2026-02-28T15:10:02+01:00",
+            "account": "1200 Дебиторская задолженность",
+            "debit_minor": 733105,
+            "credit_minor": 0,
+            "currency": "USD",
+            "entity_id": "C-UNJ23F",
+            "invoice_id": "INV-PUCZTRJ",
+            "payment_id": null
+          },
+          {
+            "row_id": "L-YEC33OBU",
+            "timestamp": "2026-02-28T15:10:02+01:00",
+            "account": "4000 Выручка",
+            "debit_minor": 0,
+            "credit_minor": 733105,
+            "currency": "USD",
+            "entity_id": "C-UNJ23F",
+            "invoice_id": "INV-PUCZTRJ",
+            "payment_id": null
+          }
+        ]
+      }
+    },
+    {
+      "mutation_id": "M07",
+      "kind": "booking_override",
+      "issue_type": "payment_allocation",
+      "variant": "missing",
+      "document": {
+        "kind": "pay",
+        "id": "PAY-ODEN5LA",
+        "doc_id": "DOC-C5JC2TRI"
+      },
+      "unapplied_minor": 353300,
+      "description": "платёж расписан на счёт, но не распределён: вся сумма осталась на 2900",
+      "postings_before": {
+        "PAY-ODEN5LA": [
+          {
+            "row_id": "L-R5FM5FYE",
+            "timestamp": "2026-02-23T09:53:19+01:00",
+            "account": "1000 Денежные средства",
+            "debit_minor": 461127,
+            "credit_minor": 0,
+            "currency": "USD",
+            "entity_id": "C-5MIMSS",
+            "invoice_id": "INV-R4WYPRY",
+            "payment_id": "PAY-ODEN5LA"
+          },
+          {
+            "row_id": "L-NQAPP5K7",
+            "timestamp": "2026-02-23T09:53:19+01:00",
+            "account": "1200 Дебиторская задолженность",
+            "debit_minor": 0,
+            "credit_minor": 455962,
+            "currency": "USD",
+            "entity_id": "C-5MIMSS",
+            "invoice_id": "INV-R4WYPRY",
+            "payment_id": "PAY-ODEN5LA"
+          },
+          {
+            "row_id": "L-BXLJM5GX",
+            "timestamp": "2026-02-23T09:53:19+01:00",
+            "account": "7800 Курсовые разницы",
+            "debit_minor": 0,
+            "credit_minor": 5165,
+            "currency": "USD",
+            "entity_id": "C-5MIMSS",
+            "invoice_id": "INV-R4WYPRY",
+            "payment_id": "PAY-ODEN5LA"
+          }
+        ]
+      },
+      "postings_after": {
+        "PAY-ODEN5LA": [
+          {
+            "row_id": "L-R5FM5FYE",
+            "timestamp": "2026-02-23T09:53:19+01:00",
+            "account": "1000 Денежные средства",
+            "debit_minor": 461127,
+            "credit_minor": 0,
+            "currency": "USD",
+            "entity_id": "C-5MIMSS",
+            "invoice_id": "INV-R4WYPRY",
+            "payment_id": "PAY-ODEN5LA"
+          },
+          {
+            "row_id": "L-IHI3BSL6",
+            "timestamp": "2026-02-23T09:53:19+01:00",
+            "account": "2900 Невыясненные поступления",
+            "debit_minor": 0,
+            "credit_minor": 461127,
+            "currency": "USD",
+            "entity_id": "C-5MIMSS",
+            "invoice_id": null,
+            "payment_id": "PAY-ODEN5LA"
+          },
+          {
+            "row_id": "L-NQAPP5K7",
+            "timestamp": "2026-02-23T09:53:19+01:00",
+            "account": "1200 Дебиторская задолженность",
+            "debit_minor": 0,
+            "credit_minor": 0,
+            "currency": "USD",
+            "entity_id": "C-5MIMSS",
+            "invoice_id": "INV-R4WYPRY",
+            "payment_id": "PAY-ODEN5LA"
+          }
+        ]
+      }
+    },
+    {
+      "mutation_id": "M08",
+      "kind": "booking_override",
+      "issue_type": "fx_rate",
+      "variant": "rounded_rate",
+      "document": {
+        "kind": "inv",
+        "id": "INV-RU6E3YZ",
+        "doc_id": "DOC-5IPKC5IF"
+      },
+      "rate_used": "1.31",
+      "rate_policy": "1.30847",
+      "rate_date_policy": "2026-02-27",
+      "description": "взят вручную округлённый курс",
+      "postings_before": {
+        "INV-RU6E3YZ": [
+          {
+            "row_id": "L-IEVER7HG",
+            "timestamp": "2026-02-27T13:02:05+01:00",
+            "account": "1200 Дебиторская задолженность",
+            "debit_minor": 2304216,
+            "credit_minor": 0,
+            "currency": "USD",
+            "entity_id": "C-UNJ23F",
+            "invoice_id": "INV-RU6E3YZ",
+            "payment_id": null
+          },
+          {
+            "row_id": "L-T6GGZ552",
+            "timestamp": "2026-02-27T13:02:05+01:00",
+            "account": "4000 Выручка",
+            "debit_minor": 0,
+            "credit_minor": 2304216,
+            "currency": "USD",
+            "entity_id": "C-UNJ23F",
+            "invoice_id": "INV-RU6E3YZ",
+            "payment_id": null
+          }
+        ]
+      },
+      "postings_after": {
+        "INV-RU6E3YZ": [
+          {
+            "row_id": "L-T6GGZ552",
+            "timestamp": "2026-02-27T13:02:05+01:00",
+            "account": "4000 Выручка",
+            "debit_minor": 0,
+            "credit_minor": 2306910,
+            "currency": "USD",
+            "entity_id": "C-UNJ23F",
+            "invoice_id": "INV-RU6E3YZ",
+            "payment_id": null
+          },
+          {
+            "row_id": "L-IEVER7HG",
+            "timestamp": "2026-02-27T13:02:05+01:00",
+            "account": "1200 Дебиторская задолженность",
+            "debit_minor": 2306910,
+            "credit_minor": 0,
+            "currency": "USD",
+            "entity_id": "C-UNJ23F",
+            "invoice_id": "INV-RU6E3YZ",
+            "payment_id": null
+          }
+        ]
+      }
+    },
+    {
+      "mutation_id": "M09",
+      "kind": "add_document",
+      "issue_type": "duplicate_invoice",
+      "document": {
+        "kind": "inv",
+        "id": "INV-VW4RYYO",
+        "doc_id": "DOC-22ABPTIK"
+      },
+      "copy_of": {
+        "kind": "inv",
+        "id": "INV-N4RFKAS",
+        "doc_id": "DOC-VBX3LQNC"
+      },
+      "description": "счёт внесён повторно под новым номером (точная копия строк, суммы и даты)",
+      "postings_before": {
+        "INV-VW4RYYO": []
+      },
+      "postings_after": {
+        "INV-VW4RYYO": [
+          {
+            "row_id": "L-2ENCKMEJ",
+            "timestamp": "2026-02-19T13:13:26+01:00",
+            "account": "4000 Выручка",
+            "debit_minor": 0,
+            "credit_minor": 1183800,
+            "currency": "USD",
+            "entity_id": "C-ROWPZK",
+            "invoice_id": "INV-VW4RYYO",
+            "payment_id": null
+          },
+          {
+            "row_id": "L-EV7WXTPS",
+            "timestamp": "2026-02-19T13:13:26+01:00",
+            "account": "1200 Дебиторская задолженность",
+            "debit_minor": 1183800,
+            "credit_minor": 0,
+            "currency": "USD",
+            "entity_id": "C-ROWPZK",
+            "invoice_id": "INV-VW4RYYO",
+            "payment_id": null
+          }
+        ]
+      }
+    },
+    {
+      "mutation_id": "M10",
+      "kind": "add_document",
+      "issue_type": "duplicate_invoice",
+      "document": {
+        "kind": "inv",
+        "id": "INV-CV2GACI",
+        "doc_id": "DOC-VZTZQFKW"
+      },
+      "copy_of": {
+        "kind": "inv",
+        "id": "INV-N735H2H",
+        "doc_id": "DOC-LWFWEM5L"
+      },
+      "description": "счёт внесён повторно под новым номером (точная копия строк, суммы и даты)",
+      "postings_before": {
+        "INV-CV2GACI": []
+      },
+      "postings_after": {
+        "INV-CV2GACI": [
+          {
+            "row_id": "L-QB4D2SVP",
+            "timestamp": "2026-02-09T11:25:39+01:00",
+            "account": "1200 Дебиторская задолженность",
+            "debit_minor": 1313280,
+            "credit_minor": 0,
+            "currency": "USD",
+            "entity_id": "C-SPXLSF",
+            "invoice_id": "INV-CV2GACI",
+            "payment_id": null
+          },
+          {
+            "row_id": "L-EUYQOXIH",
+            "timestamp": "2026-02-09T11:25:39+01:00",
+            "account": "4000 Выручка",
+            "debit_minor": 0,
+            "credit_minor": 1313280,
+            "currency": "USD",
+            "entity_id": "C-SPXLSF",
+            "invoice_id": "INV-CV2GACI",
+            "payment_id": null
+          }
+        ]
+      }
+    }
+  ],
+  "ledger_diff": {
+    "removed": [
+      {
+        "row": {
+          "row_id": "L-BXLJM5GX",
+          "timestamp": "2026-02-23T09:53:19+01:00",
+          "account": "7800 Курсовые разницы",
+          "debit_minor": 0,
+          "credit_minor": 5165,
+          "currency": "USD",
+          "entity_id": "C-5MIMSS",
+          "invoice_id": "INV-R4WYPRY",
+          "payment_id": "PAY-ODEN5LA"
+        },
+        "caused_by": [
+          "M07"
+        ],
+        "relation": "direct"
+      },
+      {
+        "row": {
+          "row_id": "L-CEOIRRJJ",
+          "timestamp": "2026-02-25T17:01:55+01:00",
+          "account": "1200 Дебиторская задолженность",
+          "debit_minor": 0,
+          "credit_minor": 808800,
+          "currency": "USD",
+          "entity_id": "C-YSO2KI",
+          "invoice_id": "INV-GBDHSK3",
+          "payment_id": "PAY-UCQMTBN"
+        },
+        "caused_by": [
+          "M02"
+        ],
+        "relation": "direct"
+      },
+      {
+        "row": {
+          "row_id": "L-D5YRISDH",
+          "timestamp": "2026-02-27T11:06:30+01:00",
+          "account": "7800 Курсовые разницы",
+          "debit_minor": 0,
+          "credit_minor": 1817,
+          "currency": "USD",
+          "entity_id": "C-SPXLSF",
+          "invoice_id": "INV-T3YCIJM",
+          "payment_id": "PAY-V5QMUAK"
+        },
+        "caused_by": [
+          "M04"
+        ],
+        "relation": "direct"
+      },
+      {
+        "row": {
+          "row_id": "L-GFTW3EEX",
+          "timestamp": "2026-02-09T15:54:31+01:00",
+          "account": "4000 Выручка",
+          "debit_minor": 0,
+          "credit_minor": 932672,
+          "currency": "USD",
+          "entity_id": "C-5MIMSS",
+          "invoice_id": "INV-OYIW4HS",
+          "payment_id": null
+        },
+        "caused_by": [
+          "M01"
+        ],
+        "relation": "direct"
+      },
+      {
+        "row": {
+          "row_id": "L-IEVER7HG",
+          "timestamp": "2026-02-27T13:02:05+01:00",
+          "account": "1200 Дебиторская задолженность",
+          "debit_minor": 2304216,
+          "credit_minor": 0,
+          "currency": "USD",
+          "entity_id": "C-UNJ23F",
+          "invoice_id": "INV-RU6E3YZ",
+          "payment_id": null
+        },
+        "caused_by": [
+          "M08"
+        ],
+        "relation": "direct"
+      },
+      {
+        "row": {
+          "row_id": "L-NQAPP5K7",
+          "timestamp": "2026-02-23T09:53:19+01:00",
+          "account": "1200 Дебиторская задолженность",
+          "debit_minor": 0,
+          "credit_minor": 455962,
+          "currency": "USD",
+          "entity_id": "C-5MIMSS",
+          "invoice_id": "INV-R4WYPRY",
+          "payment_id": "PAY-ODEN5LA"
+        },
+        "caused_by": [
+          "M07"
+        ],
+        "relation": "direct"
+      },
+      {
+        "row": {
+          "row_id": "L-RKXCNLUQ",
+          "timestamp": "2026-02-17T16:15:31+01:00",
+          "account": "1200 Дебиторская задолженность",
+          "debit_minor": 0,
+          "credit_minor": 932672,
+          "currency": "USD",
+          "entity_id": "C-5MIMSS",
+          "invoice_id": "INV-OYIW4HS",
+          "payment_id": "PAY-EVX6XHD"
+        },
+        "caused_by": [
+          "M01"
+        ],
+        "relation": "consequence"
+      },
+      {
+        "row": {
+          "row_id": "L-T6GGZ552",
+          "timestamp": "2026-02-27T13:02:05+01:00",
+          "account": "4000 Выручка",
+          "debit_minor": 0,
+          "credit_minor": 2304216,
+          "currency": "USD",
+          "entity_id": "C-UNJ23F",
+          "invoice_id": "INV-RU6E3YZ",
+          "payment_id": null
+        },
+        "caused_by": [
+          "M08"
+        ],
+        "relation": "direct"
+      },
+      {
+        "row": {
+          "row_id": "L-TLCH6JIO",
+          "timestamp": "2026-02-17T16:15:31+01:00",
+          "account": "7800 Курсовые разницы",
+          "debit_minor": 0,
+          "credit_minor": 4379,
+          "currency": "USD",
+          "entity_id": "C-5MIMSS",
+          "invoice_id": "INV-OYIW4HS",
+          "payment_id": "PAY-EVX6XHD"
+        },
+        "caused_by": [
+          "M01"
+        ],
+        "relation": "consequence"
+      },
+      {
+        "row": {
+          "row_id": "L-TWMY7NXG",
+          "timestamp": "2026-02-09T15:54:31+01:00",
+          "account": "1200 Дебиторская задолженность",
+          "debit_minor": 932672,
+          "credit_minor": 0,
+          "currency": "USD",
+          "entity_id": "C-5MIMSS",
+          "invoice_id": "INV-OYIW4HS",
+          "payment_id": null
+        },
+        "caused_by": [
+          "M01"
+        ],
+        "relation": "direct"
+      },
+      {
+        "row": {
+          "row_id": "L-ZVBLUWLM",
+          "timestamp": "2026-02-27T11:06:30+01:00",
+          "account": "1200 Дебиторская задолженность",
+          "debit_minor": 0,
+          "credit_minor": 796036,
+          "currency": "USD",
+          "entity_id": "C-SPXLSF",
+          "invoice_id": "INV-T3YCIJM",
+          "payment_id": "PAY-V5QMUAK"
+        },
+        "caused_by": [
+          "M04"
+        ],
+        "relation": "direct"
+      }
+    ],
+    "added": [
+      {
+        "row": {
+          "row_id": "L-2ENCKMEJ",
+          "timestamp": "2026-02-19T13:13:26+01:00",
+          "account": "4000 Выручка",
+          "debit_minor": 0,
+          "credit_minor": 1183800,
+          "currency": "USD",
+          "entity_id": "C-ROWPZK",
+          "invoice_id": "INV-VW4RYYO",
+          "payment_id": null
+        },
+        "caused_by": [
+          "M09"
+        ],
+        "relation": "direct"
+      },
+      {
+        "row": {
+          "row_id": "L-CEOIRRJJ",
+          "timestamp": "2026-02-25T17:01:55+01:00",
+          "account": "1200 Дебиторская задолженность",
+          "debit_minor": 0,
+          "credit_minor": 0,
+          "currency": "USD",
+          "entity_id": "C-YSO2KI",
+          "invoice_id": "INV-GBDHSK3",
+          "payment_id": "PAY-UCQMTBN"
+        },
+        "caused_by": [
+          "M02"
+        ],
+        "relation": "direct"
+      },
+      {
+        "row": {
+          "row_id": "L-D5YRISDH",
+          "timestamp": "2026-02-27T11:06:30+01:00",
+          "account": "7800 Курсовые разницы",
+          "debit_minor": 0,
+          "credit_minor": 807,
+          "currency": "USD",
+          "entity_id": "C-SPXLSF",
+          "invoice_id": "INV-T3YCIJM",
+          "payment_id": "PAY-V5QMUAK"
+        },
+        "caused_by": [
+          "M04"
+        ],
+        "relation": "direct"
+      },
+      {
+        "row": {
+          "row_id": "L-EUYQOXIH",
+          "timestamp": "2026-02-09T11:25:39+01:00",
+          "account": "4000 Выручка",
+          "debit_minor": 0,
+          "credit_minor": 1313280,
+          "currency": "USD",
+          "entity_id": "C-SPXLSF",
+          "invoice_id": "INV-CV2GACI",
+          "payment_id": null
+        },
+        "caused_by": [
+          "M10"
+        ],
+        "relation": "direct"
+      },
+      {
+        "row": {
+          "row_id": "L-EV7WXTPS",
+          "timestamp": "2026-02-19T13:13:26+01:00",
+          "account": "1200 Дебиторская задолженность",
+          "debit_minor": 1183800,
+          "credit_minor": 0,
+          "currency": "USD",
+          "entity_id": "C-ROWPZK",
+          "invoice_id": "INV-VW4RYYO",
+          "payment_id": null
+        },
+        "caused_by": [
+          "M09"
+        ],
+        "relation": "direct"
+      },
+      {
+        "row": {
+          "row_id": "L-GFTW3EEX",
+          "timestamp": "2026-02-09T15:54:31+01:00",
+          "account": "4000 Выручка",
+          "debit_minor": 0,
+          "credit_minor": 550724,
+          "currency": "USD",
+          "entity_id": "C-5MIMSS",
+          "invoice_id": "INV-OYIW4HS",
+          "payment_id": null
+        },
+        "caused_by": [
+          "M01"
+        ],
+        "relation": "direct"
+      },
+      {
+        "row": {
+          "row_id": "L-H6PIC7QT",
+          "timestamp": "2026-02-27T11:06:30+01:00",
+          "account": "2900 Невыясненные поступления",
+          "debit_minor": 0,
+          "credit_minor": 443526,
+          "currency": "USD",
+          "entity_id": "C-SPXLSF",
+          "invoice_id": null,
+          "payment_id": "PAY-V5QMUAK"
+        },
+        "caused_by": [
+          "M04"
+        ],
+        "relation": "direct"
+      },
+      {
+        "row": {
+          "row_id": "L-IEVER7HG",
+          "timestamp": "2026-02-27T13:02:05+01:00",
+          "account": "1200 Дебиторская задолженность",
+          "debit_minor": 2306910,
+          "credit_minor": 0,
+          "currency": "USD",
+          "entity_id": "C-UNJ23F",
+          "invoice_id": "INV-RU6E3YZ",
+          "payment_id": null
+        },
+        "caused_by": [
+          "M08"
+        ],
+        "relation": "direct"
+      },
+      {
+        "row": {
+          "row_id": "L-IHI3BSL6",
+          "timestamp": "2026-02-23T09:53:19+01:00",
+          "account": "2900 Невыясненные поступления",
+          "debit_minor": 0,
+          "credit_minor": 461127,
+          "currency": "USD",
+          "entity_id": "C-5MIMSS",
+          "invoice_id": null,
+          "payment_id": "PAY-ODEN5LA"
+        },
+        "caused_by": [
+          "M07"
+        ],
+        "relation": "direct"
+      },
+      {
+        "row": {
+          "row_id": "L-J4WCN72L",
+          "timestamp": "2026-02-17T10:36:19+01:00",
+          "account": "4000 Выручка",
+          "debit_minor": 0,
+          "credit_minor": 888515,
+          "currency": "USD",
+          "entity_id": "C-ZLQUV2",
+          "invoice_id": "INV-OE66P4I",
+          "payment_id": null
+        },
+        "caused_by": [
+          "M05"
+        ],
+        "relation": "direct"
+      },
+      {
+        "row": {
+          "row_id": "L-JB7D3ZYX",
+          "timestamp": "2026-02-28T12:30:33+01:00",
+          "account": "1200 Дебиторская задолженность",
+          "debit_minor": 38836,
+          "credit_minor": 0,
+          "currency": "USD",
+          "entity_id": "C-VNSFDO",
+          "invoice_id": "INV-CWQC6WJ",
+          "payment_id": null
+        },
+        "caused_by": [
+          "M03"
+        ],
+        "relation": "direct"
+      },
+      {
+        "row": {
+          "row_id": "L-JOGTY354",
+          "timestamp": "2026-02-28T15:10:02+01:00",
+          "account": "1200 Дебиторская задолженность",
+          "debit_minor": 733105,
+          "credit_minor": 0,
+          "currency": "USD",
+          "entity_id": "C-UNJ23F",
+          "invoice_id": "INV-PUCZTRJ",
+          "payment_id": null
+        },
+        "caused_by": [
+          "M06"
+        ],
+        "relation": "direct"
+      },
+      {
+        "row": {
+          "row_id": "L-NQAPP5K7",
+          "timestamp": "2026-02-23T09:53:19+01:00",
+          "account": "1200 Дебиторская задолженность",
+          "debit_minor": 0,
+          "credit_minor": 0,
+          "currency": "USD",
+          "entity_id": "C-5MIMSS",
+          "invoice_id": "INV-R4WYPRY",
+          "payment_id": "PAY-ODEN5LA"
+        },
+        "caused_by": [
+          "M07"
+        ],
+        "relation": "direct"
+      },
+      {
+        "row": {
+          "row_id": "L-OZB6M3ZX",
+          "timestamp": "2026-02-28T12:30:33+01:00",
+          "account": "4000 Выручка",
+          "debit_minor": 0,
+          "credit_minor": 38836,
+          "currency": "USD",
+          "entity_id": "C-VNSFDO",
+          "invoice_id": "INV-CWQC6WJ",
+          "payment_id": null
+        },
+        "caused_by": [
+          "M03"
+        ],
+        "relation": "direct"
+      },
+      {
+        "row": {
+          "row_id": "L-QB4D2SVP",
+          "timestamp": "2026-02-09T11:25:39+01:00",
+          "account": "1200 Дебиторская задолженность",
+          "debit_minor": 1313280,
+          "credit_minor": 0,
+          "currency": "USD",
+          "entity_id": "C-SPXLSF",
+          "invoice_id": "INV-CV2GACI",
+          "payment_id": null
+        },
+        "caused_by": [
+          "M10"
+        ],
+        "relation": "direct"
+      },
+      {
+        "row": {
+          "row_id": "L-RKXCNLUQ",
+          "timestamp": "2026-02-17T16:15:31+01:00",
+          "account": "1200 Дебиторская задолженность",
+          "debit_minor": 0,
+          "credit_minor": 550724,
+          "currency": "USD",
+          "entity_id": "C-5MIMSS",
+          "invoice_id": "INV-OYIW4HS",
+          "payment_id": "PAY-EVX6XHD"
+        },
+        "caused_by": [
+          "M01"
+        ],
+        "relation": "consequence"
+      },
+      {
+        "row": {
+          "row_id": "L-T6GGZ552",
+          "timestamp": "2026-02-27T13:02:05+01:00",
+          "account": "4000 Выручка",
+          "debit_minor": 0,
+          "credit_minor": 2306910,
+          "currency": "USD",
+          "entity_id": "C-UNJ23F",
+          "invoice_id": "INV-RU6E3YZ",
+          "payment_id": null
+        },
+        "caused_by": [
+          "M08"
+        ],
+        "relation": "direct"
+      },
+      {
+        "row": {
+          "row_id": "L-TLCH6JIO",
+          "timestamp": "2026-02-17T16:15:31+01:00",
+          "account": "7800 Курсовые разницы",
+          "debit_minor": 0,
+          "credit_minor": 386327,
+          "currency": "USD",
+          "entity_id": "C-5MIMSS",
+          "invoice_id": "INV-OYIW4HS",
+          "payment_id": "PAY-EVX6XHD"
+        },
+        "caused_by": [
+          "M01"
+        ],
+        "relation": "consequence"
+      },
+      {
+        "row": {
+          "row_id": "L-TWMY7NXG",
+          "timestamp": "2026-02-09T15:54:31+01:00",
+          "account": "1200 Дебиторская задолженность",
+          "debit_minor": 550724,
+          "credit_minor": 0,
+          "currency": "USD",
+          "entity_id": "C-5MIMSS",
+          "invoice_id": "INV-OYIW4HS",
+          "payment_id": null
+        },
+        "caused_by": [
+          "M01"
+        ],
+        "relation": "direct"
+      },
+      {
+        "row": {
+          "row_id": "L-UBWFUKQ4",
+          "timestamp": "2026-02-17T10:36:19+01:00",
+          "account": "1200 Дебиторская задолженность",
+          "debit_minor": 888515,
+          "credit_minor": 0,
+          "currency": "USD",
+          "entity_id": "C-ZLQUV2",
+          "invoice_id": "INV-OE66P4I",
+          "payment_id": null
+        },
+        "caused_by": [
+          "M05"
+        ],
+        "relation": "direct"
+      },
+      {
+        "row": {
+          "row_id": "L-W6DO7KJF",
+          "timestamp": "2026-02-25T17:01:55+01:00",
+          "account": "2900 Невыясненные поступления",
+          "debit_minor": 0,
+          "credit_minor": 808800,
+          "currency": "USD",
+          "entity_id": "C-YSO2KI",
+          "invoice_id": null,
+          "payment_id": "PAY-UCQMTBN"
+        },
+        "caused_by": [
+          "M02"
+        ],
+        "relation": "direct"
+      },
+      {
+        "row": {
+          "row_id": "L-YEC33OBU",
+          "timestamp": "2026-02-28T15:10:02+01:00",
+          "account": "4000 Выручка",
+          "debit_minor": 0,
+          "credit_minor": 733105,
+          "currency": "USD",
+          "entity_id": "C-UNJ23F",
+          "invoice_id": "INV-PUCZTRJ",
+          "payment_id": null
+        },
+        "caused_by": [
+          "M06"
+        ],
+        "relation": "direct"
+      },
+      {
+        "row": {
+          "row_id": "L-ZVBLUWLM",
+          "timestamp": "2026-02-27T11:06:30+01:00",
+          "account": "1200 Дебиторская задолженность",
+          "debit_minor": 0,
+          "credit_minor": 353520,
+          "currency": "USD",
+          "entity_id": "C-SPXLSF",
+          "invoice_id": "INV-T3YCIJM",
+          "payment_id": "PAY-V5QMUAK"
+        },
+        "caused_by": [
+          "M04"
+        ],
+        "relation": "direct"
+      }
+    ]
+  },
+  "documents_added": [
+    {
+      "doc_id": "DOC-HXZDNTAZ",
+      "id": "INV-CWQC6WJ",
+      "caused_by": [
+        "M03"
+      ]
+    },
+    {
+      "doc_id": "DOC-62DFXI3Q",
+      "id": "INV-OE66P4I",
+      "caused_by": [
+        "M05"
+      ]
+    },
+    {
+      "doc_id": "DOC-VLQ6JMVM",
+      "id": "INV-PUCZTRJ",
+      "caused_by": [
+        "M06"
+      ]
+    },
+    {
+      "doc_id": "DOC-22ABPTIK",
+      "id": "INV-VW4RYYO",
+      "caused_by": [
+        "M09"
+      ]
+    },
+    {
+      "doc_id": "DOC-VZTZQFKW",
+      "id": "INV-CV2GACI",
+      "caused_by": [
+        "M10"
+      ]
+    }
+  ],
+  "reverse_procedure": "книги до внесения = открытая книга минус строки ledger_diff.added (по row_id) плюс строки ledger_diff.removed; счета и платежи минус documents_added (по doc_id)",
+  "distractors": {
+    "multi_invoice_payment": [
+      "INV-3INYM7P",
+      "INV-742AOZL",
+      "INV-NU7RTDC",
+      "INV-QSZFM7Z",
+      "PAY-6NS4V54",
+      "PAY-YXYRZ7O"
+    ],
+    "next_period_doc": [
+      "INV-JKVV7PQ",
+      "INV-VQ4LEZ7",
+      "PAY-LEJE6G7"
+    ],
+    "partial_open": [
+      "INV-BAEFK3Z",
+      "INV-MCSGVQY",
+      "PAY-I7J6RWJ",
+      "PAY-JC7NRGS"
+    ],
+    "prior_period_doc": [
+      "INV-5R7ZXKF"
+    ],
+    "recurring_amount": [
+      "INV-AKFGNR4",
+      "INV-BPUW5UL",
+      "INV-WEPZ4HO"
+    ],
+    "refund": [
+      "INV-476TUPJ",
+      "PAY-GLHC2HI",
+      "PAY-XJAYHOV"
+    ],
+    "same_day_repeat": [
+      "INV-GBDHSK3",
+      "INV-ZFIDPVR"
+    ],
+    "split_payment": [
+      "INV-BNZXKPJ",
+      "INV-XNAZM4L",
+      "PAY-555NEYK",
+      "PAY-FMYOFGR",
+      "PAY-GIUB3UY",
+      "PAY-VFGVACC"
+    ],
+    "tz_boundary": [
+      "INV-5IJGLZL",
+      "INV-EIQWSIF",
+      "PAY-JZKXUM5",
+      "PAY-VLR33B7"
+    ],
+    "unremitted_payment": [
+      "INV-M5BGJ3L",
+      "PAY-PXRG3HO"
+    ]
+  },
+  "canonical_ids": {
+    "C-5MIMSS": "ent:2",
+    "C-ROWPZK": "ent:1",
+    "C-RTWCBT": "ent:7",
+    "C-SPXLSF": "ent:3",
+    "C-UNJ23F": "ent:4",
+    "C-UQJXMW": "ent:5",
+    "C-VMJ7QI": "ent:8",
+    "C-VNSFDO": "ent:10",
+    "C-YSO2KI": "ent:9",
+    "C-ZLQUV2": "ent:6",
+    "DOC-22ABPTIK": "docinv:87",
+    "DOC-24RTHUYD": "docinv:35",
+    "DOC-2AEIVGWK": "docpay:16",
+    "DOC-2MO2PCOJ": "docinv:4",
+    "DOC-2UVCVDXU": "docinv:52",
+    "DOC-3LXOX75Z": "docinv:66",
+    "DOC-3MXXRSYW": "docpay:41",
+    "DOC-3Q47ZXHD": "docinv:17",
+    "DOC-3RG6INJ4": "docinv:25",
+    "DOC-4BIRZMPD": "docpay:13",
+    "DOC-4IK7GJKI": "docpay:4",
+    "DOC-52KCJ6N2": "docpay:6",
+    "DOC-5GU5KTEF": "docpay:48",
+    "DOC-5IPKC5IF": "docinv:74",
+    "DOC-5OHE3QGA": "docinv:79",
+    "DOC-5OXJKCHL": "docpay:42",
+    "DOC-62DFXI3Q": "docinv:85",
+    "DOC-6K5MPSB2": "docpay:47",
+    "DOC-6YS5JOYG": "docinv:59",
+    "DOC-7ALQROJT": "docinv:37",
+    "DOC-7DWJGHIH": "docinv:48",
+    "DOC-7TIC3IUA": "docinv:32",
+    "DOC-7XMIXOOW": "docinv:30",
+    "DOC-AGIXAKSQ": "docinv:54",
+    "DOC-AIIB33KJ": "docinv:47",
+    "DOC-AIPXYFE2": "docinv:73",
+    "DOC-AJMTBFYR": "docinv:42",
+    "DOC-ARYYQVOC": "docpay:31",
+    "DOC-B3C7RGPT": "docinv:18",
+    "DOC-C2TEXRZ7": "docpay:46",
+    "DOC-C5JC2TRI": "docpay:20",
+    "DOC-CPUMWWVI": "docinv:36",
+    "DOC-CULTDQM2": "docinv:23",
+    "DOC-D4RNLJB4": "docinv:38",
+    "DOC-DRJIOUBX": "docpay:33",
+    "DOC-DS5MQXIN": "docinv:15",
+    "DOC-DV3V6ZVM": "docpay:7",
+    "DOC-E4LT73YF": "docpay:14",
+    "DOC-EJCCSY5C": "docinv:3",
+    "DOC-ELDXQO75": "docinv:80",
+    "DOC-EWA32QBZ": "docinv:28",
+    "DOC-F7UNK5GQ": "docinv:53",
+    "DOC-FICCWYSM": "docinv:10",
+    "DOC-FNRPWHXH": "docpay:2",
+    "DOC-FV37JFMI": "docinv:65",
+    "DOC-FXV4F662": "docinv:29",
+    "DOC-FYE3ON2L": "docpay:3",
+    "DOC-GBYWNNKA": "docinv:61",
+    "DOC-GXWQHTXW": "docinv:83",
+    "DOC-HDXP47PK": "docinv:64",
+    "DOC-HHYTNA3P": "docinv:72",
+    "DOC-HIZDJJMN": "docpay:45",
+    "DOC-HXZDNTAZ": "docinv:84",
+    "DOC-HYUONN3S": "docinv:60",
+    "DOC-I3JUJO73": "docinv:77",
+    "DOC-IHWT4FY2": "docinv:27",
+    "DOC-IMPYGPCK": "docpay:35",
+    "DOC-J257UPIZ": "docpay:18",
+    "DOC-J6W55WQX": "docinv:63",
+    "DOC-JJZBETLM": "docpay:22",
+    "DOC-JXG5NN4P": "docinv:70",
+    "DOC-JXNR6VGS": "docinv:8",
+    "DOC-KIMZS3TA": "docinv:5",
+    "DOC-KIRT2DYR": "docinv:50",
+    "DOC-KNCDQ4GO": "docpay:43",
+    "DOC-KZ7IPM3O": "docpay:15",
+    "DOC-L2UPHCRB": "docinv:34",
+    "DOC-L3EFKVW5": "docinv:13",
+    "DOC-LAO44KJW": "docpay:38",
+    "DOC-LWFWEM5L": "docinv:2",
+    "DOC-MEBUO76X": "docinv:43",
+    "DOC-MGIBTQJG": "docinv:24",
+    "DOC-MGLURXJ5": "docpay:8",
+    "DOC-MOGOV6CY": "docinv:67",
+    "DOC-MVKOT72M": "docinv:39",
+    "DOC-N4RNSIGE": "docpay:17",
+    "DOC-N54ZP4H4": "docpay:12",
+    "DOC-NGWV4NA6": "docinv:45",
+    "DOC-NV4XKXAX": "docinv:9",
+    "DOC-NYK4F6X5": "docpay:1",
+    "DOC-O4Q24OBM": "docinv:20",
+    "DOC-OEH7HICW": "docpay:23",
+    "DOC-OII5IDPH": "docpay:39",
+    "DOC-OWQG2EO4": "docpay:24",
+    "DOC-PGAJ247U": "docpay:34",
+    "DOC-PXSB65XZ": "docpay:44",
+    "DOC-QB7EIXUN": "docpay:36",
+    "DOC-QFXKXLPE": "docinv:31",
+    "DOC-QR4NGLMN": "docpay:40",
+    "DOC-QWYBWAR5": "docinv:26",
+    "DOC-RBJZ2IZY": "docinv:21",
+    "DOC-RNK3CZJK": "docinv:6",
+    "DOC-ROXV24SA": "docinv:1",
+    "DOC-RSFSEOQ6": "docinv:56",
+    "DOC-RSFUHNGH": "docinv:62",
+    "DOC-RSVD7F47": "docinv:81",
+    "DOC-RTF7UWC3": "docpay:27",
+    "DOC-S5FJ6WL3": "docpay:37",
+    "DOC-SCJIWOS7": "docinv:41",
+    "DOC-STMF7O2R": "docinv:82",
+    "DOC-TBRBWJUB": "docinv:58",
+    "DOC-TGN367XH": "docinv:19",
+    "DOC-TI65HUMK": "docpay:11",
+    "DOC-TIPTZH74": "docinv:44",
+    "DOC-TR7CLC4S": "docpay:5",
+    "DOC-TVQCAF2M": "docinv:46",
+    "DOC-TYTGU53E": "docpay:21",
+    "DOC-TZEKBMIL": "docinv:75",
+    "DOC-TZXAX2IL": "docinv:22",
+    "DOC-U4MJCZR2": "docpay:25",
+    "DOC-UDEKUKJW": "docinv:71",
+    "DOC-UGPB4MAA": "docpay:19",
+    "DOC-UPOOWKJA": "docpay:28",
+    "DOC-UUBADJJX": "docinv:51",
+    "DOC-VBX3LQNC": "docinv:40",
+    "DOC-VC72ZPNH": "docinv:16",
+    "DOC-VKQAKOBG": "docinv:12",
+    "DOC-VLQ6JMVM": "docinv:86",
+    "DOC-VZTZQFKW": "docinv:88",
+    "DOC-VZWZQWZJ": "docinv:33",
+    "DOC-W74IDUQY": "docinv:76",
+    "DOC-WIQIDBTZ": "docinv:14",
+    "DOC-WOJKOF4P": "docinv:55",
+    "DOC-WVL7DBST": "docpay:30",
+    "DOC-X2DS2WWR": "docpay:10",
+    "DOC-XAWWPQFC": "docpay:26",
+    "DOC-XIWMGWDW": "docpay:29",
+    "DOC-XWYQNECI": "docinv:7",
+    "DOC-YC7KDX46": "docinv:49",
+    "DOC-YH4CHTVS": "docinv:69",
+    "DOC-YK6AXY4N": "docinv:11",
+    "DOC-YPSLL27B": "docpay:32",
+    "DOC-YYWHPQJ2": "docinv:68",
+    "DOC-Z7QERUNL": "docpay:9",
+    "DOC-ZHBUYKN3": "docinv:57",
+    "DOC-ZW2X757A": "docinv:78",
+    "INV-24GOYP2": "inv:12",
+    "INV-3INYM7P": "inv:16",
+    "INV-3PHI7BV": "inv:15",
+    "INV-44O2VFU": "inv:70",
+    "INV-476TUPJ": "inv:1",
+    "INV-4DZEQYS": "inv:72",
+    "INV-4EKRDZS": "inv:50",
+    "INV-4EQ56KA": "inv:26",
+    "INV-4XH6S4O": "inv:45",
+    "INV-5IJGLZL": "inv:79",
+    "INV-5R7ZXKF": "inv:83",
+    "INV-6BEHUC3": "inv:58",
+    "INV-6DS7R3S": "inv:44",
+    "INV-6TDITY7": "inv:69",
+    "INV-6V7M2YQ": "inv:31",
+    "INV-73JJMF6": "inv:62",
+    "INV-742AOZL": "inv:32",
+    "INV-AKFGNR4": "inv:76",
+    "INV-AMXZSJF": "inv:9",
+    "INV-BAEFK3Z": "inv:57",
+    "INV-BNZXKPJ": "inv:47",
+    "INV-BPUW5UL": "inv:77",
+    "INV-CV2GACI": "inv:88",
+    "INV-CWQC6WJ": "inv:84",
+    "INV-DBBGUII": "inv:22",
+    "INV-DIZN7LA": "inv:60",
+    "INV-DJ7G4YY": "inv:38",
+    "INV-EC4BZL6": "inv:7",
+    "INV-EIQWSIF": "inv:10",
+    "INV-EMENIUY": "inv:25",
+    "INV-F5GB3C3": "inv:3",
+    "INV-F77GKXN": "inv:6",
+    "INV-FCQFVV7": "inv:33",
+    "INV-FNJP6WU": "inv:64",
+    "INV-FXIK6QH": "inv:71",
+    "INV-GBDHSK3": "inv:81",
+    "INV-GLXJ2WY": "inv:36",
+    "INV-GSVEITP": "inv:63",
+    "INV-GTU47IP": "inv:27",
+    "INV-HC7FCUH": "inv:53",
+    "INV-HEPDAEQ": "inv:48",
+    "INV-IFKIHV3": "inv:34",
+    "INV-IYZNABQ": "inv:4",
+    "INV-J3GS3Y5": "inv:41",
+    "INV-JKVV7PQ": "inv:67",
+    "INV-JWJYP3N": "inv:65",
+    "INV-LH63YYZ": "inv:56",
+    "INV-M5BGJ3L": "inv:42",
+    "INV-MALUSJM": "inv:61",
+    "INV-MCSGVQY": "inv:17",
+    "INV-MSVZCMR": "inv:18",
+    "INV-MXTBVBH": "inv:5",
+    "INV-N4RFKAS": "inv:40",
+    "INV-N735H2H": "inv:2",
+    "INV-N7IO4IC": "inv:52",
+    "INV-NU7RTDC": "inv:73",
+    "INV-O7KATFJ": "inv:49",
+    "INV-OE66P4I": "inv:85",
+    "INV-OINQTYJ": "inv:20",
+    "INV-OTP2IPF": "inv:14",
+    "INV-OYIW4HS": "inv:13",
+    "INV-P4R445J": "inv:29",
+    "INV-PIBMQWT": "inv:35",
+    "INV-PKZ4SJO": "inv:51",
+    "INV-PUCZTRJ": "inv:86",
+    "INV-QFWWYIS": "inv:55",
+    "INV-QRKRICC": "inv:19",
+    "INV-QSZFM7Z": "inv:30",
+    "INV-QV5YYRM": "inv:46",
+    "INV-R4WYPRY": "inv:21",
+    "INV-RU6E3YZ": "inv:74",
+    "INV-S2X3JPP": "inv:43",
+    "INV-SQPWC3U": "inv:75",
+    "INV-SYGUS7S": "inv:23",
+    "INV-T3YCIJM": "inv:66",
+    "INV-TY7ASG3": "inv:59",
+    "INV-U2JSLE3": "inv:11",
+    "INV-UKISP5U": "inv:39",
+    "INV-VCZNN4Z": "inv:37",
+    "INV-VQ4LEZ7": "inv:82",
+    "INV-VVYF23E": "inv:28",
+    "INV-VW4RYYO": "inv:87",
+    "INV-W74PZST": "inv:68",
+    "INV-WE4PPZM": "inv:8",
+    "INV-WEPZ4HO": "inv:78",
+    "INV-XNAZM4L": "inv:24",
+    "INV-YTJPWWN": "inv:54",
+    "INV-ZFIDPVR": "inv:80",
+    "L-23DNLQZK": "row:[[\"bg\",14],\"6300 Коммунальные услуги\",null]",
+    "L-23ULVLOE": "row:[[\"bg\",38],\"6300 Коммунальные услуги\",null]",
+    "L-27HAEZML": "row:[[\"inv\",79],\"4000 Выручка\",79]",
+    "L-2AVUB2NR": "row:[[\"inv\",27],\"1200 Дебиторская задолженность\",27]",
+    "L-2CSCSKDE": "row:[[\"inv\",56],\"1200 Дебиторская задолженность\",56]",
+    "L-2DTHJQKW": "row:[[\"inv\",57],\"4000 Выручка\",57]",
+    "L-2ENCKMEJ": "row:[[\"inv\",87],\"4000 Выручка\",87]",
+    "L-2GTW6D6N": "row:[[\"inv\",18],\"4000 Выручка\",18]",
+    "L-2IGYS7WG": "row:[[\"inv\",38],\"1200 Дебиторская задолженность\",38]",
+    "L-2K4CYYFP": "row:[[\"pay\",39],\"1000 Денежные средства\",61]",
+    "L-2KCCRHOB": "row:[[\"bg\",33],\"6100 Аренда помещений\",null]",
+    "L-2OR3AAGD": "row:[[\"bg\",5],\"1000 Денежные средства\",null]",
+    "L-2Q2AIBTV": "row:[[\"pay\",10],\"1000 Денежные средства\",1]",
+    "L-2QZYYJZ6": "row:[[\"pay\",37],\"1000 Денежные средства\",59]",
+    "L-2UQQY4L5": "row:[[\"bg\",95],\"1000 Денежные средства\",null]",
+    "L-2URA5QUL": "row:[[\"pay\",11],\"7800 Курсовые разницы\",79]",
+    "L-2W43SDWN": "row:[[\"bg\",13],\"1000 Денежные средства\",null]",
+    "L-2WZOLEXF": "row:[[\"bg\",5],\"6100 Аренда помещений\",null]",
+    "L-2YVZBAJI": "row:[[\"bg\",24],\"1000 Денежные средства\",null]",
+    "L-35ZNSM5N": "row:[[\"pay\",28],\"1200 Дебиторская задолженность\",40]",
+    "L-37LFDYTY": "row:[[\"bg\",4],\"1000 Денежные средства\",null]",
+    "L-3AFK52ZO": "row:[[\"bg\",63],\"6500 Хозяйственные расходы\",null]",
+    "L-3CE6WFHN": "row:[[\"bg\",35],\"1000 Денежные средства\",null]",
+    "L-3CRMJ3UF": "row:[[\"pay\",18],\"1000 Денежные средства\",18]",
+    "L-3K3FRFTX": "row:[[\"bg\",66],\"6400 Банковские комиссии\",null]",
+    "L-3KBD6JJ3": "row:[[\"bg\",48],\"1000 Денежные средства\",null]",
+    "L-3KMTGOSY": "row:[[\"inv\",5],\"4000 Выручка\",5]",
+    "L-3PDW7T3E": "row:[[\"bg\",46],\"1000 Денежные средства\",null]",
+    "L-3TNANGBK": "row:[[\"bg\",15],\"6400 Банковские комиссии\",null]",
+    "L-3TSZKHMA": "row:[[\"bg\",59],\"1000 Денежные средства\",null]",
+    "L-3VE5UDTV": "row:[[\"bg\",88],\"6300 Коммунальные услуги\",null]",
+    "L-3WM3H2FE": "row:[[\"pay\",19],\"1000 Денежные средства\",19]",
+    "L-3XWLYIXN": "row:[[\"pay\",11],\"1000 Денежные средства\",79]",
+    "L-3ZGXQXZ3": "row:[[\"pay\",5],\"1000 Денежные средства\",null]",
+    "L-3ZNNLS5K": "row:[[\"inv\",66],\"1200 Дебиторская задолженность\",66]",
+    "L-42YALTPC": "row:[[\"bg\",93],\"1000 Денежные средства\",null]",
+    "L-44RMSINI": "row:[[\"inv\",7],\"1200 Дебиторская задолженность\",7]",
+    "L-4655BJXM": "row:[[\"bg\",50],\"6500 Хозяйственные расходы\",null]",
+    "L-47KSF46R": "row:[[\"inv\",48],\"1200 Дебиторская задолженность\",48]",
+    "L-47RZIKDD": "row:[[\"bg\",44],\"6300 Коммунальные услуги\",null]",
+    "L-4BKWHWO2": "row:[[\"inv\",35],\"1200 Дебиторская задолженность\",35]",
+    "L-4EMXLS3O": "row:[[\"inv\",51],\"1200 Дебиторская задолженность\",51]",
+    "L-4GH3GGOJ": "row:[[\"bg\",45],\"6400 Банковские комиссии\",null]",
+    "L-4GPX2QEW": "row:[[\"bg\",39],\"6100 Аренда помещений\",null]",
+    "L-4MASNXNH": "row:[[\"bg\",8],\"6400 Банковские комиссии\",null]",
+    "L-4PQSSQ5X": "row:[[\"pay\",44],\"1000 Денежные средства\",75]",
+    "L-4SR4XF2T": "row:[[\"pay\",40],\"1000 Денежные средства\",62]",
+    "L-4T52S66B": "row:[[\"bg\",74],\"6100 Аренда помещений\",null]",
+    "L-4T73PWSJ": "row:[[\"inv\",77],\"4000 Выручка\",77]",
+    "L-4UQOEMTU": "row:[[\"inv\",26],\"1200 Дебиторская задолженность\",26]",
+    "L-4YBVX7P4": "row:[[\"bg\",17],\"1000 Денежные средства\",null]",
+    "L-537MEMKG": "row:[[\"pay\",8],\"7800 Курсовые разницы\",17]",
+    "L-55ZEIHE4": "row:[[\"inv\",76],\"4000 Выручка\",76]",
+    "L-566CMUZJ": "row:[[\"bg\",73],\"1000 Денежные средства\",null]",
+    "L-57ELMTXZ": "row:[[\"pay\",31],\"1200 Дебиторская задолженность\",46]",
+    "L-5EKVSVNE": "row:[[\"bg\",26],\"6300 Коммунальные услуги\",null]",
+    "L-5HUDZAVK": "row:[[\"pay\",28],\"1000 Денежные средства\",40]",
+    "L-5KMAE3AX": "row:[[\"inv\",19],\"1200 Дебиторская задолженность\",19]",
+    "L-5L3FTQP3": "row:[[\"bg\",73],\"6100 Аренда помещений\",null]",
+    "L-5OJUHDQE": "row:[[\"inv\",17],\"1200 Дебиторская задолженность\",17]",
+    "L-5P3TAZ5G": "row:[[\"bg\",59],\"6100 Аренда помещений\",null]",
+    "L-5QZQZQW3": "row:[[\"bg\",32],\"1000 Денежные средства\",null]",
+    "L-5RDMBEKQ": "row:[[\"inv\",70],\"4000 Выручка\",70]",
+    "L-5RRJMXXB": "row:[[\"pay\",40],\"1200 Дебиторская задолженность\",62]",
+    "L-5X3W2JFC": "row:[[\"inv\",39],\"1200 Дебиторская задолженность\",39]",
+    "L-5XCLEWNA": "row:[[\"bg\",90],\"1000 Денежные средства\",null]",
+    "L-5YI3HMY2": "row:[[\"inv\",59],\"1200 Дебиторская задолженность\",59]",
+    "L-6CQMRXPM": "row:[[\"bg\",56],\"6200 Заработная плата\",null]",
+    "L-6D7RSD37": "row:[[\"bg\",70],\"1000 Денежные средства\",null]",
+    "L-6E6UUXRX": "row:[[\"pay\",21],\"1000 Денежные средства\",22]",
+    "L-6EPEYLE2": "row:[[\"inv\",37],\"4000 Выручка\",37]",
+    "L-6KSD4DAH": "row:[[\"pay\",25],\"7800 Курсовые разницы\",36]",
+    "L-6MYD7XQH": "row:[[\"inv\",40],\"1200 Дебиторская задолженность\",40]",
+    "L-6NCIZUZK": "row:[[\"bg\",10],\"6100 Аренда помещений\",null]",
+    "L-6PEOPDQQ": "row:[[\"pay\",16],\"7800 Курсовые разницы\",3]",
+    "L-6SGMGMQK": "row:[[\"inv\",52],\"1200 Дебиторская задолженность\",52]",
+    "L-6T2Y6EW5": "row:[[\"inv\",65],\"4000 Выручка\",65]",
+    "L-6T3KFNPH": "row:[[\"bg\",91],\"6200 Заработная плата\",null]",
+    "L-6UWGUN4K": "row:[[\"inv\",16],\"1200 Дебиторская задолженность\",16]",
+    "L-754XM6DG": "row:[[\"bg\",1],\"6500 Хозяйственные расходы\",null]",
+    "L-75DUROWI": "row:[[\"pay\",32],\"1000 Денежные средства\",48]",
+    "L-77HG7KJP": "row:[[\"inv\",33],\"1200 Дебиторская задолженность\",33]",
+    "L-7BQN3JM2": "row:[[\"bg\",46],\"6400 Банковские комиссии\",null]",
+    "L-7C75TJYH": "row:[[\"pay\",8],\"1200 Дебиторская задолженность\",17]",
+    "L-7FHJD7EK": "row:[[\"bg\",6],\"6300 Коммунальные услуги\",null]",
+    "L-7GUN52ZH": "row:[[\"bg\",40],\"6500 Хозяйственные расходы\",null]",
+    "L-7HSXF6BT": "row:[[\"inv\",21],\"1200 Дебиторская задолженность\",21]",
+    "L-7IMTK5UT": "row:[[\"pay\",33],\"1000 Денежные средства\",49]",
+    "L-7KLXI66G": "row:[[\"inv\",1],\"4000 Выручка\",1]",
+    "L-7LZBR6G2": "row:[[\"bg\",81],\"6500 Хозяйственные расходы\",null]",
+    "L-7OSFIU5S": "row:[[\"bg\",82],\"6400 Банковские комиссии\",null]",
+    "L-7RIAGYJF": "row:[[\"inv\",77],\"1200 Дебиторская задолженность\",77]",
+    "L-7SMYZRHD": "row:[[\"inv\",71],\"1200 Дебиторская задолженность\",71]",
+    "L-7T72DM4Q": "row:[[\"bg\",37],\"6200 Заработная плата\",null]",
+    "L-7TCBTR7F": "row:[[\"bg\",34],\"6500 Хозяйственные расходы\",null]",
+    "L-7UYTIL2S": "row:[[\"pay\",12],\"1200 Дебиторская задолженность\",10]",
+    "L-7W4N7G6Z": "row:[[\"inv\",59],\"4000 Выручка\",59]",
+    "L-A45KK6DM": "row:[[\"inv\",76],\"1200 Дебиторская задолженность\",76]",
+    "L-A4C6XGUV": "row:[[\"pay\",39],\"1200 Дебиторская задолженность\",61]",
+    "L-A52MB6JW": "row:[[\"inv\",21],\"4000 Выручка\",21]",
+    "L-A67GOMOY": "row:[[\"inv\",39],\"4000 Выручка\",39]",
+    "L-A6MZTWNV": "row:[[\"inv\",2],\"4000 Выручка\",2]",
+    "L-ABZQ37G3": "row:[[\"pay\",25],\"1200 Дебиторская задолженность\",36]",
+    "L-AEZQL4EU": "row:[[\"pay\",15],\"1000 Денежные средства\",2]",
+    "L-AFSKOYH6": "row:[[\"inv\",5],\"1200 Дебиторская задолженность\",5]",
+    "L-AH42J4GW": "row:[[\"pay\",45],\"1000 Денежные средства\",76]",
+    "L-AIYVKEGK": "row:[[\"bg\",80],\"6500 Хозяйственные расходы\",null]",
+    "L-AN72EQBB": "row:[[\"bg\",31],\"6500 Хозяйственные расходы\",null]",
+    "L-AO2QBQUS": "row:[[\"inv\",72],\"4000 Выручка\",72]",
+    "L-AQDG36ZM": "row:[[\"bg\",16],\"1000 Денежные средства\",null]",
+    "L-ATRXGWBS": "row:[[\"inv\",28],\"4000 Выручка\",28]",
+    "L-AU33VUUU": "row:[[\"bg\",10],\"1000 Денежные средства\",null]",
+    "L-B3WKI5EL": "row:[[\"bg\",57],\"1000 Денежные средства\",null]",
+    "L-B4GR5EIF": "row:[[\"pay\",29],\"1200 Дебиторская задолженность\",44]",
+    "L-B5WOSBQA": "row:[[\"pay\",42],\"1000 Денежные средства\",66]",
+    "L-BCXC2CYT": "row:[[\"pay\",3],\"1000 Денежные средства\",24]",
+    "L-BLIY5EST": "row:[[\"bg\",89],\"6300 Коммунальные услуги\",null]",
+    "L-BLZCT7YL": "row:[[\"inv\",10],\"4000 Выручка\",10]",
+    "L-BNNZ56JV": "row:[[\"pay\",30],\"1200 Дебиторская задолженность\",45]",
+    "L-BOCTAVWV": "row:[[\"bg\",58],\"6300 Коммунальные услуги\",null]",
+    "L-BSQV2OQA": "row:[[\"bg\",94],\"1000 Денежные средства\",null]",
+    "L-BSZU7OYF": "row:[[\"inv\",79],\"1200 Дебиторская задолженность\",79]",
+    "L-BUNQY4OV": "row:[[\"inv\",3],\"1200 Дебиторская задолженность\",3]",
+    "L-BURXUYBV": "row:[[\"inv\",15],\"1200 Дебиторская задолженность\",15]",
+    "L-BXLJM5GX": "row:[[\"pay\",20],\"7800 Курсовые разницы\",21]",
+    "L-BYMWKN6L": "row:[[\"pay\",26],\"1200 Дебиторская задолженность\",38]",
+    "L-BYN6GSLS": "row:[[\"bg\",27],\"1000 Денежные средства\",null]",
+    "L-CCHRPMIX": "row:[[\"pay\",3],\"1200 Дебиторская задолженность\",24]",
+    "L-CEOIRRJJ": "row:[[\"pay\",48],\"1200 Дебиторская задолженность\",81]",
+    "L-CHUIWPBQ": "row:[[\"pay\",34],\"1000 Денежные средства\",51]",
+    "L-CIWOUH6H": "row:[[\"inv\",35],\"4000 Выручка\",35]",
+    "L-CNKZEC2E": "row:[[\"bg\",55],\"1000 Денежные средства\",null]",
+    "L-CNUITW4X": "row:[[\"pay\",15],\"7800 Курсовые разницы\",2]",
+    "L-CNZS76MV": "row:[[\"bg\",53],\"1000 Денежные средства\",null]",
+    "L-CQAAS5FE": "row:[[\"inv\",47],\"1200 Дебиторская задолженность\",47]",
+    "L-CVBQQVPV": "row:[[\"inv\",48],\"4000 Выручка\",48]",
+    "L-CWGHOKWC": "row:[[\"inv\",9],\"4000 Выручка\",9]",
+    "L-CYWC2N4R": "row:[[\"bg\",12],\"1000 Денежные средства\",null]",
+    "L-CZSUSLUU": "row:[[\"inv\",10],\"1200 Дебиторская задолженность\",10]",
+    "L-D4UINHZ2": "row:[[\"bg\",69],\"6300 Коммунальные услуги\",null]",
+    "L-D5WGJJEP": "row:[[\"pay\",31],\"7800 Курсовые разницы\",46]",
+    "L-D5YRISDH": "row:[[\"pay\",42],\"7800 Курсовые разницы\",66]",
+    "L-D6LETEVZ": "row:[[\"inv\",49],\"1200 Дебиторская задолженность\",49]",
+    "L-D7NZHS6M": "row:[[\"inv\",22],\"4000 Выручка\",22]",
+    "L-DC5AXJ36": "row:[[\"pay\",41],\"1200 Дебиторская задолженность\",64]",
+    "L-DEHXBV2T": "row:[[\"pay\",47],\"1000 Денежные средства\",80]",
+    "L-DG4XNEU5": "row:[[\"inv\",78],\"4000 Выручка\",78]",
+    "L-DHS5FH4F": "row:[[\"pay\",2],\"1000 Денежные средства\",47]",
+    "L-DJNBR7ET": "row:[[\"bg\",15],\"1000 Денежные средства\",null]",
+    "L-DK5C6NYJ": "row:[[\"inv\",41],\"4000 Выручка\",41]",
+    "L-DLCMXBKP": "row:[[\"bg\",68],\"6400 Банковские комиссии\",null]",
+    "L-DO7JKFRL": "row:[[\"inv\",75],\"1200 Дебиторская задолженность\",75]",
+    "L-DSCOGKL3": "row:[[\"inv\",64],\"1200 Дебиторская задолженность\",64]",
+    "L-DTV5ZAGJ": "row:[[\"bg\",79],\"6300 Коммунальные услуги\",null]",
+    "L-DUPT7CWM": "row:[[\"bg\",66],\"1000 Денежные средства\",null]",
+    "L-DYPYPUKD": "row:[[\"pay\",15],\"1200 Дебиторская задолженность\",2]",
+    "L-DYQ4XBFC": "row:[[\"inv\",27],\"4000 Выручка\",27]",
+    "L-DZLOGKIX": "row:[[\"pay\",35],\"7800 Курсовые разницы\",52]",
+    "L-DZXMMSBS": "row:[[\"inv\",12],\"1200 Дебиторская задолженность\",12]",
+    "L-E2QQWDD5": "row:[[\"bg\",82],\"1000 Денежные средства\",null]",
+    "L-E57MOBX7": "row:[[\"pay\",43],\"7800 Курсовые разницы\",68]",
+    "L-E6PQVSL2": "row:[[\"inv\",62],\"1200 Дебиторская задолженность\",62]",
+    "L-EA3NUWVM": "row:[[\"bg\",94],\"6400 Банковские комиссии\",null]",
+    "L-EC5FZBRG": "row:[[\"bg\",67],\"1000 Денежные средства\",null]",
+    "L-EI3YHEDK": "row:[[\"bg\",53],\"6400 Банковские комиссии\",null]",
+    "L-EILJ36G5": "row:[[\"inv\",69],\"1200 Дебиторская задолженность\",69]",
+    "L-EJPEIISV": "row:[[\"pay\",24],\"1000 Денежные средства\",33]",
+    "L-EJQNE45Q": "row:[[\"bg\",75],\"6200 Заработная плата\",null]",
+    "L-ENO5KTUL": "row:[[\"bg\",1],\"1000 Денежные средства\",null]",
+    "L-EU73GZCN": "row:[[\"inv\",11],\"4000 Выручка\",11]",
+    "L-EUKQQCE2": "row:[[\"bg\",36],\"1000 Денежные средства\",null]",
+    "L-EUYQOXIH": "row:[[\"inv\",88],\"4000 Выручка\",88]",
+    "L-EUZHP466": "row:[[\"inv\",25],\"1200 Дебиторская задолженность\",25]",
+    "L-EV7WXTPS": "row:[[\"inv\",87],\"1200 Дебиторская задолженность\",87]",
+    "L-EZ4XNTOS": "row:[[\"bg\",47],\"1000 Денежные средства\",null]",
+    "L-F5EZHZ5C": "row:[[\"bg\",83],\"1000 Денежные средства\",null]",
+    "L-F6Y6YQJY": "row:[[\"inv\",36],\"4000 Выручка\",36]",
+    "L-FFCMLO23": "row:[[\"bg\",9],\"1000 Денежные средства\",null]",
+    "L-FG6HWREM": "row:[[\"inv\",45],\"1200 Дебиторская задолженность\",45]",
+    "L-FKB2YUWL": "row:[[\"bg\",71],\"6100 Аренда помещений\",null]",
+    "L-FL64WUNQ": "row:[[\"bg\",24],\"6400 Банковские комиссии\",null]",
+    "L-FLRQQWHJ": "row:[[\"bg\",9],\"6100 Аренда помещений\",null]",
+    "L-FPSVMFXL": "row:[[\"bg\",85],\"1000 Денежные средства\",null]",
+    "L-FX5LYIEU": "row:[[\"pay\",8],\"1000 Денежные средства\",17]",
+    "L-FXCFICVZ": "row:[[\"inv\",68],\"4000 Выручка\",68]",
+    "L-FXHVF35M": "row:[[\"inv\",34],\"4000 Выручка\",34]",
+    "L-G4P63GKS": "row:[[\"bg\",78],\"6200 Заработная плата\",null]",
+    "L-G7GDQARB": "row:[[\"pay\",22],\"1000 Денежные средства\",23]",
+    "L-GFTW3EEX": "row:[[\"inv\",13],\"4000 Выручка\",13]",
+    "L-GH72JR52": "row:[[\"inv\",69],\"4000 Выручка\",69]",
+    "L-GI5SWTMN": "row:[[\"bg\",26],\"1000 Денежные средства\",null]",
+    "L-GJDANFJC": "row:[[\"bg\",42],\"1000 Денежные средства\",null]",
+    "L-GLMQUWVP": "row:[[\"pay\",37],\"1200 Дебиторская задолженность\",59]",
+    "L-GNNVS5PQ": "row:[[\"inv\",38],\"4000 Выручка\",38]",
+    "L-GPPHAIGM": "row:[[\"inv\",81],\"4000 Выручка\",81]",
+    "L-GPZQA3M5": "row:[[\"inv\",31],\"4000 Выручка\",31]",
+    "L-GREV2TZI": "row:[[\"inv\",41],\"1200 Дебиторская задолженность\",41]",
+    "L-GRIJDMM4": "row:[[\"inv\",31],\"1200 Дебиторская задолженность\",31]",
+    "L-GUCEWPAR": "row:[[\"pay\",46],\"1200 Дебиторская задолженность\",78]",
+    "L-GXY5KPXQ": "row:[[\"pay\",26],\"7800 Курсовые разницы\",38]",
+    "L-H5HA3IU3": "row:[[\"pay\",41],\"1000 Денежные средства\",64]",
+    "L-H6PIC7QT": "row:[[\"pay\",42],\"2900 Невыясненные поступления\",null]",
+    "L-HEHHK6T5": "row:[[\"bg\",6],\"1000 Денежные средства\",null]",
+    "L-HEONOR7U": "row:[[\"bg\",12],\"6400 Банковские комиссии\",null]",
+    "L-HGTRDVWB": "row:[[\"bg\",81],\"1000 Денежные средства\",null]",
+    "L-HO2QY74E": "row:[[\"pay\",31],\"1000 Денежные средства\",46]",
+    "L-HS43VZZQ": "row:[[\"inv\",34],\"1200 Дебиторская задолженность\",34]",
+    "L-HTXHVXZF": "row:[[\"inv\",2],\"1200 Дебиторская задолженность\",2]",
+    "L-ICOTDGGH": "row:[[\"pay\",6],\"1200 Дебиторская задолженность\",16]",
+    "L-IDUUZLSA": "row:[[\"bg\",87],\"6300 Коммунальные услуги\",null]",
+    "L-IEVER7HG": "row:[[\"inv\",74],\"1200 Дебиторская задолженность\",74]",
+    "L-IH66LSLV": "row:[[\"inv\",78],\"1200 Дебиторская задолженность\",78]",
+    "L-IHI3BSL6": "row:[[\"pay\",20],\"2900 Невыясненные поступления\",null]",
+    "L-IZ7L64K3": "row:[[\"bg\",42],\"6300 Коммунальные услуги\",null]",
+    "L-J3Q7K5YD": "row:[[\"inv\",57],\"1200 Дебиторская задолженность\",57]",
+    "L-J4WCN72L": "row:[[\"inv\",85],\"4000 Выручка\",85]",
+    "L-J7ODEQQR": "row:[[\"bg\",4],\"6200 Заработная плата\",null]",
+    "L-JB7D3ZYX": "row:[[\"inv\",84],\"1200 Дебиторская задолженность\",84]",
+    "L-JBPUHLGM": "row:[[\"pay\",33],\"7800 Курсовые разницы\",49]",
+    "L-JE37XQWD": "row:[[\"pay\",24],\"7800 Курсовые разницы\",33]",
+    "L-JFNUNIP6": "row:[[\"pay\",17],\"1000 Денежные средства\",13]",
+    "L-JHE6JFKG": "row:[[\"pay\",6],\"1000 Денежные средства\",null]",
+    "L-JKQCRNRA": "row:[[\"bg\",40],\"1000 Денежные средства\",null]",
+    "L-JM4DTRZR": "row:[[\"bg\",61],\"1000 Денежные средства\",null]",
+    "L-JM5QHBF4": "row:[[\"bg\",22],\"6300 Коммунальные услуги\",null]",
+    "L-JNVJBA4X": "row:[[\"bg\",16],\"6100 Аренда помещений\",null]",
+    "L-JOGTY354": "row:[[\"inv\",86],\"1200 Дебиторская задолженность\",86]",
+    "L-JPQK2FMX": "row:[[\"inv\",24],\"1200 Дебиторская задолженность\",24]",
+    "L-JSVGJZFW": "row:[[\"inv\",50],\"1200 Дебиторская задолженность\",50]",
+    "L-JTGOUF2L": "row:[[\"inv\",14],\"1200 Дебиторская задолженность\",14]",
+    "L-JXBLOUEY": "row:[[\"bg\",56],\"1000 Денежные средства\",null]",
+    "L-JXBRAJ3Q": "row:[[\"pay\",2],\"1200 Дебиторская задолженность\",47]",
+    "L-JYIYWLHY": "row:[[\"pay\",33],\"1200 Дебиторская задолженность\",49]",
+    "L-JZVJWYKI": "row:[[\"bg\",49],\"1000 Денежные средства\",null]",
+    "L-K3UABRIA": "row:[[\"bg\",2],\"1000 Денежные средства\",null]",
+    "L-K43FL4BO": "row:[[\"inv\",73],\"4000 Выручка\",73]",
+    "L-KEB4W7FX": "row:[[\"bg\",34],\"1000 Денежные средства\",null]",
+    "L-KFWKNWY4": "row:[[\"inv\",1],\"1200 Дебиторская задолженность\",1]",
+    "L-KGW3TCTE": "row:[[\"inv\",67],\"4000 Выручка\",67]",
+    "L-KGYOJ2CR": "row:[[\"inv\",8],\"4000 Выручка\",8]",
+    "L-KHO75BNB": "row:[[\"pay\",9],\"1200 Дебиторская задолженность\",1]",
+    "L-KIDK44NF": "row:[[\"bg\",28],\"6100 Аренда помещений\",null]",
+    "L-KJ2HBKVU": "row:[[\"pay\",7],\"1200 Дебиторская задолженность\",57]",
+    "L-KLKPPV7H": "row:[[\"bg\",3],\"1000 Денежные средства\",null]",
+    "L-KM35H5AS": "row:[[\"bg\",19],\"1000 Денежные средства\",null]",
+    "L-KUENCTDD": "row:[[\"inv\",16],\"4000 Выручка\",16]",
+    "L-L2ULIZO4": "row:[[\"inv\",72],\"1200 Дебиторская задолженность\",72]",
+    "L-L6WOW3XU": "row:[[\"bg\",23],\"6300 Коммунальные услуги\",null]",
+    "L-L7EHUKK2": "row:[[\"bg\",62],\"1000 Денежные средства\",null]",
+    "L-LACU5ZCU": "row:[[\"inv\",26],\"4000 Выручка\",26]",
+    "L-LCWNSHKZ": "row:[[\"bg\",60],\"6200 Заработная плата\",null]",
+    "L-LF6CJ7JA": "row:[[\"inv\",49],\"4000 Выручка\",49]",
+    "L-LFEIJ7K3": "row:[[\"inv\",65],\"1200 Дебиторская задолженность\",65]",
+    "L-LHAGU3QI": "row:[[\"pay\",36],\"1200 Дебиторская задолженность\",53]",
+    "L-LIFSTSJE": "row:[[\"pay\",1],\"1200 Дебиторская задолженность\",47]",
+    "L-LLAVFYHW": "row:[[\"inv\",7],\"4000 Выручка\",7]",
+    "L-LLKU3UQ3": "row:[[\"pay\",5],\"1200 Дебиторская задолженность\",73]",
+    "L-LM3SKDGD": "row:[[\"inv\",28],\"1200 Дебиторская задолженность\",28]",
+    "L-LNHPKK2H": "row:[[\"bg\",91],\"1000 Денежные средства\",null]",
+    "L-LOJX7XZE": "row:[[\"inv\",33],\"4000 Выручка\",33]",
+    "L-LS5G5BOZ": "row:[[\"bg\",86],\"1000 Денежные средства\",null]",
+    "L-LSY2OJXY": "row:[[\"pay\",47],\"1200 Дебиторская задолженность\",80]",
+    "L-LTUF2CTT": "row:[[\"bg\",7],\"1000 Денежные средства\",null]",
+    "L-LUQ64LN4": "row:[[\"bg\",76],\"6100 Аренда помещений\",null]",
+    "L-M4TS5L37": "row:[[\"bg\",36],\"6100 Аренда помещений\",null]",
+    "L-M67KPTP6": "row:[[\"inv\",40],\"4000 Выручка\",40]",
+    "L-M7PXD6LU": "row:[[\"pay\",9],\"1000 Денежные средства\",1]",
+    "L-MBD76QG3": "row:[[\"bg\",20],\"1000 Денежные средства\",null]",
+    "L-MCCWX6ZU": "row:[[\"bg\",27],\"6200 Заработная плата\",null]",
+    "L-MCDBSIJL": "row:[[\"inv\",52],\"4000 Выручка\",52]",
+    "L-METKY7VR": "row:[[\"pay\",30],\"1000 Денежные средства\",45]",
+    "L-MGNIJELR": "row:[[\"inv\",55],\"4000 Выручка\",55]",
+    "L-MGSNT3EQ": "row:[[\"pay\",29],\"1000 Денежные средства\",44]",
+    "L-MKZ7XD4B": "row:[[\"bg\",33],\"1000 Денежные средства\",null]",
+    "L-MQTHZJUR": "row:[[\"bg\",84],\"6100 Аренда помещений\",null]",
+    "L-MRXX45AE": "row:[[\"bg\",18],\"1000 Денежные средства\",null]",
+    "L-MSKTGQQR": "row:[[\"inv\",81],\"1200 Дебиторская задолженность\",81]",
+    "L-MSR4GJC4": "row:[[\"inv\",75],\"4000 Выручка\",75]",
+    "L-MTJXGCMV": "row:[[\"pay\",4],\"1200 Дебиторская задолженность\",24]",
+    "L-MUODL53J": "row:[[\"bg\",63],\"1000 Денежные средства\",null]",
+    "L-MZ7E7SAY": "row:[[\"bg\",25],\"6300 Коммунальные услуги\",null]",
+    "L-N2UALRJL": "row:[[\"pay\",11],\"1200 Дебиторская задолженность\",79]",
+    "L-N4VHGW63": "row:[[\"bg\",69],\"1000 Денежные средства\",null]",
+    "L-N5WYPCV2": "row:[[\"pay\",1],\"1000 Денежные средства\",47]",
+    "L-N6WL5JOE": "row:[[\"pay\",21],\"1200 Дебиторская задолженность\",22]",
+    "L-NAPH3OY4": "row:[[\"inv\",20],\"4000 Выручка\",20]",
+    "L-NLKBF4CX": "row:[[\"pay\",13],\"2900 Невыясненные поступления\",null]",
+    "L-NMI45XMT": "row:[[\"bg\",74],\"1000 Денежные средства\",null]",
+    "L-NQAPP5K7": "row:[[\"pay\",20],\"1200 Дебиторская задолженность\",21]",
+    "L-NWKNFNOO": "row:[[\"bg\",55],\"6200 Заработная плата\",null]",
+    "L-O5ZGIMD5": "row:[[\"inv\",30],\"4000 Выручка\",30]",
+    "L-O62IIMTV": "row:[[\"bg\",41],\"1000 Денежные средства\",null]",
+    "L-O63BHZQF": "row:[[\"inv\",11],\"1200 Дебиторская задолженность\",11]",
+    "L-O6KIZ4WP": "row:[[\"bg\",54],\"1000 Денежные средства\",null]",
+    "L-OC7E7ON3": "row:[[\"bg\",45],\"1000 Денежные средства\",null]",
+    "L-OCJGG7MW": "row:[[\"bg\",85],\"6200 Заработная плата\",null]",
+    "L-ODJSLYCH": "row:[[\"inv\",29],\"4000 Выручка\",29]",
+    "L-OJG4IOVX": "row:[[\"inv\",80],\"4000 Выручка\",80]",
+    "L-OPCGDY7Z": "row:[[\"bg\",50],\"1000 Денежные средства\",null]",
+    "L-OPNZMGSB": "row:[[\"inv\",66],\"4000 Выручка\",66]",
+    "L-OQRELTO6": "row:[[\"bg\",35],\"6200 Заработная плата\",null]",
+    "L-OUIXIA2N": "row:[[\"bg\",70],\"6300 Коммунальные услуги\",null]",
+    "L-OZB6M3ZX": "row:[[\"inv\",84],\"4000 Выручка\",84]",
+    "L-P4RAK3XP": "row:[[\"inv\",32],\"1200 Дебиторская задолженность\",32]",
+    "L-P54Q6EXT": "row:[[\"bg\",89],\"1000 Денежные средства\",null]",
+    "L-P5QT73FX": "row:[[\"pay\",12],\"1000 Денежные средства\",10]",
+    "L-P6FIE5P3": "row:[[\"inv\",53],\"1200 Дебиторская задолженность\",53]",
+    "L-PBM6GVVC": "row:[[\"bg\",28],\"1000 Денежные средства\",null]",
+    "L-PE4FENBF": "row:[[\"bg\",52],\"1000 Денежные средства\",null]",
+    "L-PF3U6CO6": "row:[[\"inv\",23],\"4000 Выручка\",23]",
+    "L-PF77VGDE": "row:[[\"bg\",57],\"6400 Банковские комиссии\",null]",
+    "L-PGTV2AND": "row:[[\"inv\",36],\"1200 Дебиторская задолженность\",36]",
+    "L-PM3FQRCM": "row:[[\"bg\",67],\"6300 Коммунальные услуги\",null]",
+    "L-PM4DSFEZ": "row:[[\"bg\",43],\"6300 Коммунальные услуги\",null]",
+    "L-POHRN5YO": "row:[[\"bg\",2],\"6400 Банковские комиссии\",null]",
+    "L-POVJNIYC": "row:[[\"inv\",73],\"1200 Дебиторская задолженность\",73]",
+    "L-PTY44SZR": "row:[[\"inv\",4],\"4000 Выручка\",4]",
+    "L-PYCGNPYW": "row:[[\"inv\",42],\"1200 Дебиторская задолженность\",42]",
+    "L-Q2SCAXSF": "row:[[\"pay\",6],\"1200 Дебиторская задолженность\",30]",
+    "L-Q526E3SU": "row:[[\"inv\",3],\"4000 Выручка\",3]",
+    "L-Q57IVKOI": "row:[[\"inv\",67],\"1200 Дебиторская задолженность\",67]",
+    "L-QB4D2SVP": "row:[[\"inv\",88],\"1200 Дебиторская задолженность\",88]",
+    "L-QBFJ5HOU": "row:[[\"bg\",77],\"6200 Заработная плата\",null]",
+    "L-QBWALJSF": "row:[[\"inv\",4],\"1200 Дебиторская задолженность\",4]",
+    "L-QFAYRKMI": "row:[[\"bg\",43],\"1000 Денежные средства\",null]",
+    "L-QJDD7SAV": "row:[[\"pay\",45],\"1200 Дебиторская задолженность\",76]",
+    "L-QJJVMP7J": "row:[[\"bg\",93],\"6500 Хозяйственные расходы\",null]",
+    "L-QKYT7JPB": "row:[[\"bg\",64],\"1000 Денежные средства\",null]",
+    "L-QLFGYSIK": "row:[[\"bg\",65],\"1000 Денежные средства\",null]",
+    "L-QM6XJN3K": "row:[[\"inv\",63],\"1200 Дебиторская задолженность\",63]",
+    "L-QM7M3NDP": "row:[[\"bg\",60],\"1000 Денежные средства\",null]",
+    "L-QMYHTXME": "row:[[\"bg\",90],\"6400 Банковские комиссии\",null]",
+    "L-QQV7MGEV": "row:[[\"pay\",22],\"7800 Курсовые разницы\",23]",
+    "L-QTAWPDES": "row:[[\"inv\",43],\"4000 Выручка\",43]",
+    "L-QWHCXHQP": "row:[[\"bg\",19],\"6100 Аренда помещений\",null]",
+    "L-QXSKP32D": "row:[[\"bg\",11],\"6400 Банковские комиссии\",null]",
+    "L-R37SFUYC": "row:[[\"pay\",36],\"1000 Денежные средства\",53]",
+    "L-R5FM5FYE": "row:[[\"pay\",20],\"1000 Денежные средства\",21]",
+    "L-RCVPCHIH": "row:[[\"inv\",29],\"1200 Дебиторская задолженность\",29]",
+    "L-REFFKATR": "row:[[\"pay\",43],\"1200 Дебиторская задолженность\",68]",
+    "L-RESCDYKS": "row:[[\"inv\",46],\"4000 Выручка\",46]",
+    "L-RIJ3OL44": "row:[[\"inv\",9],\"1200 Дебиторская задолженность\",9]",
+    "L-RIWESMM5": "row:[[\"bg\",54],\"6400 Банковские комиссии\",null]",
+    "L-RKXCNLUQ": "row:[[\"pay\",17],\"1200 Дебиторская задолженность\",13]",
+    "L-RLHCAIO5": "row:[[\"pay\",34],\"1200 Дебиторская задолженность\",51]",
+    "L-RNUAB4ZZ": "row:[[\"inv\",24],\"4000 Выручка\",24]",
+    "L-RPZDH6BV": "row:[[\"bg\",49],\"6300 Коммунальные услуги\",null]",
+    "L-RQIKK4SO": "row:[[\"bg\",44],\"1000 Денежные средства\",null]",
+    "L-RSA5SWM4": "row:[[\"inv\",44],\"4000 Выручка\",44]",
+    "L-RV4BMHO5": "row:[[\"pay\",27],\"1200 Дебиторская задолженность\",39]",
+    "L-RVPZ4H7C": "row:[[\"pay\",16],\"1200 Дебиторская задолженность\",3]",
+    "L-RWGM7ERV": "row:[[\"inv\",19],\"4000 Выручка\",19]",
+    "L-RYKKDAZF": "row:[[\"pay\",41],\"7800 Курсовые разницы\",64]",
+    "L-S26OYCOA": "row:[[\"inv\",6],\"1200 Дебиторская задолженность\",6]",
+    "L-S2DHIX37": "row:[[\"bg\",80],\"1000 Денежные средства\",null]",
+    "L-S36XJVZC": "row:[[\"bg\",18],\"6300 Коммунальные услуги\",null]",
+    "L-S3GG7G5J": "row:[[\"bg\",75],\"1000 Денежные средства\",null]",
+    "L-S6PU7C5T": "row:[[\"inv\",58],\"4000 Выручка\",58]",
+    "L-S6YYEDKH": "row:[[\"pay\",24],\"1200 Дебиторская задолженность\",33]",
+    "L-S7YXZTLA": "row:[[\"bg\",20],\"6500 Хозяйственные расходы\",null]",
+    "L-SAN2PQS4": "row:[[\"inv\",70],\"1200 Дебиторская задолженность\",70]",
+    "L-SBW224M3": "row:[[\"inv\",25],\"4000 Выручка\",25]",
+    "L-SDXK5VPL": "row:[[\"pay\",4],\"1000 Денежные средства\",24]",
+    "L-SE6JEIEO": "row:[[\"bg\",76],\"1000 Денежные средства\",null]",
+    "L-SFDRJG7U": "row:[[\"pay\",44],\"1200 Дебиторская задолженность\",75]",
+    "L-SG36IHMX": "row:[[\"pay\",38],\"1200 Дебиторская задолженность\",60]",
+    "L-SGG7QI56": "row:[[\"pay\",9],\"7800 Курсовые разницы\",1]",
+    "L-SHS4KTJQ": "row:[[\"bg\",14],\"1000 Денежные средства\",null]",
+    "L-SN7OXLYU": "row:[[\"inv\",46],\"1200 Дебиторская задолженность\",46]",
+    "L-SRKPR2JY": "row:[[\"pay\",23],\"1200 Дебиторская задолженность\",25]",
+    "L-STD6V6PZ": "row:[[\"pay\",32],\"1200 Дебиторская задолженность\",48]",
+    "L-SU47Y4HD": "row:[[\"bg\",41],\"6300 Коммунальные услуги\",null]",
+    "L-SUIDO3TO": "row:[[\"inv\",80],\"1200 Дебиторская задолженность\",80]",
+    "L-SWJAWVZR": "row:[[\"bg\",87],\"1000 Денежные средства\",null]",
+    "L-SZLJECLS": "row:[[\"bg\",37],\"1000 Денежные средства\",null]",
+    "L-T253AENX": "row:[[\"inv\",8],\"1200 Дебиторская задолженность\",8]",
+    "L-T6F5FH73": "row:[[\"bg\",92],\"1000 Денежные средства\",null]",
+    "L-T6GGZ552": "row:[[\"inv\",74],\"4000 Выручка\",74]",
+    "L-TBSVBPHA": "row:[[\"bg\",95],\"6500 Хозяйственные расходы\",null]",
+    "L-TCSANX7R": "row:[[\"inv\",43],\"1200 Дебиторская задолженность\",43]",
+    "L-TE6GBM7J": "row:[[\"bg\",47],\"6300 Коммунальные услуги\",null]",
+    "L-TEG2PNLQ": "row:[[\"inv\",55],\"1200 Дебиторская задолженность\",55]",
+    "L-TET7FFT4": "row:[[\"bg\",62],\"6400 Банковские комиссии\",null]",
+    "L-TFA6C47R": "row:[[\"pay\",18],\"1200 Дебиторская задолженность\",18]",
+    "L-THGBWC7H": "row:[[\"bg\",72],\"1000 Денежные средства\",null]",
+    "L-TLCH6JIO": "row:[[\"pay\",17],\"7800 Курсовые разницы\",13]",
+    "L-TR5W3USI": "row:[[\"inv\",54],\"1200 Дебиторская задолженность\",54]",
+    "L-TSPYADNX": "row:[[\"pay\",48],\"1000 Денежные средства\",81]",
+    "L-TTNI5UTB": "row:[[\"inv\",30],\"1200 Дебиторская задолженность\",30]",
+    "L-TU5N4B5B": "row:[[\"inv\",54],\"4000 Выручка\",54]",
+    "L-TU72ESIX": "row:[[\"pay\",26],\"1000 Денежные средства\",38]",
+    "L-TVIB4LY7": "row:[[\"bg\",29],\"6200 Заработная плата\",null]",
+    "L-TWFR4MY5": "row:[[\"bg\",8],\"1000 Денежные средства\",null]",
+    "L-TWMY7NXG": "row:[[\"inv\",13],\"1200 Дебиторская задолженность\",13]",
+    "L-TZSIHQCK": "row:[[\"bg\",68],\"1000 Денежные средства\",null]",
+    "L-U2FQN2ET": "row:[[\"bg\",92],\"6200 Заработная плата\",null]",
+    "L-U5NOLKE5": "row:[[\"pay\",35],\"1000 Денежные средства\",52]",
+    "L-UBWFUKQ4": "row:[[\"inv\",85],\"1200 Дебиторская задолженность\",85]",
+    "L-UCRLEZND": "row:[[\"bg\",65],\"6200 Заработная плата\",null]",
+    "L-UF5DVLYI": "row:[[\"inv\",58],\"1200 Дебиторская задолженность\",58]",
+    "L-ULH4HOAK": "row:[[\"pay\",3],\"7800 Курсовые разницы\",24]",
+    "L-UMNOCES4": "row:[[\"bg\",30],\"1000 Денежные средства\",null]",
+    "L-UPX4WGZJ": "row:[[\"bg\",83],\"6500 Хозяйственные расходы\",null]",
+    "L-USUBGBTZ": "row:[[\"pay\",19],\"1200 Дебиторская задолженность\",19]",
+    "L-UUFANTQU": "row:[[\"pay\",10],\"7800 Курсовые разницы\",1]",
+    "L-UWPZDRWI": "row:[[\"inv\",42],\"4000 Выручка\",42]",
+    "L-V2TI4QME": "row:[[\"inv\",51],\"4000 Выручка\",51]",
+    "L-V3VP6SAR": "row:[[\"pay\",43],\"1000 Денежные средства\",68]",
+    "L-V5NQSGQE": "row:[[\"inv\",62],\"4000 Выручка\",62]",
+    "L-V5RHSMFM": "row:[[\"inv\",37],\"1200 Дебиторская задолженность\",37]",
+    "L-VBHRUEU5": "row:[[\"pay\",4],\"7800 Курсовые разницы\",24]",
+    "L-VC4B2SPP": "row:[[\"bg\",13],\"6100 Аренда помещений\",null]",
+    "L-VCZNNYQ7": "row:[[\"inv\",22],\"1200 Дебиторская задолженность\",22]",
+    "L-VE5XVUFI": "row:[[\"bg\",7],\"6300 Коммунальные услуги\",null]",
+    "L-VEAQPZIK": "row:[[\"pay\",16],\"1000 Денежные средства\",3]",
+    "L-VEE4X3DT": "row:[[\"inv\",60],\"1200 Дебиторская задолженность\",60]",
+    "L-VGHF2SJW": "row:[[\"inv\",61],\"4000 Выручка\",61]",
+    "L-VHC7NW7U": "row:[[\"bg\",11],\"1000 Денежные средства\",null]",
+    "L-VHYNLIXB": "row:[[\"inv\",17],\"4000 Выручка\",17]",
+    "L-VQCDHIWW": "row:[[\"bg\",86],\"6100 Аренда помещений\",null]",
+    "L-VQZMNPCE": "row:[[\"bg\",77],\"1000 Денежные средства\",null]",
+    "L-VSQZ5NB5": "row:[[\"bg\",52],\"6100 Аренда помещений\",null]",
+    "L-VTGCWDGJ": "row:[[\"pay\",13],\"1000 Денежные средства\",null]",
+    "L-VYJVQ43I": "row:[[\"inv\",20],\"1200 Дебиторская задолженность\",20]",
+    "L-W2VQ5PUW": "row:[[\"bg\",48],\"6400 Банковские комиссии\",null]",
+    "L-W33ZQ2XW": "row:[[\"pay\",29],\"7800 Курсовые разницы\",44]",
+    "L-W5FNA6GK": "row:[[\"bg\",84],\"1000 Денежные средства\",null]",
+    "L-W6DO7KJF": "row:[[\"pay\",48],\"2900 Невыясненные поступления\",null]",
+    "L-WGHVAWWH": "row:[[\"bg\",23],\"1000 Денежные средства\",null]",
+    "L-WI4XKKYV": "row:[[\"inv\",50],\"4000 Выручка\",50]",
+    "L-WLLT3CWM": "row:[[\"bg\",71],\"1000 Денежные средства\",null]",
+    "L-WNL2GVLS": "row:[[\"bg\",31],\"1000 Денежные средства\",null]",
+    "L-WOPAQWTA": "row:[[\"inv\",56],\"4000 Выручка\",56]",
+    "L-WOZBJH6R": "row:[[\"bg\",51],\"1000 Денежные средства\",null]",
+    "L-WPPSPWKT": "row:[[\"bg\",38],\"1000 Денежные средства\",null]",
+    "L-WQNX6FQC": "row:[[\"inv\",71],\"4000 Выручка\",71]",
+    "L-WSKXCQGO": "row:[[\"inv\",53],\"4000 Выручка\",53]",
+    "L-WYVR5BCK": "row:[[\"bg\",51],\"6100 Аренда помещений\",null]",
+    "L-X3DOJTUR": "row:[[\"pay\",46],\"1000 Денежные средства\",78]",
+    "L-X42URN3G": "row:[[\"bg\",88],\"1000 Денежные средства\",null]",
+    "L-X4ACVRG2": "row:[[\"bg\",64],\"6500 Хозяйственные расходы\",null]",
+    "L-XB3Y5L7N": "row:[[\"bg\",79],\"1000 Денежные средства\",null]",
+    "L-XENNZFWD": "row:[[\"pay\",7],\"1000 Денежные средства\",57]",
+    "L-XF5MF6FU": "row:[[\"inv\",32],\"4000 Выручка\",32]",
+    "L-XKE6QUK5": "row:[[\"bg\",3],\"6500 Хозяйственные расходы\",null]",
+    "L-XKYQMHUA": "row:[[\"pay\",35],\"1200 Дебиторская задолженность\",52]",
+    "L-XNKPL7PG": "row:[[\"bg\",96],\"6400 Банковские комиссии\",null]",
+    "L-XQWZSDRL": "row:[[\"pay\",22],\"1200 Дебиторская задолженность\",23]",
+    "L-XSHIWSFC": "row:[[\"bg\",30],\"6500 Хозяйственные расходы\",null]",
+    "L-XSQMY6CU": "row:[[\"pay\",38],\"1000 Денежные средства\",60]",
+    "L-XXYZXO4V": "row:[[\"bg\",29],\"1000 Денежные средства\",null]",
+    "L-XZ3TNYF3": "row:[[\"bg\",32],\"6300 Коммунальные услуги\",null]",
+    "L-Y3LELGCA": "row:[[\"inv\",23],\"1200 Дебиторская задолженность\",23]",
+    "L-Y4IQPEFW": "row:[[\"inv\",44],\"1200 Дебиторская задолженность\",44]",
+    "L-Y7GCLY5A": "row:[[\"inv\",68],\"1200 Дебиторская задолженность\",68]",
+    "L-YCVWWTUT": "row:[[\"inv\",15],\"4000 Выручка\",15]",
+    "L-YEC33OBU": "row:[[\"inv\",86],\"4000 Выручка\",86]",
+    "L-YIY6NIRA": "row:[[\"bg\",22],\"1000 Денежные средства\",null]",
+    "L-YJJ7MDJQ": "row:[[\"pay\",23],\"1000 Денежные средства\",25]",
+    "L-YK5FMDD4": "row:[[\"inv\",64],\"4000 Выручка\",64]",
+    "L-YKEZNOO7": "row:[[\"bg\",17],\"6100 Аренда помещений\",null]",
+    "L-YLO4DR2Y": "row:[[\"bg\",39],\"1000 Денежные средства\",null]",
+    "L-YMFK6WL4": "row:[[\"bg\",78],\"1000 Денежные средства\",null]",
+    "L-YPPGOCAB": "row:[[\"inv\",14],\"4000 Выручка\",14]",
+    "L-YT67P2HF": "row:[[\"inv\",60],\"4000 Выручка\",60]",
+    "L-YVH2FMXY": "row:[[\"bg\",72],\"6200 Заработная плата\",null]",
+    "L-YWACJMP6": "row:[[\"pay\",27],\"1000 Денежные средства\",39]",
+    "L-Z22WQ2OZ": "row:[[\"bg\",21],\"1000 Денежные средства\",null]",
+    "L-Z34GH7OU": "row:[[\"inv\",45],\"4000 Выручка\",45]",
+    "L-Z4GCAT65": "row:[[\"inv\",47],\"4000 Выручка\",47]",
+    "L-Z4K7C66F": "row:[[\"inv\",18],\"1200 Дебиторская задолженность\",18]",
+    "L-Z5IMPZD2": "row:[[\"bg\",96],\"1000 Денежные средства\",null]",
+    "L-ZA7XQQGD": "row:[[\"pay\",25],\"1000 Денежные средства\",36]",
+    "L-ZCDCZ3JK": "row:[[\"bg\",21],\"6400 Банковские комиссии\",null]",
+    "L-ZDWN7BSU": "row:[[\"inv\",6],\"4000 Выручка\",6]",
+    "L-ZELY5WXZ": "row:[[\"bg\",58],\"1000 Денежные средства\",null]",
+    "L-ZFBG43HL": "row:[[\"bg\",61],\"6100 Аренда помещений\",null]",
+    "L-ZHTJ4DZP": "row:[[\"inv\",12],\"4000 Выручка\",12]",
+    "L-ZOCAX5IP": "row:[[\"pay\",38],\"7800 Курсовые разницы\",60]",
+    "L-ZOIQJKAN": "row:[[\"inv\",61],\"1200 Дебиторская задолженность\",61]",
+    "L-ZQKNCJDA": "row:[[\"inv\",63],\"4000 Выручка\",63]",
+    "L-ZTYEE36F": "row:[[\"bg\",25],\"1000 Денежные средства\",null]",
+    "L-ZVBLUWLM": "row:[[\"pay\",42],\"1200 Дебиторская задолженность\",66]",
+    "L-ZX37YHOX": "row:[[\"pay\",10],\"1200 Дебиторская задолженность\",1]",
+    "L-ZXYTOZNZ": "row:[[\"pay\",5],\"1200 Дебиторская задолженность\",32]",
+    "PAY-3AH25KQ": "pay:44",
+    "PAY-3JLNYJX": "pay:31",
+    "PAY-555NEYK": "pay:2",
+    "PAY-6NS4V54": "pay:6",
+    "PAY-6NSY5P4": "pay:15",
+    "PAY-7TD4B74": "pay:45",
+    "PAY-BMMKI57": "pay:21",
+    "PAY-DJVAQDW": "pay:23",
+    "PAY-DM5EUZ5": "pay:18",
+    "PAY-E22UZYT": "pay:32",
+    "PAY-EGXH6NU": "pay:33",
+    "PAY-EVX6XHD": "pay:17",
+    "PAY-F27DFFT": "pay:40",
+    "PAY-FMYOFGR": "pay:3",
+    "PAY-FRFZQ6H": "pay:41",
+    "PAY-GIUB3UY": "pay:1",
+    "PAY-GLHC2HI": "pay:10",
+    "PAY-HDCGRGN": "pay:16",
+    "PAY-I7J6RWJ": "pay:8",
+    "PAY-IWNXRNY": "pay:34",
+    "PAY-JC7NRGS": "pay:7",
+    "PAY-JZKXUM5": "pay:12",
+    "PAY-LEJE6G7": "pay:14",
+    "PAY-NCF7UVE": "pay:37",
+    "PAY-NHC7THJ": "pay:24",
+    "PAY-NHTEANI": "pay:22",
+    "PAY-ODEN5LA": "pay:20",
+    "PAY-ON74KM4": "pay:29",
+    "PAY-PXRG3HO": "pay:13",
+    "PAY-RAM7ZGW": "pay:46",
+    "PAY-RDGD3PE": "pay:25",
+    "PAY-RSUHYU6": "pay:39",
+    "PAY-SWECFCW": "pay:35",
+    "PAY-SY7ODX2": "pay:27",
+    "PAY-UCQMTBN": "pay:48",
+    "PAY-UPG7PIC": "pay:30",
+    "PAY-URWF4QV": "pay:43",
+    "PAY-UZ7C5XE": "pay:36",
+    "PAY-UZQDUCM": "pay:47",
+    "PAY-V5QMUAK": "pay:42",
+    "PAY-VEXVOJM": "pay:38",
+    "PAY-VFGVACC": "pay:4",
+    "PAY-VLR33B7": "pay:11",
+    "PAY-WJQKSSN": "pay:26",
+    "PAY-XJAYHOV": "pay:9",
+    "PAY-XZYRZEP": "pay:28",
+    "PAY-YUFWYNS": "pay:19",
+    "PAY-YXYRZ7O": "pay:5"
+  }
+}

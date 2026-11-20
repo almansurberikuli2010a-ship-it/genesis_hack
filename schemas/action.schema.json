@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "auditgym/action.schema.json",
+  "title": "step(action) — действие агента (словарь или JSON-строка)",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "table"
+      ],
+      "properties": {
+        "type": {
+          "const": "list_records"
+        },
+        "table": {
+          "enum": [
+            "ledger",
+            "invoices",
+            "payments",
+            "fx"
+          ]
+        },
+        "cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "больше 50 обрезается до 50"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "table",
+        "id"
+      ],
+      "properties": {
+        "type": {
+          "const": "get_record"
+        },
+        "table": {
+          "enum": [
+            "ledger",
+            "invoices",
+            "payments",
+            "fx"
+          ]
+        },
+        "id": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "doc_id"
+      ],
+      "properties": {
+        "type": {
+          "const": "get_document"
+        },
+        "doc_id": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "expression"
+      ],
+      "properties": {
+        "type": {
+          "const": "calculator"
+        },
+        "expression": {
+          "type": "string",
+          "maxLength": 300
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "findings"
+      ],
+      "properties": {
+        "type": {
+          "const": "submit"
+        },
+        "findings": {
+          "$ref": "findings.schema.json"
+        }
+      }
+    }
+  ]
+}

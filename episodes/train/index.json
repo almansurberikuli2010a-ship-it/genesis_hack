@@ -1,0 +1,152 @@
+[
+  {
+    "name": "чистая_компания",
+    "seed": 1001,
+    "episode_id": "EP-J5LJOHPNKX",
+    "digest": "0976a2df778acb7931462b6c3dd7fadc7fe72366dee6dbc0407e6b4dafc53400",
+    "n_issues": 0,
+    "counts": {
+      "ledger": 494,
+      "journal_entries": 234,
+      "invoices": 78,
+      "payments": 47,
+      "fx": 88,
+      "documents": 125
+    }
+  },
+  {
+    "name": "чистая_много_ловушек",
+    "seed": 1002,
+    "episode_id": "EP-6AP2FKFANU",
+    "digest": "0ba47000188188b48404d566c417326340380a91188d4f79cbf744ca09b86394",
+    "n_issues": 0,
+    "counts": {
+      "ledger": 557,
+      "journal_entries": 267,
+      "invoices": 92,
+      "payments": 58,
+      "fx": 88,
+      "documents": 150
+    }
+  },
+  {
+    "name": "дубль_и_распределение",
+    "seed": 1003,
+    "episode_id": "EP-RMQJZERI27",
+    "digest": "1a6e1195b6fb8f42e61edb22541ddde3d7bbbcaeb615e90132ddeb38eb03c9ce",
+    "n_issues": 2,
+    "counts": {
+      "ledger": 495,
+      "journal_entries": 235,
+      "invoices": 77,
+      "payments": 45,
+      "fx": 132,
+      "documents": 122
+    }
+  },
+  {
+    "name": "курс_и_период",
+    "seed": 1004,
+    "episode_id": "EP-CXZJKDVRIH",
+    "digest": "f69aa25c9f6f696f0482addd1ae663a586e666048f86eb48c56395f06bc20b07",
+    "n_issues": 3,
+    "counts": {
+      "ledger": 583,
+      "journal_entries": 278,
+      "invoices": 99,
+      "payments": 59,
+      "fx": 86,
+      "documents": 158
+    }
+  },
+  {
+    "name": "четыре_типа",
+    "seed": 1005,
+    "episode_id": "EP-3XLNVLLMFR",
+    "digest": "3f7a30804023face6633a380f1a353fcce2406a4b4dc8e73b92831e04353b60e",
+    "n_issues": 4,
+    "counts": {
+      "ledger": 482,
+      "journal_entries": 229,
+      "invoices": 81,
+      "payments": 53,
+      "fx": 86,
+      "documents": 134
+    }
+  },
+  {
+    "name": "четыре_типа_x2",
+    "seed": 1006,
+    "episode_id": "EP-VJHLRF2Z65",
+    "digest": "6150f46145650ad9e066b4db4dd92f83dfa619305532ef5fa5c9bffcc8e9e030",
+    "n_issues": 8,
+    "counts": {
+      "ledger": 471,
+      "journal_entries": 220,
+      "invoices": 77,
+      "payments": 43,
+      "fx": 88,
+      "documents": 120
+    }
+  },
+  {
+    "name": "взаимодействие_частичный_валютный_платёж",
+    "seed": 1007,
+    "episode_id": "EP-3BTZSWTINJ",
+    "digest": "0a059f504f8e31efb13f24f6b12e5157a731cbcaf193b85be0b8f222b911589a",
+    "n_issues": 3,
+    "counts": {
+      "ledger": 533,
+      "journal_entries": 256,
+      "invoices": 95,
+      "payments": 58,
+      "fx": 88,
+      "documents": 153
+    }
+  },
+  {
+    "name": "взаимодействие_замаскированный_дубль",
+    "seed": 1008,
+    "episode_id": "EP-LYJ2VX4X2J",
+    "digest": "206fce76a325914700a1e335a28e1dc549d1698a85322a756fc291ddc67c425f",
+    "n_issues": 3,
+    "counts": {
+      "ledger": 517,
+      "journal_entries": 250,
+      "invoices": 87,
+      "payments": 50,
+      "fx": 129,
+      "documents": 137
+    }
+  },
+  {
+    "name": "оба_взаимодействия",
+    "seed": 1009,
+    "episode_id": "EP-FBLCWOJJCB",
+    "digest": "8a9ae826d24866de6c2398745e750fb92f625b13e26ddd225dac2727e09e5168",
+    "n_issues": 6,
+    "counts": {
+      "ledger": 475,
+      "journal_entries": 224,
+      "invoices": 72,
+      "payments": 48,
+      "fx": 88,
+      "documents": 120
+    }
+  },
+  {
+    "name": "нагрузка_10",
+    "seed": 1010,
+    "episode_id": "EP-QCM75SRGKC",
+    "digest": "d8ff34713f40cdfc3d47d7c4f05d6bd144e09273d4376dfdcc5ddd548adb64c4",
+    "n_issues": 10,
+    "counts": {
+      "ledger": 484,
+      "journal_entries": 229,
+      "invoices": 88,
+      "payments": 48,
+      "fx": 123,
+      "documents": 136
+    }
+  }
+]

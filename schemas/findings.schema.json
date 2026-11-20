@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "auditgym/findings.schema.json",
+  "title": "findings.json — ответ агента (аргумент submit)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "episode_id",
+    "findings"
+  ],
+  "properties": {
+    "episode_id": {
+      "type": "string",
+      "description": "episode_id из manifest"
+    },
+    "findings": {
+      "type": "array",
+      "maxItems": 30,
+      "description": "не больше 30 выводов",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "type",
+          "affected_ids",
+          "claimed_amount_minor",
+          "currency",
+          "evidence_ids",
+          "explanation"
+        ],
+        "properties": {
+          "type": {
+            "enum": [
+              "duplicate_invoice",
+              "payment_allocation",
+              "fx_rate",
+              "period_cutoff"
+            ]
+          },
+          "affected_ids": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 10,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "description": "канонические ID (см. policy.finding_types); doc_id принимается как синоним"
+          },
+          "claimed_amount_minor": {
+            "type": "integer",
+            "minimum": -1000000000000000,
+            "maximum": 1000000000000000,
+            "description": "сумма в минимальных единицах базовой валюты"
+          },
+          "currency": {
+            "type": "string",
+            "pattern": "^[A-Za-z]{3}$",
+            "description": "базовая валюта эпизода"
+          },
+          "evidence_ids": {
+            "type": "array",
+            "maxItems": 10,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "description": "row_id, doc_id, fx_id"
+          },
+          "explanation": {
+            "type": "string",
+            "maxLength": 1000,
+            "description": "короткое обоснование, на награду не влияет"
+          }
+        }
+      }
+    }
+  }
+}

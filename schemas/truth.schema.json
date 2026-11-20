@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "auditgym/truth.schema.json",
+  "title": "truth.json — эталон (только для оценщика)",
+  "type": "object",
+  "required": [
+    "episode_id",
+    "schema_version",
+    "base_currency",
+    "issues"
+  ],
+  "properties": {
+    "episode_id": {
+      "type": "string"
+    },
+    "schema_version": {
+      "type": "string"
+    },
+    "base_currency": {
+      "type": "string"
+    },
+    "issues": {
+      "type": "array",
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "required": [
+          "issue_id",
+          "type",
+          "affected_ids",
+          "expected_amount_minor",
+          "currency",
+          "tolerance_minor",
+          "evidence_sets",
+          "mutation_id"
+        ],
+        "properties": {
+          "issue_id": {
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "duplicate_invoice",
+              "payment_allocation",
+              "fx_rate",
+              "period_cutoff"
+            ]
+          },
+          "affected_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "expected_amount_minor": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "currency": {
+            "type": "string"
+          },
+          "tolerance_minor": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "evidence_sets": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "description": "допустимые наборы доказательств: для TP нужен хотя бы один целиком"
+          },
+          "mutation_id": {
+            "type": "string",
+            "description": "ссылка на provenance.json → mutations[]"
+          }
+        }
+      }
+    }
+  }
+}

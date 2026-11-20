@@ -1,0 +1,66 @@
+{
+  "episode_id": "EP-3BTZSWTINJ",
+  "schema_version": "3.0",
+  "base_currency": "KZT",
+  "issues": [
+    {
+      "issue_id": "ISS-EZGFLZLI",
+      "type": "fx_rate",
+      "affected_ids": [
+        "INV-PILDDFL"
+      ],
+      "expected_amount_minor": 60055,
+      "currency": "KZT",
+      "tolerance_minor": 30,
+      "evidence_sets": [
+        [
+          "DOC-JEOAG24H",
+          "FX-2026-01-22-JPY-KZT",
+          "L-3BJIZSUB"
+        ],
+        [
+          "DOC-JEOAG24H",
+          "FX-2026-01-22-JPY-KZT",
+          "L-H33YUE3A"
+        ]
+      ],
+      "mutation_id": "M02"
+    },
+    {
+      "issue_id": "ISS-TEUC5APA",
+      "type": "payment_allocation",
+      "affected_ids": [
+        "INV-DAOMWKU",
+        "PAY-R7ZSSCJ"
+      ],
+      "expected_amount_minor": 65663564,
+      "currency": "KZT",
+      "tolerance_minor": 32831,
+      "evidence_sets": [
+        [
+          "DOC-BGYXJO55",
+          "L-2PXX7FBJ"
+        ]
+      ],
+      "mutation_id": "M01"
+    },
+    {
+      "issue_id": "ISS-ZMEBBFRT",
+      "type": "fx_rate",
+      "affected_ids": [
+        "PAY-R7ZSSCJ"
+      ],
+      "expected_amount_minor": 679128,
+      "currency": "KZT",
+      "tolerance_minor": 339,
+      "evidence_sets": [
+        [
+          "DOC-BGYXJO55",
+          "FX-2026-01-31-GBP-KZT",
+          "L-YYZD3DA3"
+        ]
+      ],
+      "mutation_id": "M01"
+    }
+  ]
+}
