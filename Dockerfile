@@ -4,8 +4,12 @@
 FROM python:3.11.11-slim-bookworm
 # UTF-8 явно: вывод, отчёты и данные содержат кириллицу
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PYTHONUTF8=1 PYTHONIOENCODING=utf-8 LANG=C.UTF-8 LC_ALL=C.UTF-8
+# без пользовательского site-packages: политика не подложит код (usercustomize, .pth) следующим процессам
+ENV PYTHONNOUSERSITE=1
 WORKDIR /app
 COPY . /app
-RUN useradd --create-home --uid 10001 auditor && chown -R auditor /app
+# код среды и оценщика остаётся за root: пользователь прогона (и его политика) не может его изменить;
+# писать он может только отчёты в reports/
+RUN useradd --create-home --uid 10001 auditor && mkdir -p /app/reports && chown -R auditor /app/reports
 USER auditor
 CMD ["python", "-m", "auditgym", "check"]
