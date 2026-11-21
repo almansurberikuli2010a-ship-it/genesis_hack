@@ -13,7 +13,9 @@
 в другом, свежем: туда передаются сама политика (pickle) и наблюдения, обратно — только действия.
 Seed и config эпизода, клиент среды с токеном оценщика и чтение итога эпизода остаются в процессе
 оркестратора. Процесс политики работает в своей личной временной папке (cwd, TMPDIR); путей к
-файлам эпизода он не получает. На macOS он запускается в песочнице sandbox-exec: писать можно только
+файлам эпизода он не получает, переменных окружения оркестратора AUDITGYM_* (например,
+AUDITGYM_GRADER_LOG) — тоже: из них у него только AUDITGYM_POLICY_PROCESS, которую ставит run_policy.
+На macOS он запускается в песочнице sandbox-exec: писать можно только
 в эту папку, читать файлы оценщика (truth.json, provenance.json, pre_injection/, grader/EP-*/) нельзя,
 посылать сигналы чужим процессам нельзя. На других системах полноценной песочницы нет: запись в код
 ограничивают права на файлы (в Docker-образе код принадлежит root). Лимит 60 с соблюдается даже для
@@ -201,7 +203,9 @@ class _PolicyProcess:
             raise TypeError("политику нельзя передать в отдельный процесс (%s: %s); доверенный запуск в одном "
                             "процессе — isolated=False" % (type(e).__name__, e)) from e
         self._dir = tempfile.mkdtemp(prefix="auditgym-policy-")
-        env = {k: v for k, v in os.environ.items() if k != "PYTHONPATH"}
+        # переменные оркестратора AUDITGYM_* (журнал оценщика и др.) не передаются; из них у политики
+        # только POLICY_PROCESS_ENV, которую ставит run_policy
+        env = {k: v for k, v in os.environ.items() if k != "PYTHONPATH" and not k.startswith("AUDITGYM_")}
         env.update({"PYTHONPATH": str(ROOT), POLICY_PROCESS_ENV: "1", "PYTHONDONTWRITEBYTECODE": "1",
                     "TMPDIR": self._dir, "TMP": self._dir, "TEMP": self._dir})
         # относительные пути sys.path (например, "" = рабочая папка оркестратора) — абсолютными: у процесса

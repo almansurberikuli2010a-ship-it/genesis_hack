@@ -29,7 +29,7 @@ MUTANTS = {
     "local_date_utc": ("auditgym/money.py", "return dt.astimezone(tz_from_offset(company_offset)).date()",
                        'return dt.astimezone(tz_from_offset("+00:00")).date()',
                        "дата курса по UTC вместо часового пояса компании"),
-    "tolerance_10pct": ("auditgym/matcher.py", 'if abs(nf["amount"] - issue["expected_amount_minor"]) > tolerance(issue):',
+    "tolerance_10pct": ("auditgym/matcher.py", 'if abs(nf["amount"] - issue["expected_amount_minor"]) > tolerance(issue, ctx):',
                         'if abs(nf["amount"] - issue["expected_amount_minor"]) > abs(issue["expected_amount_minor"]) // 10:',
                         "допуск 10% вместо опубликованного τ = 0"),
     "nondeterministic_story": ("auditgym/story.py", 'self.rng = rng("story", self.story_hash)',

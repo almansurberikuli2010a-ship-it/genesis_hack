@@ -22,8 +22,10 @@
 * type — точное совпадение с одним из FINDING_TYPES;
 * affected_ids — МНОЖЕСТВО (порядок и повторы не важны), точно равное каноническому набору
   t.affected_ids (канонические ID по типам — policy.finding_types.<type>.affected_ids);
-* claimed_amount_minor: |claimed − expected| ≤ τ, τ = t.tolerance_minor (генератор пишет
-  τ = AMOUNT_TOLERANCE_MINOR[type] = 0, опубликован в policy.json → matching);
+* claimed_amount_minor: |claimed − expected| ≤ τ. Источник τ (tolerance): главный — открытый
+  policy.json → matching.amount_tolerance_minor[t.type] этого эпизода; нет такого ключа —
+  truth.json → t.tolerance_minor; нет и его — τ = 0. Закрытое t.tolerance_minor опубликованный τ
+  не расширяет и не сужает. Генератор пишет в оба файла AMOUNT_TOLERANCE_MINOR[type] = 0;
 * currency — точное совпадение строки с t.currency (без смены регистра и обрезки пробелов);
 * evidence_ids — МНОЖЕСТВО; каждый ID обязан существовать в открытых записях эпизода
   (EVIDENCE_ID_FIELDS: row_id, doc_id, invoice_id, payment_id, fx_id), иначе вывод не
@@ -114,12 +116,16 @@ def validate_submission(obj, episode_id: str) -> list[dict]:
 
 
 def match_context(public: dict) -> dict:
-    """Открытая часть, нужная сопоставлению: episode_id эпизода и множество существующих ID
-    записей, допустимых в evidence_ids. Строится только из открытых записей."""
+    """Открытая часть, нужная сопоставлению: episode_id эпизода, множество существующих ID
+    записей, допустимых в evidence_ids, и опубликованный допуск суммы по типам
+    (policy.json → matching.amount_tolerance_minor; нет ключа — пустой). Строится только из
+    открытых записей."""
     known = set()
     for table, field in EVIDENCE_ID_FIELDS:
         known.update(r[field] for r in public[table] if isinstance(r.get(field), str))
-    return {"episode_id": public["manifest"]["episode_id"], "evidence_ids": frozenset(known)}
+    published = public["policy"].get("matching", {}).get("amount_tolerance_minor", {})
+    return {"episode_id": public["manifest"]["episode_id"], "evidence_ids": frozenset(known),
+            "amount_tolerance_minor": dict(published)}
 
 
 build_aliases = match_context  # прежнее имя (синонимов ID больше нет); оставлено для совместимости вызовов
@@ -137,19 +143,24 @@ def _norm(f, ctx):
     }
 
 
-def tolerance(issue: dict) -> int:
-    """τ ошибки эталона: её tolerance_minor (генератор пишет опубликованный AMOUNT_TOLERANCE_MINOR)."""
-    return int(issue.get("tolerance_minor", AMOUNT_TOLERANCE_MINOR.get(issue["type"], 0)))
+def tolerance(issue: dict, ctx: dict) -> int:
+    """τ ошибки эталона: опубликованный policy.json → matching.amount_tolerance_minor[type] этого
+    эпизода (ctx — match_context); нет такого ключа — truth.json → tolerance_minor ошибки; нет и
+    его — 0. Закрытое tolerance_minor опубликованный τ не расширяет и не сужает."""
+    published = ctx["amount_tolerance_minor"]
+    if issue["type"] in published:
+        return int(published[issue["type"]])
+    return int(issue.get("tolerance_minor", 0))
 
 
-def compatible(nf: dict, issue: dict) -> bool:
+def compatible(nf: dict, issue: dict, ctx: dict) -> bool:
     if nf["type"] != issue["type"]:
         return False
     if nf["affected"] != frozenset(issue["affected_ids"]):
         return False
     if nf["currency"] != issue["currency"]:
         return False
-    if abs(nf["amount"] - issue["expected_amount_minor"]) > tolerance(issue):
+    if abs(nf["amount"] - issue["expected_amount_minor"]) > tolerance(issue, ctx):
         return False
     if not nf["evidence_known"]:
         return False
@@ -197,7 +208,7 @@ def select_pairs(adj: list[list[int]], issue_ids: list[str]) -> list[tuple[str, 
 
 def match(findings: list[dict], issues: list[dict], ctx: dict) -> dict:
     norm = [_norm(f, ctx) for f in findings]
-    adj = [[j for j, t in enumerate(issues) if compatible(nf, t)] for nf in norm]
+    adj = [[j for j, t in enumerate(issues) if compatible(nf, t, ctx)] for nf in norm]
     chosen = select_pairs(adj, [t["issue_id"] for t in issues])
     pairs = sorted((i, iid) for iid, i in chosen)
     matched_f, matched_t = {i for i, _ in pairs}, {iid for _, iid in pairs}
