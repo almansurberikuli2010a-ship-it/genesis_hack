@@ -1,7 +1,7 @@
 {
   "total": 100.0,
   "max": 100,
-  "elapsed_s": 12.3,
+  "elapsed_s": 14.2,
   "card": [
     {
       "criterion": "Контракт и изоляция",
@@ -14,103 +14,103 @@
           "check": "reset возвращает (obs, info)",
           "passed": true,
           "detail": "reset → (dict, dict), сериализуется в JSON",
-          "time_s": 0.102
+          "time_s": 0.105
         },
         {
           "check": "содержимое первого наблюдения",
           "passed": true,
           "detail": "первое наблюдение: задача, manifest, политика, бюджет 100",
-          "time_s": 0.1
+          "time_s": 0.105
         },
         {
           "check": "схема manifest",
           "passed": true,
           "detail": "поля manifest по разделу 03",
-          "time_s": 0.101
+          "time_s": 0.104
         },
         {
           "check": "типы 5-кортежа step",
           "passed": true,
           "detail": "step → ['dict', 'float', 'bool', 'bool', 'dict']",
-          "time_s": 0.101
+          "time_s": 0.104
         },
         {
           "check": "страница ≤ 50 строк",
           "passed": true,
           "detail": "limit=1000 → 50 строк",
-          "time_s": 0.101
+          "time_s": 0.105
         },
         {
           "check": "стабильные курсоры, полный обход",
           "passed": true,
           "detail": "полный обход 453/453 строк, курсор стабилен",
-          "time_s": 0.105
+          "time_s": 0.109
         },
         {
           "check": "get_record / get_document",
           "passed": true,
           "detail": "get_record / get_document возвращают запрошенную запись",
-          "time_s": 0.101
+          "time_s": 0.106
         },
         {
           "check": "неизвестный ID → ограниченная ошибка, шаг израсходован",
           "passed": true,
           "detail": "{\"type\": \"get_record\", \"table\": \"ledger\", \"id\": \"L-NOPE\"} → {'code': 'not_found', 'message': 'в таблице ledger нет записи с таким id'}, шаг израсходован",
-          "time_s": 0.102
+          "time_s": 0.111
         },
         {
           "check": "неизвестное действие → ограниченная ошибка, шаг израсходован",
           "passed": true,
           "detail": "{\"type\": \"delete_records\"} → {'code': 'unknown_action', 'message': 'action.type должен быть одним из: list_records, get_record, get_document, calculator, submit'}, шаг израсходован",
-          "time_s": 0.101
+          "time_s": 0.104
         },
         {
           "check": "неверные аргументы → ограниченная ошибка, шаг израсходован",
           "passed": true,
           "detail": "{\"type\": \"list_records\", \"table\": \"ledger\", \"limit\": -5} → {'code': 'invalid_arguments', 'message': 'limit — целое число от 1 (больше 50 обрезается)'}, шаг израсходован",
-          "time_s": 0.101
+          "time_s": 0.104
         },
         {
           "check": "песочница калькулятора",
           "passed": true,
           "detail": "только десятичная арифметика; код и файлы отклоняются",
-          "time_s": 0.102
+          "time_s": 0.106
         },
         {
           "check": "нет shell/SQL/файловой системы",
           "passed": true,
           "detail": "нет shell, SQL и файловой системы",
-          "time_s": 0.101
+          "time_s": 0.104
         },
         {
           "check": "submit завершает эпизод",
           "passed": true,
           "detail": "submit → terminated=True",
-          "time_s": 0.101
+          "time_s": 0.106
         },
         {
           "check": "лимит 100 шагов → truncated",
           "passed": true,
           "detail": "100-й шаг → truncated, пустой ответ",
-          "time_s": 0.104
+          "time_s": 0.112
         },
         {
           "check": "лимит времени → truncated",
           "passed": true,
           "detail": "лимит времени → truncated, пустой ответ",
-          "time_s": 0.818
+          "time_s": 0.805
         },
         {
           "check": "после конца и повторная отправка — без изменений",
           "passed": true,
           "detail": "шаг после конца ничего не меняет",
-          "time_s": 0.123
+          "time_s": 0.105
         },
         {
           "check": "неверная структура → −1 и журнал оценщика",
           "passed": true,
           "detail": "неверная структура → −1, журнал оценщика, ограниченная ошибка",
-          "time_s": 0.102
+          "time_s": 0.105
         },
         {
           "check": "режим eval скрывает награду",
@@ -122,13 +122,13 @@
           "check": "режим train: только терминальная награда",
           "passed": true,
           "detail": "train: 0 при исследовании, терминальная награда в конце",
-          "time_s": 0.104
+          "time_s": 0.106
         },
         {
           "check": "нет утечек, reset изолирует",
           "passed": true,
           "detail": "нет закрытых ключей, issue_id и путей в 19 наблюдениях; reset изолирует",
-          "time_s": 0.212
+          "time_s": 0.219
         }
       ]
     },
@@ -143,121 +143,121 @@
           "check": "скрытый00_clean",
           "passed": true,
           "detail": "0 ошибок, 454 строк книги",
-          "time_s": 0.057
+          "time_s": 0.086
         },
         {
           "check": "скрытый01_clean_hard",
           "passed": true,
           "detail": "0 ошибок, 561 строк книги",
-          "time_s": 0.065
+          "time_s": 0.102
         },
         {
           "check": "скрытый02_clean",
           "passed": true,
           "detail": "0 ошибок, 428 строк книги",
-          "time_s": 0.053
+          "time_s": 0.11
         },
         {
           "check": "скрытый03_clean_hard",
           "passed": true,
           "detail": "0 ошибок, 529 строк книги",
-          "time_s": 0.064
+          "time_s": 0.105
         },
         {
           "check": "скрытый04_clean",
           "passed": true,
           "detail": "0 ошибок, 566 строк книги",
-          "time_s": 0.066
+          "time_s": 0.1
         },
         {
           "check": "скрытый05_interacting",
           "passed": true,
           "detail": "5 ошибок, 482 строк книги",
-          "time_s": 0.059
+          "time_s": 0.088
         },
         {
           "check": "скрытый06_interacting_partial_fx_boundary",
           "passed": true,
           "detail": "2 ошибок, 583 строк книги",
-          "time_s": 0.067
+          "time_s": 0.103
         },
         {
           "check": "скрытый07_interacting_masked_duplicate",
           "passed": true,
           "detail": "2 ошибок, 469 строк книги",
-          "time_s": 0.06
+          "time_s": 0.09
         },
         {
           "check": "скрытый08_interacting",
           "passed": true,
           "detail": "5 ошибок, 473 строк книги",
-          "time_s": 0.06
+          "time_s": 0.089
         },
         {
           "check": "скрытый09_heavy",
           "passed": true,
           "detail": "12 ошибок, 525 строк книги",
-          "time_s": 0.066
+          "time_s": 0.101
         },
         {
           "check": "скрытый10_four_types",
           "passed": true,
           "detail": "4 ошибок, 529 строк книги",
-          "time_s": 0.066
+          "time_s": 0.101
         },
         {
           "check": "скрытый11_mixed",
           "passed": true,
           "detail": "8 ошибок, 566 строк книги",
-          "time_s": 0.068
+          "time_s": 0.106
         },
         {
           "check": "скрытый12_only_duplicate_invoice",
           "passed": true,
           "detail": "2 ошибок, 523 строк книги",
-          "time_s": 0.083
+          "time_s": 0.096
         },
         {
           "check": "скрытый13_only_payment_allocation",
           "passed": true,
           "detail": "2 ошибок, 436 строк книги",
-          "time_s": 0.054
+          "time_s": 0.083
         },
         {
           "check": "скрытый14_only_fx_rate",
           "passed": true,
           "detail": "2 ошибок, 483 строк книги",
-          "time_s": 0.06
+          "time_s": 0.089
         },
         {
           "check": "скрытый15_only_period_cutoff",
           "passed": true,
           "detail": "2 ошибок, 469 строк книги",
-          "time_s": 0.056
+          "time_s": 0.085
         },
         {
           "check": "скрытый16_mixed",
           "passed": true,
           "detail": "8 ошибок, 511 строк книги",
-          "time_s": 0.063
+          "time_s": 0.122
         },
         {
           "check": "скрытый17_four_types",
           "passed": true,
           "detail": "4 ошибок, 607 строк книги",
-          "time_s": 0.07
+          "time_s": 0.11
         },
         {
           "check": "скрытый18_heavy",
           "passed": true,
           "detail": "12 ошибок, 491 строк книги",
-          "time_s": 0.062
+          "time_s": 0.097
         },
         {
           "check": "скрытый19_mixed",
           "passed": true,
           "detail": "8 ошибок, 553 строк книги",
-          "time_s": 0.066
+          "time_s": 0.101
         }
       ]
     },
@@ -272,121 +272,121 @@
           "check": "верный ответ лучше молчания на ошибочных книгах",
           "passed": true,
           "detail": "ответ/молчание: 0.960 против -1.000",
-          "time_s": 0.214
+          "time_s": 0.225
         },
         {
           "check": "молчание лучше ложного обвинения на чистых книгах",
           "passed": true,
           "detail": "молчание/обвинение: 0.980 против -1.000",
-          "time_s": 0.207
+          "time_s": 0.215
         },
         {
           "check": "дубли выводов не дают выгоды",
           "passed": true,
           "detail": "tp 4→4",
-          "time_s": 0.212
+          "time_s": 0.223
         },
         {
           "check": "атака «пометить всё» плоха",
           "passed": true,
           "detail": "награда -1.000",
-          "time_s": 0.106
+          "time_s": 0.12
         },
         {
           "check": "экономия шагов лишь немного различает равные ответы",
           "passed": true,
           "detail": "0.990 против 0.880",
-          "time_s": 0.215
+          "time_s": 0.231
         },
         {
           "check": "угаданные ID — не TP",
           "passed": true,
           "detail": "угаданные ID",
-          "time_s": 0.106
+          "time_s": 0.112
         },
         {
           "check": "неполный набор доказательств — не TP",
           "passed": true,
           "detail": "без одного ID",
-          "time_s": 0.105
+          "time_s": 0.111
         },
         {
           "check": "выдуманные доказательства — не TP",
           "passed": true,
           "detail": "фиктивные ID",
-          "time_s": 0.105
+          "time_s": 0.112
         },
         {
           "check": "чужая валюта — не TP",
           "passed": true,
           "detail": "валюта изменена",
-          "time_s": 0.106
+          "time_s": 0.111
         },
         {
           "check": "допуск по сумме = опубликованный τ",
           "passed": true,
           "detail": "+допуск — TP, +допуск+1 — FP, +1% — FP",
-          "time_s": 0.318
+          "time_s": 0.334
         },
         {
           "check": "неверный тип — FP",
           "passed": true,
           "detail": "tp=0 fp=1",
-          "time_s": 0.106
+          "time_s": 0.113
         },
         {
           "check": "неполные affected_ids — не TP",
           "passed": true,
           "detail": "один из двух ID",
-          "time_s": 0.104
+          "time_s": 0.109
         },
         {
           "check": "повторная отправка ничего не даёт",
           "passed": true,
           "detail": "вторая отправка проигнорирована",
-          "time_s": 0.105
+          "time_s": 0.112
         },
         {
           "check": "неверный ввод → −1",
           "passed": true,
           "detail": "сумма строкой",
-          "time_s": 0.106
+          "time_s": 0.112
         },
         {
           "check": "тайм-аут → пустой ответ",
           "passed": true,
           "detail": "поздний верный ответ не принят",
-          "time_s": 0.62
+          "time_s": 0.612
         },
         {
           "check": "пустой эталон и пустой ответ → F1 = 1",
           "passed": true,
           "detail": "награда 0.994",
-          "time_s": 0.127
+          "time_s": 0.108
         },
         {
           "check": "пустой эталон и выводы → F1 = 0",
           "passed": true,
           "detail": "награда -1.000",
-          "time_s": 0.103
+          "time_s": 0.107
         },
         {
           "check": "убедительный текст не влияет",
           "passed": true,
           "detail": "неверные суммы с уверенным текстом",
-          "time_s": 0.106
+          "time_s": 0.113
         },
         {
           "check": "сопоставление один к одному",
           "passed": true,
           "detail": "tp=1 fp=2",
-          "time_s": 0.106
+          "time_s": 0.111
         },
         {
           "check": "формула награды точна на частичном ответе",
           "passed": true,
           "detail": "частичный ответ: 0.1289 = clip(2·0.571 − 1 − 0.014)",
-          "time_s": 0.104
+          "time_s": 0.111
         }
       ]
     },
@@ -401,121 +401,121 @@
           "check": "повтор скрытый00_clean",
           "passed": true,
           "detail": "записи, переходы и награды совпали (-1.000, 0.968)",
-          "time_s": 0.281
+          "time_s": 0.335
         },
         {
           "check": "повтор скрытый01_clean_hard",
           "passed": true,
           "detail": "записи, переходы и награды совпали (-1.000, 0.964)",
-          "time_s": 0.312
+          "time_s": 0.382
         },
         {
           "check": "повтор скрытый02_clean",
           "passed": true,
           "detail": "записи, переходы и награды совпали (0.988, 0.972)",
-          "time_s": 0.274
+          "time_s": 0.319
         },
         {
           "check": "повтор скрытый03_clean_hard",
           "passed": true,
           "detail": "записи, переходы и награды совпали (-1.000, 0.966)",
-          "time_s": 0.301
+          "time_s": 0.389
         },
         {
           "check": "повтор скрытый04_clean",
           "passed": true,
           "detail": "записи, переходы и награды совпали (0.982, 0.964)",
-          "time_s": 0.311
+          "time_s": 0.378
         },
         {
           "check": "повтор скрытый05_interacting",
           "passed": true,
           "detail": "записи, переходы и награды совпали (-1.000, 0.968)",
-          "time_s": 0.29
+          "time_s": 0.347
         },
         {
           "check": "повтор скрытый06_interacting_partial_fx_boundary",
           "passed": true,
           "detail": "записи, переходы и награды совпали (-1.000, 0.964)",
-          "time_s": 0.307
+          "time_s": 0.374
         },
         {
           "check": "повтор скрытый07_interacting_masked_duplicate",
           "passed": true,
           "detail": "записи, переходы и награды совпали (-1.000, 0.968)",
-          "time_s": 0.301
+          "time_s": 0.361
         },
         {
           "check": "повтор скрытый08_interacting",
           "passed": true,
           "detail": "записи, переходы и награды совпали (-1.000, 0.970)",
-          "time_s": 0.288
+          "time_s": 0.345
         },
         {
           "check": "повтор скрытый09_heavy",
           "passed": true,
           "detail": "записи, переходы и награды совпали (-1.000, 0.964)",
-          "time_s": 0.316
+          "time_s": 0.408
         },
         {
           "check": "новые ID и порядок скрытый10_four_types",
           "passed": true,
           "detail": "награды oracle/аудитора [1.0, 0.964] = [1.0, 0.964] с новыми ID",
-          "time_s": 0.215
+          "time_s": 0.273
         },
         {
           "check": "новые ID и порядок скрытый11_mixed",
           "passed": true,
           "detail": "награды oracle/аудитора [1.0, 0.964] = [1.0, 0.964] с новыми ID",
-          "time_s": 0.219
+          "time_s": 0.284
         },
         {
           "check": "новые ID и порядок скрытый12_only_duplicate_invoice",
           "passed": true,
           "detail": "награды oracle/аудитора [1.0, 0.966] = [1.0, 0.966] с новыми ID",
-          "time_s": 0.205
+          "time_s": 0.26
         },
         {
           "check": "новые ID и порядок скрытый13_only_payment_allocation",
           "passed": true,
           "detail": "награды oracle/аудитора [1.0, 0.972] = [1.0, 0.972] с новыми ID",
-          "time_s": 0.184
+          "time_s": 0.228
         },
         {
           "check": "новые ID и порядок скрытый14_only_fx_rate",
           "passed": true,
           "detail": "награды oracle/аудитора [1.0, 0.968] = [1.0, 0.968] с новыми ID",
-          "time_s": 0.194
+          "time_s": 0.244
         },
         {
           "check": "преобразование файлов скрытый15_only_period_cutoff",
           "passed": true,
           "detail": "внешнее преобразование файлов: [1.0, 0.968] = [1.0, 0.968]",
-          "time_s": 0.138
+          "time_s": 0.18
         },
         {
           "check": "преобразование файлов скрытый16_mixed",
           "passed": true,
           "detail": "внешнее преобразование файлов: [1.0, 0.966] = [1.0, 0.966]",
-          "time_s": 0.165
+          "time_s": 0.173
         },
         {
           "check": "преобразование файлов скрытый17_four_types",
           "passed": true,
           "detail": "внешнее преобразование файлов: [1.0, 0.96] = [1.0, 0.96]",
-          "time_s": 0.156
+          "time_s": 0.186
         },
         {
           "check": "преобразование файлов скрытый18_heavy",
           "passed": true,
           "detail": "внешнее преобразование файлов: [1.0, 0.97] = [1.0, 0.97]",
-          "time_s": 0.144
+          "time_s": 0.169
         },
         {
           "check": "преобразование файлов скрытый19_mixed",
           "passed": true,
           "detail": "внешнее преобразование файлов: [1.0, 0.964] = [1.0, 0.964]",
-          "time_s": 0.149
+          "time_s": 0.18
         }
       ]
     },
