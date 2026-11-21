@@ -42,7 +42,7 @@ docker run --rm --network none --cpus 2 --memory 4g auditgym
 явно, код в образе принадлежит root, писать пользователь прогона может только в `reports/`.
 **Проверено запуском**: в образе (Python 3.11.11, Linux, Landlock ABI 8) официальная
 команда печатает «ВСЕ ПРОВЕРКИ ПРОЙДЕНЫ» за 113 с, песочница процесса политики —
-`landlock-abi8`, все 177 тестов выполнены без пропусков, запись в код среды запрещена
+`landlock-abi8`, все 178 тестов выполнены без пропусков, запись в код среды запрещена
 (`PermissionError` у пользователя uid 10001). Лимиты ТЗ: 2 CPU, 4 ГБ RAM, без GPU, 60 с на эпизод,
 100 шагов. Измерено `check` (Python 3.13, macOS): пик памяти оркестратора 191 МБ (вместе с
 тестами в том же процессе), процесса среды 79 МБ, самый долгий эпизод 0.09 с.
@@ -72,7 +72,7 @@ Python 3.12.10, «ВСЕ ПРОВЕРКИ ПРОЙДЕНЫ» за 183 с), но 
 | `python3 -m auditgym run --policy reconciler --split dev [--mode train\|eval] [--trajectories out.jsonl]` | прогнать политику |
 | `python3 -m auditgym demo > reports/demo_transcript.txt` | пошаговый показ работы среды (записанный показ — в `reports/demo_transcript.txt`) |
 | `python3 -m auditgym export` / `trajectories` | пересобрать `episodes/` и `trajectories/trajectories.jsonl` |
-| `python3 -m unittest discover -s tests -t .` | только тесты (177; на macOS 3 теста Landlock пропускаются) |
+| `python3 -m unittest discover -s tests -t .` | только тесты (178; на macOS 3 теста Landlock пропускаются) |
 | `python3 scripts/mutation_test.py` | мутационный тест самой проверки (около 2 мин) |
 
 ---
@@ -298,7 +298,7 @@ episodes/             10 train + 10 dev: public/<id>/*; grader/<id>/truth.json, 
 trajectories/         trajectories.jsonl (train/dev; 104 прогона, из них 12 по лимиту шагов и 18 в режиме eval)
 schemas/              JSON Schema draft-04: action, findings, truth, observation
 scripts/              mutation_test.py
-tests/                177 тестов, в том числе по официальным определениям (test_judge_adapter, test_judge_pairs)
+tests/                178 тестов, в том числе по официальным определениям (test_judge_adapter, test_judge_pairs)
 reports/              check_report, jury_scorecard, demo_transcript
 DESIGN.md             записка о дизайне
 JURY.md               как проверить каждый критерий
@@ -579,7 +579,7 @@ exp_src))`; отсутствующие ссылки — `null` (в CSV букв�
 
 | Раздел | Критерий | Что именно проверяется |
 |---|---|---|
-| `unit_tests` (177) | все | официальные определения C01–C20, D01–D20, 1–20, M01–M12, P01–P20; reset/step, схемы, лимиты, завершение, неверный ввод, тайм-аут, режимы, атакующие ответы, изоляция политики (sandbox-exec и Landlock), гарантии генератора и отсутствие открытых признаков ошибок. `check` печатает действующую песочницу политики и число пропущенных тестов (на macOS пропускаются 3 теста Landlock, в Docker — ни одного) |
+| `unit_tests` (178) | все | официальные определения C01–C20, D01–D20, 1–20, M01–M12, P01–P20; reset/step, схемы, лимиты, завершение, неверный ввод, тайм-аут, режимы, атакующие ответы, изоляция политики (sandbox-exec и Landlock), гарантии генератора и отсутствие открытых признаков ошибок. `check` печатает действующую песочницу политики и число пропущенных тестов (на macOS пропускаются 3 теста Landlock, в Docker — ни одного) |
 | `determinism` | Воспроизводимость | одинаковые seed+config → побайтно одинаковый эпизод; совпадение с опубликованными `episodes/*/index.json` |
 | `data_and_truth` (220 эпизодов) | Данные и эталон | книги до ошибок **восстанавливаются из provenance.json** и проходят все равенства; у каждого изменения книги есть причина; **независимая перепроводка** совпадает с чистой книгой полностью, а с книгой после внесения — везде, кроме объявленных ошибок; эталонный аудитор не находит ничего на чистых книгах и ровно эталон на книгах с ошибками; каждый набор доказательств сам по себе доказывает ошибку |
 | `baselines` | Надёжность награды | 4 базовые политики и скриптовый аудитор в режиме **eval** в **отдельном процессе**: `flag_all < reconciler < rule_auditor ≤ oracle = 1.0` |
