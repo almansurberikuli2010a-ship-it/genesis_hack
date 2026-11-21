@@ -226,7 +226,12 @@ _GRADER_RES = tuple(re.compile(p) for p in GRADER_PATH_PATTERNS)
 
 
 def _within(path: str, root: str) -> bool:
-    return path == root or path.startswith(root.rstrip("/") + "/")
+    return path == root or path.startswith(root.rstrip(os.sep) + os.sep)
+
+
+def _slashed(path: str) -> str:
+    """Путь с "/" вместо разделителя ОС: шаблоны GRADER_PATH_PATTERNS записаны с "/"."""
+    return path.replace(os.sep, "/")
 
 
 def _listdir(path: str) -> list:
@@ -269,7 +274,8 @@ class _LandlockPlan:
     def scan(self, top: str) -> None:
         """Каталоги с файлами оценщика внутри разрешаемого пакета — в запрещённые."""
         for d, dirs, files in os.walk(top):
-            if any(r.search(d) for r in _GRADER_RES) or any(r.search(os.path.join(d, f)) for r in _GRADER_RES for f in files):
+            if any(r.search(_slashed(d)) for r in _GRADER_RES) or \
+                    any(r.search(_slashed(os.path.join(d, f))) for r in _GRADER_RES for f in files):
                 self.forbidden.add(os.path.realpath(d))
                 dirs[:] = []
             else:

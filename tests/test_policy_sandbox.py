@@ -348,7 +348,7 @@ class LinuxLandlock(unittest.TestCase):
         self.assertIn("без песочницы", logs.output[0])
         adapters._warned.clear()
 
-    @unittest.skipIf(os.geteuid() == 0, "root читает /proc любого процесса")
+    @unittest.skipIf(hasattr(os, "geteuid") and os.geteuid() == 0, "root читает /proc любого процесса")
     def test_env_process_not_dumpable(self):
         with SubprocessEnv(mode="eval") as env:
             env.reset(5, ERRS)
