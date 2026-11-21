@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 import statistics
 import time
 from pathlib import Path
@@ -21,16 +22,93 @@ class _PolicyTimeout(Exception):
     pass
 
 
+def _guarded_nt(fn, remaining):
+    """Windows (нет SIGALRM): fn() выполняется в главном потоке, как на POSIX, а сторожевой поток через
+    ``remaining`` секунд поднимает SIGINT — на время fn() его обработчик бросает _PolicyTimeout (это
+    прерывает и цикл Python, и time.sleep) — и отменяет блокирующий ввод-вывод главного потока
+    (ожидание ответа процесса политики) через CancelSynchronousIo. Настоящий Ctrl+C до лимита уходит
+    прежнему обработчику."""
+    import ctypes
+    import signal
+    import threading
+    main_tid = threading.get_native_id()
+    lock, stop = threading.RLock(), threading.Event()
+    st = {"fired": False, "consumed": False, "done": False}
+    old = signal.getsignal(signal.SIGINT)
+
+    def on_sigint(signum, frame):
+        if not st["fired"]:  # настоящий Ctrl+C
+            if callable(old):
+                return old(signum, frame)
+            if old == signal.SIG_IGN:
+                return None
+            raise KeyboardInterrupt
+        st["consumed"] = True
+        if not st["done"]:
+            raise _PolicyTimeout()
+        return None
+
+    def watchdog():
+        if stop.wait(remaining):
+            return
+        k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        k32.OpenThread.restype = ctypes.c_void_p
+        k32.OpenThread.argtypes = (ctypes.c_uint32, ctypes.c_int, ctypes.c_uint32)
+        k32.CancelSynchronousIo.argtypes = k32.CloseHandle.argtypes = (ctypes.c_void_p,)
+        handle = None
+        try:
+            while True:  # пока fn() не вернулась: отмена повторяется, если ввод-вывод начался позже
+                with lock:
+                    if st["done"]:
+                        return
+                    if not st["fired"]:
+                        st["fired"] = True
+                        try:
+                            signal.raise_signal(signal.SIGINT)
+                        except (OSError, ValueError):  # обработчик не вызовется: не ждать его в fn()
+                            st["consumed"] = True
+                        handle = k32.OpenThread(0x0001, False, main_tid)  # THREAD_TERMINATE
+                    if handle:
+                        k32.CancelSynchronousIo(handle)
+                if stop.wait(0.05):
+                    return
+        finally:
+            if handle:
+                k32.CloseHandle(handle)
+
+    signal.signal(signal.SIGINT, on_sigint)
+    threading.Thread(target=watchdog, name="auditgym-policy-watchdog", daemon=True).start()
+    late = False
+    try:
+        return fn()
+    finally:
+        while True:  # _PolicyTimeout может прийти и здесь, но не больше одного раза
+            try:
+                with lock:
+                    st["done"] = True
+                stop.set()
+                while st["fired"] and not st["consumed"]:
+                    pass  # SIGINT сторожа ещё не обработан: пусть он придёт сюда, а не прежнему обработчику
+                signal.signal(signal.SIGINT, old if old is not None else signal.SIG_DFL)
+                break
+            except _PolicyTimeout:
+                late = True
+        if late:
+            raise _PolicyTimeout()
+
+
 def _guarded(fn, deadline):
-    """Выполнить fn(), но прервать его в момент ``deadline`` (главный поток, POSIX): зависшая
-    политика не может задержать эпизод дольше лимита времени."""
+    """Выполнить fn(), но прервать его в момент ``deadline`` (главный поток): зависшая политика не может
+    задержать эпизод дольше лимита времени. POSIX — SIGALRM, Windows — сторожевой поток (_guarded_nt)."""
     import signal
     import threading
     remaining = deadline - time.monotonic()
     if remaining <= 0:
         raise _PolicyTimeout()
-    if threading.current_thread() is not threading.main_thread() or not hasattr(signal, "setitimer"):
+    if threading.current_thread() is not threading.main_thread():
         return fn()
+    if not hasattr(signal, "setitimer"):
+        return _guarded_nt(fn, remaining) if os.name == "nt" else fn()
 
     def on_alarm(signum, frame):
         raise _PolicyTimeout()

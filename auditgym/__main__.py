@@ -16,7 +16,6 @@ from __future__ import annotations
 import argparse
 import json
 import random
-import resource
 import subprocess
 import sys
 import tempfile
@@ -35,6 +34,11 @@ from .policies import BASELINES, RandomExplorer, make_policy
 from .runner import ROOT, load_split, run_episode, run_suite, summarize, write_jsonl
 from .server import SubprocessEnv
 from .transform import transform_episode
+
+try:
+    import resource
+except ImportError:  # Windows: модуля resource нет, пик памяти не измеряется
+    resource = None
 
 FORBIDDEN_KEYS = {"issue_id", "issues", "expected_amount_minor", "evidence_sets", "mutation_id", "mutations",
                   "story_hash", "provenance", "truth", "tolerance_minor", "seed", "ledger_diff", "canonical_ids"}
@@ -73,9 +77,12 @@ def git_state() -> dict:
         return {"commit": None, "dirty": None}
 
 
-def peak_rss_mb(who) -> float:
-    """Пик резидентной памяти в МБ. ru_maxrss на macOS — в байтах, на Linux — в килобайтах."""
-    v = resource.getrusage(who).ru_maxrss
+def peak_rss_mb(who: str):
+    """Пик резидентной памяти в МБ: "self" — этот процесс, "children" — самый большой из дочерних.
+    ru_maxrss на macOS — в байтах, на Linux — в килобайтах. Без модуля resource (Windows) — None."""
+    if resource is None:
+        return None
+    v = resource.getrusage(resource.RUSAGE_SELF if who == "self" else resource.RUSAGE_CHILDREN).ru_maxrss
     return round(v / (2 ** 20 if sys.platform == "darwin" else 2 ** 10), 1)
 
 
@@ -395,10 +402,12 @@ def cmd_check(args) -> int:
     report["resources"] = {
         "max_episode_time_s": max(r["time_s"] for r in all_res),
         "max_steps_used": max(r["steps"] for r in all_res),
-        "peak_rss_mb_orchestrator": peak_rss_mb(resource.RUSAGE_SELF),
-        "peak_rss_mb_env_process": peak_rss_mb(resource.RUSAGE_CHILDREN),  # самый большой из дочерних процессов
+        "peak_rss_mb_orchestrator": peak_rss_mb("self"),
+        "peak_rss_mb_env_process": peak_rss_mb("children"),  # самый большой из дочерних процессов
         "limits": {"time_per_episode_s": 60, "steps": 100, "ram_gb": 4},
     }
+    if resource is None:
+        report["resources"]["peak_rss_note"] = "измерение памяти на %s недоступно: нет модуля resource" % sys.platform
     out = ROOT / "reports"
     out.mkdir(exist_ok=True)
     write_json(out / "check_report.json", report)
