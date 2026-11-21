@@ -12,9 +12,17 @@
 ``run_policy`` (isolated=True) запускает среду и оценщика в одном отдельном процессе, а политику —
 в другом, свежем: туда передаются сама политика (pickle) и наблюдения, обратно — только действия.
 Seed и config эпизода, клиент среды с токеном оценщика и чтение итога эпизода остаются в процессе
-оркестратора. На macOS процессу политики запрещена запись в код среды и туда, откуда Python
-загружает код. Лимит 60 с соблюдается даже для зависшей политики; возвращаются траектория и отчёт
-оценщика (доступный только после эпизода).
+оркестратора. Процесс политики работает в своей личной временной папке (cwd, TMPDIR); путей к
+файлам эпизода он не получает. На macOS он запускается в песочнице sandbox-exec: писать можно только
+в эту папку, читать файлы оценщика (truth.json, provenance.json, pre_injection/, grader/EP-*/) нельзя,
+посылать сигналы чужим процессам нельзя. На других системах полноценной песочницы нет: запись в код
+ограничивают права на файлы (в Docker-образе код принадлежит root). Лимит 60 с соблюдается даже для
+зависшей политики; возвращаются траектория и отчёт оценщика (доступный только после эпизода).
+
+Ответ получает только oracle, которую оркестратор создаёт сам по явному запросу: строка "oracle" или
+``BASELINE_ADAPTERS["oracle_grader_only"]`` (``make_policy("oracle")``). Она работает в процессе
+оркестратора. Любой другой объект, в том числе ``Oracle()`` или её подкласс, уходит в процесс политики
+и ответа не получает.
 """
 from __future__ import annotations
 
@@ -27,17 +35,25 @@ import json
 import marshal
 import os
 import pickle
+import shutil
+import signal
 import subprocess
 import sys
+import tempfile
 import types
 
 from .env import AuditEnv
-from .policies import Oracle, Policy, make_policy
+from .policies import Policy, is_grader_oracle, make_policy
 from .runner import ROOT, run_episode
 from .server import SubprocessEnv
 
 POLICY_PROCESS_ENV = "AUDITGYM_POLICY_PROCESS"
 _HEAPTYPE = 1 << 9  # Py_TPFLAGS_HEAPTYPE: класс описан на Python, а не встроен в интерпретатор
+_SANDBOX_EXEC = "/usr/bin/sandbox-exec"
+_MAX_RESPONSE_CHARS = 16 * 2 ** 20  # строка ответа процесса политики
+_MAX_NAME = 200
+# файлы оценщика (export.write_episode: DIR/grader/<episode_id>/{truth.json, provenance.json, pre_injection/})
+GRADER_PATH_PATTERNS = (r"/(truth|provenance)\.json$", r"/pre_injection(/|$)", r"/grader/EP-[^/]*(/|$)")
 
 
 class FunctionPolicy(Policy):
@@ -137,25 +153,45 @@ class _Pickler(pickle.Pickler):
         return NotImplemented
 
 
-def _write_sandbox() -> list:
-    """Начало команды процесса политики. На macOS (sandbox-exec) ему запрещена запись в код среды и
-    оценщика и туда, откуда Python загружает код (sys.path, установка Python, пользовательский
-    site-packages): изменённый код не попадёт в следующие процессы среды. На других системах запись
-    ограничивают права на файлы (в Docker-образе код принадлежит root)."""
-    exe = "/usr/bin/sandbox-exec"
-    if sys.platform != "darwin" or not os.path.exists(exe):
+def _sbpl(path: str) -> str:
+    return '"%s"' % os.path.realpath(path).replace("\\", "\\\\").replace('"', '\\"')
+
+
+def sandbox_profile(private_dir: str) -> str:
+    """Профиль sandbox-exec процесса политики (macOS). Запись — только в личную папку (и /dev/null,
+    уже открытые stdout/stderr);
+    чтение файлов оценщика запрещено (правило по каноническому пути на диске: регистр букв, ссылки
+    и «..» не помогают; жёсткую ссылку создать нельзя — нет записи); сигналы — только своим процессам.
+    Код среды и Python читаются всегда, даже если путь к ним совпал с шаблоном."""
+    code = sorted({str(ROOT / "auditgym"), sys.prefix, sys.base_prefix, sys.exec_prefix})
+    return " ".join([
+        "(version 1)", "(allow default)",
+        "(deny file-write*)",
+        "(allow file-write* (subpath %s))" % _sbpl(private_dir),
+        '(allow file-write-data (literal "/dev/null") (literal "/dev/zero") (literal "/dev/tty") (literal "/dev/stdout") '
+        '(literal "/dev/stderr") (regex #"^/dev/fd/[0-9]+$"))',
+        "(deny file-read* %s)" % " ".join('(regex #"%s")' % p for p in GRADER_PATH_PATTERNS),
+        "(allow file-read* %s)" % " ".join("(subpath %s)" % _sbpl(c) for c in code),
+        "(deny signal)", "(allow signal (target same-sandbox))",
+    ])
+
+
+def _sandbox_prefix(private_dir: str) -> list:
+    """Начало команды процесса политики: песочница на macOS, на других системах — ничего."""
+    if sys.platform != "darwin" or not os.path.exists(_SANDBOX_EXEC):
         return []
-    import site
-    paths = {str(ROOT), sys.prefix, sys.base_prefix, sys.exec_prefix, site.getusersitepackages(),
-             *(p for p in sys.path if isinstance(p, str))}
-    rules = "".join(' (subpath "%s")' % os.path.realpath(p).replace("\\", "\\\\").replace('"', '\\"')
-                    for p in sorted(paths))
-    return [exe, "-p", "(version 1) (allow default) (deny file-write*%s)" % rules]
+    return [_SANDBOX_EXEC, "-p", sandbox_profile(private_dir)]
+
+
+def policy_sandbox() -> str:
+    """Чем ограничен процесс политики на этой системе: "sandbox-exec" или "process" (только отдельный процесс)."""
+    return "sandbox-exec" if sys.platform == "darwin" and os.path.exists(_SANDBOX_EXEC) else "process"
 
 
 class _PolicyProcess:
     """Политика в отдельном свежем процессе: те же begin/act, но через канал JSON. В этом процессе нет
-    seed и config эпизода, клиента среды с токеном оценщика и кода, читающего итог эпизода."""
+    seed и config эпизода, клиента среды с токеном оценщика и кода, читающего итог эпизода; рабочая
+    папка и TMPDIR — личная временная папка, удаляемая после эпизода."""
 
     def __init__(self, policy):
         buf = io.BytesIO()
@@ -164,13 +200,23 @@ class _PolicyProcess:
         except Exception as e:
             raise TypeError("политику нельзя передать в отдельный процесс (%s: %s); доверенный запуск в одном "
                             "процессе — isolated=False" % (type(e).__name__, e)) from e
+        self._dir = tempfile.mkdtemp(prefix="auditgym-policy-")
         env = {k: v for k, v in os.environ.items() if k != "PYTHONPATH"}
-        env.update({"PYTHONPATH": str(ROOT), POLICY_PROCESS_ENV: "1"})
-        self._p = subprocess.Popen(
-            _write_sandbox() + [sys.executable, "-c", "from auditgym.adapters import _serve_policy; _serve_policy()"],
-            stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, encoding="utf-8", env=env, bufsize=1)
+        env.update({"PYTHONPATH": str(ROOT), POLICY_PROCESS_ENV: "1", "PYTHONDONTWRITEBYTECODE": "1",
+                    "TMPDIR": self._dir, "TMP": self._dir, "TEMP": self._dir})
+        # относительные пути sys.path (например, "" = рабочая папка оркестратора) — абсолютными: у процесса
+        # политики своя рабочая папка
+        path = [os.path.abspath(p) if isinstance(p, str) else p for p in sys.path]
         try:
-            self.name = self._call({"path": sys.path, "policy": base64.b64encode(buf.getvalue()).decode("ascii")})["name"]
+            self._p = subprocess.Popen(
+                _sandbox_prefix(self._dir) + [sys.executable, "-c", "from auditgym.adapters import _serve_policy; _serve_policy()"],
+                stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, encoding="utf-8", env=env, bufsize=1,
+                cwd=self._dir, start_new_session=True)
+        except BaseException:
+            shutil.rmtree(self._dir, ignore_errors=True)
+            raise
+        try:
+            self.name = str(self._call({"path": path, "policy": base64.b64encode(buf.getvalue()).decode("ascii")})["name"])[:_MAX_NAME]
         except BaseException:
             self.close()
             raise
@@ -181,26 +227,31 @@ class _PolicyProcess:
         try:
             self._p.stdin.write(json.dumps(req) + "\n")
             self._p.stdin.flush()
-            line = self._p.stdout.readline()
+            line = self._p.stdout.readline(_MAX_RESPONSE_CHARS + 1)
         except BaseException:  # в том числе прерывание по лимиту времени: процесс политики больше не нужен
             self.close()
             raise
-        if not line:
+        if not line or (len(line) > _MAX_RESPONSE_CHARS and not line.endswith("\n")):
             self.close()
-            raise RuntimeError("процесс политики завершился")
+            raise RuntimeError("процесс политики завершился или прислал слишком длинный ответ")
         resp = json.loads(line)
-        if not resp.get("ok"):
-            raise RuntimeError("ошибка политики: %s" % resp.get("error"))
+        if not isinstance(resp, dict) or not resp.get("ok"):
+            raise RuntimeError("ошибка политики: %s" % str(resp.get("error") if isinstance(resp, dict) else resp)[:500])
         return resp
 
     def begin(self, obs):
         self._call({"cmd": "begin", "obs": obs})
 
     def act(self, obs):
-        return self._call({"cmd": "act", "obs": obs})["action"]
+        return self._call({"cmd": "act", "obs": obs}).get("action")
 
     def close(self):
         if self._p.returncode is None:
+            if hasattr(os, "killpg"):  # вместе с процессами, которые политика успела запустить
+                try:
+                    os.killpg(self._p.pid, signal.SIGKILL)
+                except OSError:
+                    pass
             self._p.kill()
             self._p.wait()
         for f in (self._p.stdin, self._p.stdout):
@@ -208,6 +259,7 @@ class _PolicyProcess:
                 f.close()
             except OSError:
                 pass
+        shutil.rmtree(self._dir, ignore_errors=True)
 
 
 def _serve_policy():
@@ -236,14 +288,22 @@ def _serve_policy():
         chan_out.flush()
 
 
+def _grader_oracle_requested(policy) -> bool:
+    """Явный запрос оркестратора на oracle оценщика: строка "oracle" или экземпляр из make_policy("oracle")."""
+    return (type(policy) is str and policy == "oracle") or is_grader_oracle(policy)
+
+
 def run_policy(policy, seed: int = 0, config=None, mode: str = "eval", isolated: bool = True,
                time_limit_s: float = 60.0) -> dict:
-    pol = as_policy(policy)
     host = env = None
-    if isolated and type(pol) is not Oracle:  # базовая oracle — часть оценщика, ей ответ положен
-        if os.environ.get(POLICY_PROCESS_ENV):
-            raise RuntimeError("run_policy(isolated=True) нельзя вызывать из процесса политики")
-        host = pol = _PolicyProcess(pol)  # до запуска среды: процессу политики нечего от неё унаследовать
+    if _grader_oracle_requested(policy):
+        pol = make_policy("oracle")  # свежая oracle среды: ответ — привилегия оценщика, переданный объект не используется
+    else:
+        pol = as_policy(policy)
+        if isolated:
+            if os.environ.get(POLICY_PROCESS_ENV):
+                raise RuntimeError("run_policy(isolated=True) нельзя вызывать из процесса политики")
+            host = pol = _PolicyProcess(pol)  # до запуска среды: процессу политики нечего от неё унаследовать
     traj = []
     try:
         env = SubprocessEnv(mode=mode, time_limit_s=time_limit_s) if isolated else AuditEnv(mode=mode, time_limit_s=time_limit_s)
@@ -252,14 +312,15 @@ def run_policy(policy, seed: int = 0, config=None, mode: str = "eval", isolated:
     finally:
         if host is not None:
             host.close()
-        if isolated and env is not None:
+        if env is not None:
             env.close()
-    return {"summary": summary, "grader": report["result"], "grader_log": report["log"], "trajectory": traj}
+    return {"summary": summary, "grader": report["result"], "grader_log": report["log"],
+            "diagnostics": report.get("diagnostics"), "trajectory": traj}
 
 
 BASELINE_ADAPTERS = {
     "random_explorer": lambda seed=0: make_policy("random", seed),
     "simple_reconciliation": lambda seed=0: make_policy("reconciler"),
     "flag_all_attack": lambda seed=0: make_policy("flag_all"),
-    "oracle_grader_only": lambda seed=0: Oracle(),
+    "oracle_grader_only": lambda seed=0: make_policy("oracle"),
 }

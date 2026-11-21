@@ -1,9 +1,9 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "auditgym/findings.schema.json",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "auditgym/findings.schema.json",
   "title": "findings.json — ответ агента (аргумент submit)",
+  "description": "Структура, которую принимает matcher.validate_submission. Ответ, нарушающий схему, — неверный: эпизод завершается с наградой −1 (ошибка — в журнале оценщика, политике — только ограниченная ошибка invalid_submission). Неверная структура — только неверный тип значения, отсутствующее обязательное поле и превышение лимитов (30 выводов, 10 элементов исходного списка evidence_ids, 1000 кодовых точек explanation); лишние ключи игнорируются. Пустые, повторные или несуществующие ID, неизвестный type и любая строка currency — не ошибка структуры, а несопоставимый вывод (FP). Draft-04 выбран намеренно: в нём integer — число без дробной части в записи (100.0 отвергается, как и в коде). Сверх схемы проверяется только условие, зависящее от эпизода: episode_id равен episode_id из manifest.",
   "type": "object",
-  "additionalProperties": false,
   "required": [
     "episode_id",
     "findings"
@@ -11,15 +11,14 @@
   "properties": {
     "episode_id": {
       "type": "string",
-      "description": "episode_id из manifest"
+      "description": "episode_id из manifest (иначе ответ неверный)"
     },
     "findings": {
       "type": "array",
       "maxItems": 30,
-      "description": "не больше 30 выводов",
+      "description": "не больше 30 выводов; повторы — отдельные выводы",
       "items": {
         "type": "object",
-        "additionalProperties": false,
         "required": [
           "type",
           "affected_ids",
@@ -30,49 +29,36 @@
         ],
         "properties": {
           "type": {
-            "enum": [
-              "duplicate_invoice",
-              "payment_allocation",
-              "fx_rate",
-              "period_cutoff"
-            ]
+            "type": "string",
+            "description": "одно из policy.finding_types (duplicate_invoice, payment_allocation, fx_rate, period_cutoff); другая строка — несопоставимый вывод"
           },
           "affected_ids": {
             "type": "array",
-            "minItems": 1,
-            "maxItems": 10,
             "items": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 64
+              "type": "string"
             },
-            "description": "канонические ID (см. policy.finding_types); doc_id принимается как синоним"
+            "description": "множество точных ID (порядок и повторы не важны); должно точно совпасть с каноническим набором ошибки (policy.finding_types.<type>.affected_ids)"
           },
           "claimed_amount_minor": {
             "type": "integer",
-            "minimum": -1000000000000000,
-            "maximum": 1000000000000000,
-            "description": "сумма в минимальных единицах базовой валюты"
+            "description": "сумма в минимальных единицах базовой валюты; JSON-целое, не bool и не строка"
           },
           "currency": {
             "type": "string",
-            "pattern": "^[A-Za-z]{3}$",
-            "description": "базовая валюта эпизода"
+            "description": "код базовой валюты; сравнивается точно (без смены регистра и обрезки пробелов)"
           },
           "evidence_ids": {
             "type": "array",
             "maxItems": 10,
             "items": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 64
+              "type": "string"
             },
-            "description": "row_id, doc_id, fx_id"
+            "description": "не больше 10 элементов исходного списка; множество существующих ID открытых записей (row_id, doc_id, invoice_id, payment_id, fx_id); несуществующий ID — несопоставимый вывод"
           },
           "explanation": {
             "type": "string",
             "maxLength": 1000,
-            "description": "короткое обоснование, на награду не влияет"
+            "description": "короткое обоснование до 1000 кодовых точек Unicode, на награду не влияет"
           }
         }
       }

@@ -1,4 +1,4 @@
-# AuditGym 3 — RL-среда для дообучения ИИ-аудитора финансовой отчётности
+# AuditGym 3.2 — RL-среда для дообучения ИИ-аудитора финансовой отчётности
 
 Воспроизводимый симулятор аудита. Генератор создаёт синтетическую компанию за один отчётный
 период: главную книгу, счета, платежи, курсы валют и учётную политику. В книги внесены
@@ -8,20 +8,24 @@ read-only интерфейс инструментов и отправляет в
 `clip(2*F1 - 1 - 0.002*inspection_steps, -1, 1)`.
 
 Это **среда для возможного дообучения модели**: веса она не обновляет. Платные API, GPU и сеть
-не нужны — только стандартная библиотека Python 3.11. Всё на русском: код и комментарии,
-policy.json, текст задачи, сообщения агенту, отчёты, документация. Имена полей, ID и коды
-ошибок — латиницей, как в ТЗ. Все компании, люди, счета и суммы вымышлены.
+не нужны — только стандартная библиотека Python ≥ 3.11. Код, policy.json, текст задачи,
+сообщения агенту, отчёты и документация — на русском. Имена полей, ID и коды ошибок —
+латиницей, как в ТЗ. Все компании, люди, счета и суммы вымышлены.
 
 ---
 
 ## Единая команда проверки
 
 ```bash
-python3.11 -m auditgym check
+python3 -m auditgym check
 ```
 
-Работает офлайн примерно за 45 секунд. Код возврата `0` означает, что всё прошло. Отчёты:
-`reports/check_report.md` и `.json`, `reports/jury_scorecard.md` и `.json`.
+Нужен любой `python3` версии 3.11 или новее; в образе — `python3.11 -m auditgym check`.
+То же через make: `make check PY=python3` (по умолчанию `PY=python3.11`).
+
+Работает офлайн примерно за 60 секунд. Код возврата `0` означает, что всё прошло. Отчёты:
+`reports/check_report.md` и `.json` (версии, git-коммит, итоги разделов, базовые политики,
+разбор сбоев, ресурсы), `reports/jury_scorecard.md` и `.json`.
 
 В контейнере — официальный прогон без сети:
 
@@ -35,89 +39,224 @@ docker run --rm --network none --cpus 2 --memory 4g auditgym
 
 Зависимостей нет: `requirements.txt` пуст намеренно, в `pyproject.toml` указано
 `dependencies = []`. Образ закреплён точной версией `python:3.11.11-slim-bookworm`, UTF-8 задан
-явно. Лимиты ТЗ: 2 CPU, 4 ГБ RAM, без GPU, 60 с на эпизод, 100 шагов. Измерено: пик памяти
-73 МБ, самый долгий эпизод 0.06 с.
+явно, код в образе принадлежит root, писать пользователь прогона может только в `reports/`.
+**Docker после последних правок не запускался** — на машине разработки его нет (см. «Честные
+ограничения»). Лимиты ТЗ: 2 CPU, 4 ГБ RAM, без GPU, 60 с на эпизод, 100 шагов. Измерено
+`check` (Python 3.13, macOS): пик памяти оркестратора 137 МБ (вместе с тестами в том же
+процессе), процесса среды 71 МБ, самый долгий эпизод 0.08 с.
 
-Для жюри есть отдельная короткая инструкция по проверке каждого критерия: [JURY.md](JURY.md).
+Для жюри есть короткая инструкция по проверке каждого критерия: [JURY.md](JURY.md).
 
 ### Все команды
 
+Все команды запускаются из корня проекта.
+
 | Команда | Назначение |
 |---|---|
-| `python3.11 -m auditgym check` | единая проверка: тесты, детерминизм, данные, базовые политики, утечки, парные проверки, репетиция оценки жюри |
-| `python3.11 -m auditgym jury` | репетиция оценки по разделу 10 ТЗ: чёрный ящик, 20 свежих «скрытых» эпизодов, таблица баллов |
-| `python3.11 -m auditgym generate --seed 101 102 --config '{"preset":"interacting"}' --out DIR` | эпизоды для **любых** seed и конфигураций → `DIR/public`, `DIR/grader` |
-| `python3.11 -m auditgym verify DIR` | **независимая** проверка данных и эталона **только по файлам** |
-| `python3.11 -m auditgym grade DIR --findings f.json --steps N` | оценить `findings.json` общим matcher'ом |
-| `python3.11 -m auditgym pair --seed 1 2 --config cfg.json` | парные проверки: повтор, смена ID и порядка, внешнее преобразование файлов |
-| `python3.11 -m auditgym transform DIR --episode EP-… --out DIR2` | переименовать все ID и перемешать строки экспортированного эпизода |
-| `python3.11 -m auditgym run --policy reconciler --split dev [--mode train\|eval] [--trajectories out.jsonl]` | прогнать политику |
-| `python3.11 -m auditgym demo` | пошаговый показ работы среды (запись: `reports/demo_transcript.txt`) |
-| `python3.11 -m auditgym export` / `trajectories` | пересобрать `episodes/` и `trajectories/trajectories.jsonl` |
-| `python3.11 -m unittest discover -s tests -t .` | только тесты (63) |
-| `python3.11 scripts/mutation_test.py` | мутационный тест самой проверки (около 3 мин) |
+| `python3 -m auditgym check` | единая проверка: тесты, детерминизм, данные, базовые политики, утечки (и в опубликованных траекториях), парные проверки, репетиция оценки жюри |
+| `python3 -m auditgym jury` | репетиция оценки по разделу 10 ТЗ: чёрный ящик, 20 свежих «скрытых» эпизодов, таблица баллов |
+| `python3 -m auditgym generate --seed 101 102 --config '{"preset":"interacting"}' --out DIR` | эпизоды для **любых** seed и конфигураций → `DIR/public`, `DIR/grader` |
+| `python3 -m auditgym verify DIR` | **независимая** проверка данных и эталона **только по файлам** |
+| `python3 -m auditgym grade DIR --findings f.json --steps N` | оценить `findings.json` общим matcher'ом |
+| `python3 -m auditgym pair --seed 1 2 --config cfg.json` | парные проверки: повтор, смена ID и порядка, внешнее преобразование файлов |
+| `python3 -m auditgym transform DIR --episode EP-… --out DIR2` | переименовать все ID и перемешать строки экспортированного эпизода |
+| `python3 -m auditgym run --policy reconciler --split dev [--mode train\|eval] [--trajectories out.jsonl]` | прогнать политику |
+| `python3 -m auditgym demo > reports/demo_transcript.txt` | пошаговый показ работы среды (записанный показ — в `reports/demo_transcript.txt`) |
+| `python3 -m auditgym export` / `trajectories` | пересобрать `episodes/` и `trajectories/trajectories.jsonl` |
+| `python3 -m unittest discover -s tests -t .` | только тесты (166) |
+| `python3 scripts/mutation_test.py` | мутационный тест самой проверки (около 2 мин) |
 
 ---
 
-## Что проверяет `check` (по критериям оценки ТЗ)
+## Для жюри: `judge_adapter.py` (единый способ подключения)
 
-| Раздел | Критерий | Что именно проверяется |
+Адаптер реализует интерфейс из определений проверок. **Рабочая директория — корень проекта**
+(в Docker-образе — `/app`, это `WORKDIR`). Адаптер сам добавляет корень в `sys.path`; процессу
+жюри достаточно `import judge_adapter` из корня (или `PYTHONPATH=/app`). Пример в контейнере:
+
+```bash
+docker run --rm --network none --cpus 2 --memory 4g -v "$PWD/jury:/jury" auditgym python -c "import judge_adapter as J; J.generate_episode(123, {'preset': 'mixed'}, '/jury/ep1')"
+```
+
+Каталог вывода должен быть доступен на запись пользователю образа (uid 10001).
+
+### Точки входа
+
+```python
+import judge_adapter as J
+
+J.generate_episode(seed, team_config, "/jury/ep1")   # плоский каталог из 8 файлов
+env = J.make_env()                                    # среда и оценщик — в отдельном процессе
+obs, info = env.reset(0, {"mode": "closed", "episode_dir": "/jury/ep1"})
+obs, reward, terminated, truncated, info = env.step(
+    {"name": "list_records", "args": {"table": "ledger", "cursor": None, "limit": 50}})
+obs, reward, terminated, truncated, info = env.step({"name": "submit", "args": {"findings": findings}})
+J.score_episode("/jury/ep1", findings, inspection_steps)   # закрытый вызов оценщика
+env.close()
+```
+
+- **`generate_episode(seed, config, output_dir)`** — обёртка над генератором команды.
+  `config` — конфиг генератора (раздел «Конфигурация»); объект с ключом `team_config` тоже
+  принимается. Каталог плоский: `manifest.json, ledger.csv, invoices.jsonl, payments.jsonl,
+  fx.csv, policy.json` (открытые, форматы §03) и закрытые `truth.json, provenance.json`.
+  Других файлов нет: книги до внесения ошибок восстанавливаются из `provenance.json`.
+- **`make_env()`** → объект с `reset`, `step`, `close` (и `with`). Среда и оценщик работают в
+  дочернем процессе `auditgym.server`; эталон в память вызывающего процесса не попадает.
+- **`reset(seed, config)`**, `config = {"mode": "closed" | "train", "episode_dir": str?,
+  "team_config": dict?}`:
+  - есть `episode_dir` — загружается ровно этот каталог (записи и ID как в файлах; seed и
+    team_config не используются); повторный reset начинает его заново;
+  - нет `episode_dir` — эпизод генерируется по `seed` и `team_config`;
+  - `mode` по умолчанию `"closed"`: награда политике — числовой `0` на каждом шаге, включая
+    последний, `info = {}`; `"train"`: на последнем шаге — терминальная награда и
+    `info.grading` (valid, reward, P, R, F1, inspection_steps).
+- **`step(action)`**, `action = {"name": <действие>, "args": {...}}` (или JSON-строка с таким
+  объектом). Имена: `list_records(table, cursor, limit)`, `get_record(table, id)`,
+  `get_document(doc_id)`, `calculator(expression)`, `submit(findings)`. Таблицы: `ledger`,
+  `invoices`, `payments`, `fx`. `id` в get_record — `row_id` | `invoice_id` или `doc_id` |
+  `payment_id` или `doc_id` | `fx_id`.
+- **Наблюдения.** Первое: `{"task", "manifest", "policy", "remaining_steps": 100}`. Следующие:
+  `{"result", "error", "remaining_steps"}`; при ошибке `result = null`.
+  - `list_records` → `{"records": [...], "next_cursor": null | "<table>:<смещение>"}`; первый
+    cursor — `null`, страница не больше 50 записей, курсор стабилен;
+  - `get_record`, `get_document` → сама запись или документ;
+  - `calculator` → десятичная строка (`"0.3"` для `0.1+0.2`);
+  - `submit` → `{"accepted": true}` (без оценки правильности) или ошибка структуры.
+- **`score_episode(episode_dir, findings, inspection_steps)`** — общий matcher и награда по
+  файлам каталога. Валидный ответ → `{"tp", "fp", "fn", "precision", "recall", "f1",
+  "return"}`; неверная структура → `"return": -1.0`, остальные поля `null`, ошибка — в журнале
+  оценщика. `findings=None` — ответа не было (лимит шагов или времени): пустые выводы.
+- **Журнал оценщика**: `judge_adapter.GRADER_LOG` (список), логгер `auditgym.judge` и, если
+  задана переменная окружения `AUDITGYM_GRADER_LOG`, строка JSON в этом файле. Внутри среды
+  журнал — `env.grader_report()["log"]` (только для оркестратора).
+- **Базовые политики через адаптер**: `J.baseline("random" | "reconciler" | "flag_all" |
+  "oracle", episode_dir)` и `J.run_on_episode(policy, episode_dir)` — прогон и оценка так, как
+  это делает жюри. Oracle строит выводы из `truth.json` только на стороне жюри и отправляет их
+  обычным submit.
+
+### Коды ошибок
+
+Ошибка — `{"code", "message"}`: код латиницей, сообщение на русском не длиннее 119 символов,
+без путей, seed и закрытых данных. Каждая ошибка, кроме `episode_finished`, расходует шаг.
+
+| Код | Когда |
+|---|---|
+| `invalid_action` | оболочка не `{"name", "args"}`: не объект, нет `name`, лишние ключи, неразборчивый JSON |
+| `unknown_action` | `name` не из пяти действий |
+| `invalid_arguments` | неверный или лишний аргумент: `args` не объект, неизвестная таблица, `limit` не целое ≥ 1, лишние ключи (сообщение называет не больше трёх, каждый не длиннее 16 символов) |
+| `not_found` | нет записи или документа с таким ID |
+| `invalid_cursor` | курсор другой таблицы, неверного формата или вне диапазона |
+| `calculator_error` | выражение вне арифметической грамматики, деление на ноль, слишком большое число |
+| `invalid_submission` | неверная структура `findings`: эпизод завершён (`terminated=true`), награда −1 у оценщика |
+| `time_limit` | истекли 60 с от начала reset: `truncated=true`, пустой ответ |
+| `episode_finished` | шаг после завершения эпизода; ничего не меняет |
+
+### Пограничные решения
+
+- submit — одно из 100 действий, но не входит в `inspection_steps`; все предыдущие шаги, в том
+  числе ошибочные, входят. Submit на действии 100 принимается.
+- 100 действий без submit — `truncated=true` и пустой ответ.
+- Лимит времени — 60 с **от начала reset**, включая время политики.
+- Повторная отправка после завершения не меняет зафиксированный результат.
+
+---
+
+## Соответствие блокам официальных определений проверок
+
+| Блок | Как жюри прогоняет у нас | Чем покрыто в проекте |
 |---|---|---|
-| `unit_tests` (63) | все | reset/step, схемы, лимиты, завершение, неверный ввод, тайм-аут, повторная отправка, режимы train/eval, атакующие ответы, экстремальные конфигурации, эпизоды из файлов, зависшие и падающие политики, обращение provenance, пресеты, UTF-8 |
-| `determinism` | Воспроизводимость | одинаковые seed+config → побайтно одинаковый эпизод; совпадение с опубликованными `episodes/*/index.json` |
-| `data_and_truth` (220 эпизодов) | Данные и эталон | книги до ошибок **восстанавливаются из provenance.json** и проходят все равенства; у каждого изменения книги есть причина; **независимая перепроводка** каждого документа по политике совпадает с чистой книгой полностью, а с книгой после внесения — везде, кроме объявленных ошибок; эталонный аудитор не находит ничего на чистых книгах и ровно эталон на книгах с ошибками; каждый набор доказательств сам по себе доказывает ошибку |
-| `baselines` | Надёжность награды | 4 базовые политики и скриптовый аудитор в режиме **eval** в **отдельном процессе**: `flag_all < reconciler < rule_auditor ≤ oracle = 1.0` |
-| `no_leakage` | Контракт и изоляция | каждое наблюдение каждой траектории — на закрытые ключи и issue_id |
-| `paired_checks` (30) | Воспроизводимость | 10 точных повторов; 10 смен ID и порядка через конфиг (эталон и все таблицы совпадают при точном сопоставлении ID); 10 внешних преобразований файлов |
-| `jury_rehearsal` | все пять | репетиция оценки жюри, см. ниже |
+| **1. Контракт, C01–C20** | `make_env()` → `reset` на фикстурах C, E, L, U через `episode_dir`, действия в оболочке `{"name","args"}` | `tests/test_judge_adapter.py`, класс `Block1Contract` (`test_C01…test_C20`); ещё 20 проверок через `SubprocessEnv` — `jury`, «Контракт и изоляция» |
+| **2. Закрытые эпизоды, D01–D20** | `generate_episode(seed, team_config, dir)` с конфигами из таблицы ниже; независимая сверка по 8 файлам | `tests/test_judge_pairs.py`, `MatrixD.test_D01_D20_generated_and_valid` (`datachecks.check_records` по файлам: равенства до внесения, объявленное расхождение после, перепроводка, достаточность каждого набора доказательств); `check` → `data_and_truth` (220 эпизодов) |
+| **3. Matcher и награда, 1–20 и M01–M12** | `score_episode(dir, findings, inspection_steps)` | `tests/test_judge_adapter.py`: `Block3MatcherReward` (`test_01…test_20`), `OpenExamplesM` (`test_M01…test_M12`); `tests/test_matcher_reward.py` |
+| **4. Парные проверки, P01–P20** | копия каталога жюри: перестановка записей и/или взаимно однозначная замена ID (в truth и provenance тоже) → `reset(…, {"episode_dir": копия})`, oracle с новыми ID и тем же числом шагов | `tests/test_judge_pairs.py`, `PairsP`: `test_P01_P05_permutation`, `test_P06_P10_id_remap`, `test_P11_P20_permutation_and_remap`; ещё `pair` и `check` → `paired_checks` |
+| **Инженерия** | см. таблицу в [JURY.md](JURY.md) | `check` пишет версии и коммит; `trajectories.jsonl`; разбор сбоев ниже |
 
-### Репетиция оценки жюри и мутационный тест
+### D01–D20 конфигом генератора
 
-По разделу 10 ТЗ жюри считает «пройдено из 20» по каждому критерию. Определения проверок
-публикует жюри, поэтому `jury` реализует **наше прочтение** критериев. Это самооценка, а не
-гарантия баллов. Проверки устроены как чёрный ящик:
+Только документированными ключами конфига (`auditgym/config.py`); незаданные ключи — по
+умолчанию (в том числе отвлекающие случаи по умолчанию, если `distractors` не указан). Здесь
+`0` — все остальные типы ошибок, сценарии или случаи нулевые. Ровно эти конфиги собирает
+`tests/test_judge_pairs.py` (`D_MATRIX`).
 
-- **Контракт и изоляция, 20 проверок** — против среды в отдельном процессе.
-- **Данные и эталон, 20 свежих «скрытых» эпизодов** (5 чистых, 5 с взаимодействующими
-  ошибками, 10 смешанных). Каждый эпизод пишется в файлы и проверяется только по файлам.
-- **Надёжность награды, 20 проверок.** Каждый ответ отправляется через среду; допуск считается
-  по опубликованной формуле, а не берётся из кода.
-- **Воспроизводимость, 20 парных проверок.**
-- **Инженерия, 5 пунктов.**
-
-Текущий результат: **100 / 100** (`reports/jury_scorecard.md`).
-
-`scripts/mutation_test.py` по одному вносит **настоящие баги** во временную копию проекта.
-Каждый должен снять баллы в своём критерии:
-
-| Внесённый баг | Что поймало | Итог |
+| Эпизоды | Сценарий | `team_config` |
 |---|---|---|
-| matcher не проверяет доказательства | Надёжность 18/20 | 97.5 |
-| страница больше 50 строк | Контракт 19/20 | 98.8 |
-| эталон в `info` после `reset` | Контракт 19/20 | 98.8 |
-| усечение вместо банковского округления | Данные 0/20, Воспроизводимость 18/20 | 73.5 |
-| дата курса по UTC вместо часового пояса компании | Данные 9/20 | 86.2 |
-| допуск 10% вместо 0.05% | Надёжность 19/20 | 98.8 |
-| недетерминированный генератор | Воспроизводимость 5/20, Контракт 19/20 | 87.5 |
-| сопоставление без «один к одному» | Надёжность 18/20 | 97.5 |
-| награда видна политике в режиме eval | Контракт 19/20 | 98.8 |
-| provenance теряет изменённые строки | Данные 8/20 | 85.0 |
-| платёж без расписки проведён не по политике (на 1 минимальную единицу) | Данные 0/20 | 75.0 |
+| D01 | обычная сверка, чисто | `{"errors": 0, "interactions": 0, "distractors": 0}` |
+| D02 | корректно разбитый платёж | то же + `"distractors": {"split_payment": 3}` |
+| D03 | корректный возврат | `"distractors": {"refund": 2}` |
+| D04 | законные повторяющиеся суммы | `"distractors": {"recurring_amount": 2, "same_day_repeat": 2}` |
+| D05 | валютная и периодная граница | `"distractors": {"tz_boundary": 4, "next_period_doc": 2, "prior_period_doc": 1}, "foreign_share": 1.0` |
+| D06–D08 | дубль счёта | `"errors": {"duplicate_invoice": 1}` (D07: `"foreign_share": 0.0`; D08: `2`) |
+| D09 | пропущенное распределение | `"errors": {"payment_allocation": 1}, "variants": {"payment_allocation": "missing"}` |
+| D10–D11 | частичное распределение | `"variants": {"payment_allocation": "partial"}` (D11: 2 ошибки) |
+| D12 | курс другой даты | `"errors": {"fx_rate": 1}, "variants": {"fx_rate": "wrong_date"}` |
+| D13 | перевёрнутый курс | `"variants": {"fx_rate": "inverted_rate"}` (есть и `rounded_rate`) |
+| D14 | документ прошлого периода проведён поздно | `"errors": {"period_cutoff": 1}, "variants": {"period_cutoff": "prior_period"}` |
+| D15 | документ следующего периода проведён задним числом | `"variants": {"period_cutoff": "next_period"}` |
+| D16–D18 | сценарий 1: частичный валютный платёж на границе периода | `"interactions": {"partial_fx_boundary": 1}` (D17: `"foreign_share": 1.0`; D18: `2`) |
+| D19–D20 | сценарий 2: замаскированный дубль | `"interactions": {"masked_duplicate": 1}` (D20: `2`) |
 
-Пойманы **11 из 11**: каждый баг снижает баллы ровно в своём критерии.
+Пресеты: `clean`, `clean_hard`, `interacting`, `interacting_partial_fx_boundary`,
+`interacting_masked_duplicate`, `four_types`, `mixed`, `heavy` (12 ошибок), `only_<тип>`.
 
-Ради двух из этих мутантов проверяющая сторона (`audit_rules.py`) **не использует общий с
-генератором код** денег и времени. Конвертация считается на точных дробях с явным банковским
-округлением, даты и границы периода — ручной арифметикой смещений UTC. Ещё одного мутанта,
-проводку не по политике, ловит **независимая перепроводка** каждого документа.
+### Соответствие четырёх типов ошибок
+
+Канонические `affected_ids`, сумма и наборы доказательств опубликованы в
+`policy.json → finding_types` и закодированы в `auditgym/render.py` (эталон) и
+`auditgym/matcher.py` (сопоставление). Сумма — в базовой валюте эпизода, `currency` — её код.
+
+| Тип (формулировка ТЗ) | Варианты (`variants`) | `affected_ids` | `expected_amount_minor` | Допустимые наборы доказательств |
+|---|---|---|---|---|
+| `duplicate_invoice` — дубли счетов | точная копия счёта (клиент, момент, сумма, строки с PO) под новым номером | оба `invoice_id` | проводка 1200 одной копии | `{doc_id оригинала, doc_id копии, строка}`, строка — 1200 или 4000 любой из копий (4 набора) |
+| `payment_allocation` — пропущенное или частичное распределение | `missing` (вся расписанная сумма на 2900), `partial` (часть на 2900); в сценарии 2 — зачёт на чужой счёт | `[payment_id, invoice_id из invoice_refs]` | ошибочная кредитовая строка, как проведена | `{doc_id платежа, эта строка}` |
+| `fx_rate` — неверная дата или курс конвертации | `wrong_date`, `rounded_rate`, `inverted_rate` (только для пар около паритета) | `[invoice_id]` или `[payment_id]` | `\|проведено − верно\|` по основной строке | `{doc_id, основная строка, fx_id курса даты по политике}`; у счёта основная строка — 1200 или 4000 |
+| `period_cutoff` — ошибка отнесения к периоду | `prior_period` (проведён поздно), `next_period` (проведён задним числом; счёт или оплата) | `[invoice_id]` или `[payment_id]` | основная строка, проведённая в периоде | `{doc_id, основная строка}`; у счёта — 1200 или 4000 |
+
+`"random"` (по умолчанию) — вариант выбирается генератором; фактический вариант каждой ошибки
+— в `provenance.mutations[].variant`. Сценарии взаимодействия свои варианты не меняют.
+
+---
+
+## Matcher и награда (код: `auditgym/matcher.py`)
+
+Правила — «Точные соглашения matcher» определений проверок; они же опубликованы в
+`policy.json → matching`.
+
+- **Структура** (неверная → весь submit −1, ошибка — в журнале оценщика, политике — только
+  `invalid_submission`): неверный тип значения; нет обязательного поля (`episode_id`,
+  `findings`, шесть полей вывода); больше 30 выводов; больше 10 элементов **исходного** списка
+  `evidence_ids` (до удаления повторов); `explanation` длиннее 1000 кодовых точек Unicode;
+  `claimed_amount_minor` не JSON-целое (bool, строка, дробное — неверный тип); `episode_id` не
+  равен `manifest.episode_id`. Лишние ключи игнорируются.
+- **ID — точные строки**: с учётом регистра и пробелов, без синонимов `doc_id ⇄
+  invoice_id/payment_id`, без приведения чисел.
+- **`affected_ids`** — множество: порядок и повторы не важны; должно точно совпасть с
+  каноническим набором ошибки.
+- **`evidence_ids`** — множество; каждый ID обязан существовать в открытых записях эпизода
+  (`row_id`, `doc_id`, `invoice_id`, `payment_id`, `fx_id`), иначе вывод не сопоставляется (FP);
+  хотя бы один допустимый набор входит целиком; лишние существующие ID не мешают.
+  `invoice_id`/`payment_id` — существующие ID, но `doc_id` в наборе не заменяют.
+- **`type`** — точная строка из четырёх; неизвестная строка — FP, не ошибка структуры.
+- **`currency`** — точное совпадение с кодом валюты эталона, без смены регистра и обрезки.
+- **Сумма**: `|claimed − expected| ≤ τ`, **τ = 0** для всех типов (`policy.json → matching.
+  amount_tolerance_minor`, `truth.json → tolerance_minor`): суммы эталона — точный пересчёт по
+  политике, документированного округления сверх него нет.
+- **Неоднозначность**: двудольный граф (повторы выводов — отдельные вершины), паросочетание
+  максимальной мощности; среди равных — лексикографически наименьшая последовательность пар
+  `(issue_id, индекс вывода с 0)`, отсортированная по `issue_id` (`matcher.select_pairs`).
+  TP — число пар, FP = выводов − TP, FN = ошибок − TP. Повтор верного вывода — FP.
+- **Метрики**: P, R, F1 точно по ТЗ, включая крайние случаи (пустой эталон и пустой ответ → F1=1).
+- **Общая награда**: `clip(2*F1 - 1 - 0.002*inspection_steps, -1, 1)`. **Экспериментальная**
+  (половина за верные тип и ID при неверной сумме или доказательствах) показывается отдельно и
+  никогда не подменяет общую.
 
 ---
 
 ## Структура репозитория
 
 ```
+judge_adapter.py      адаптер жюри: generate_episode, make_env, step {"name","args"}, score_episode
 auditgym/
-  config.py           версии, конфигурация, пресеты, строгая проверка
+  config.py           версии, конфигурация, пресеты, variants, строгая проверка, предел документов
   money.py            деньги, курсы, время (сторона генератора)
   story.py            шаг 1: скрытая история компании и корректные отвлекающие случаи
   posting.py          шаг 2: двойная запись по опубликованной политике (план счетов)
@@ -125,25 +264,25 @@ auditgym/
   render.py           шаг 4: публичные ID, порядок, эталон, provenance с полным диффом книги
   generator.py        generate(seed, config) с детерминированными повторными попытками
   policy_text.py      policy.json, текст задачи, справка по действиям (на русском)
-  env.py              AuditEnv: reset/step, 5 инструментов, лимиты, режимы train/eval, эпизоды из файлов
-  server.py           среда и оценщик в отдельном процессе (JSON lines), команды оценщика по токену
+  env.py              AuditEnv: reset/step, 5 инструментов, лимиты, режимы train/eval, эпизод из каталога
+  server.py           среда и оценщик в отдельном процессе (JSON lines), два режима запуска
   matcher.py          общий matcher, метрики, терминальная и экспериментальная награда (открытый код)
   calculator.py       песочница десятичной арифметики
   audit_rules.py      НЕЗАВИСИМЫЙ проверяющий: равенства, перепроводка, эталонный аудитор, доказательства
   provenance_tools.py книги до ошибок из provenance.json
   datachecks.py       проверки данных и эталона (по объектам или по файлам)
   policies.py         базовые политики: random, reconciler, flag_all, oracle + демо rule_auditor
-  adapters.py         подключение любой политики (функция obs→action или объект)
+  adapters.py         run_policy: любая политика в отдельном процессе (песочница на macOS)
   runner.py           цикл эпизода, наборы прогонов, траектории, сторожевой таймер
-  export.py           запись и чтение эпизодов в форматах раздела 03 (UTF-8)
+  export.py           запись и чтение эпизодов (public/grader и плоский каталог), UTF-8
   transform.py        безвредное преобразование файлов эпизода (ID + порядок)
   jury.py             репетиция оценки по разделу 10
-configs/              train.json, dev.json — открытые seed и конфигурации (config_version 3.0)
+configs/              train.json, dev.json — открытые seed и конфигурации (config_version 3.2)
 episodes/             10 train + 10 dev: public/<id>/*; grader/<id>/truth.json, provenance.json, pre_injection/
-trajectories/         trajectories.jsonl (train/dev, 4 политики)
-schemas/              JSON Schema: findings, action, truth
+trajectories/         trajectories.jsonl (train/dev; 104 прогона, из них 12 по лимиту шагов и 18 в режиме eval)
+schemas/              JSON Schema draft-04: action, findings, truth, observation
 scripts/              mutation_test.py
-tests/                63 теста
+tests/                166 тестов, в том числе по официальным определениям (test_judge_adapter, test_judge_pairs)
 reports/              check_report, jury_scorecard, demo_transcript
 DESIGN.md             записка о дизайне
 JURY.md               как проверить каждый критерий
@@ -151,125 +290,170 @@ JURY.md               как проверить каждый критерий
 
 ---
 
-## Подключение политик (в том числе политик организаторов)
+## Версии
+
+| Что | Значение | Где |
+|---|---|---|
+| среда (`ENV_VERSION`), пакет | 3.2.0 | `auditgym/env.py`, `pyproject.toml`; `info.env_version` после reset |
+| генератор (`GENERATOR_VERSION`) | 3.2.0 | `auditgym/config.py`; `manifest.generator_version`, `provenance.generator_version` |
+| формат данных и схем (`SCHEMA_VERSION`) | 3.2 | `auditgym/config.py`; `manifest.schema_version`, `truth.schema_version` |
+| формат конфига (`CONFIG_VERSION`) | 3.2 | `auditgym/config.py`; `configs/*.json` и каждый их эпизод; `manifest.config_version` |
+| политика | 3.2 | `policy.json → policy_version` |
+
+- Генератор случайных чисел истории зависит от `(generator_version, seed, экономическая
+  часть конфига, attempt)`: новая версия генератора меняет все эпизоды. `check` сверяет хэши
+  эпизодов с опубликованными `episodes/*/index.json` (там же seed и конфиг каждого).
+- Конфиг с другой `config_version` отвергается (`ConfigError`).
+- `reports/check_report.json` пишет все четыре версии, Python, платформу и git-коммит с
+  признаком незакоммиченных правок; каждая строка `trajectories.jsonl` — `env_version`,
+  `generator_version` и `mode`. `check` проваливается, если траектории собраны другой версией.
+- История: **3.0.0** — первая версия (коммит `de26f77`). **3.1** — изоляция политики в
+  `run_policy`, точное выполнение конфига, `provenance.actual`, `fx_id_format`, схемы draft-04
+  (отдельно не публиковалась). **3.2** — официальные определения проверок: `judge_adapter.py`,
+  плоский каталог эпизода, matcher с τ = 0 и точными ID, ключ конфига `variants`, ошибка
+  `invalid_submission`, лимит времени от начала reset.
+
+---
+
+## Подключение политик
 
 ```python
 from auditgym import make_env, run_policy
 
-# 1) Цикл в стиле Gymnasium
-env = make_env(mode="train")                     # make_env(mode="eval", isolated=True) — отдельный процесс
-obs, info = env.reset(seed=1, config={"preset": "mixed"})
-obs, reward, terminated, truncated, info = env.step({"type": "list_records", "table": "ledger"})
+# 1) Цикл в стиле Gymnasium (внутренний формат действий: {"type": ..., аргументы})
+with make_env(mode="train") as env:              # make_env(mode="eval", isolated=True) — отдельный процесс
+    obs, info = env.reset(seed=1, config={"preset": "mixed"})
+    obs, reward, terminated, truncated, info = env.step({"type": "list_records", "table": "ledger"})
 
-# 2) Любая функция obs -> action; среда и оценщик в отдельном процессе, таймер 60 с
-result = run_policy(my_policy_fn, seed=123, config={"preset": "interacting"}, mode="eval")
-result["grader"]["reward"], result["grader"]["f1"], result["trajectory"]
+# 2) Любая политика: функция obs -> action или объект с begin/act
+result = run_policy(my_policy, seed=123, config={"preset": "interacting"}, mode="eval")
+result["grader"]["reward"], result["grader"]["f1"], result["trajectory"], result["diagnostics"]["elapsed_s"]
 ```
 
-- `reset(seed=None)` означает seed 0: эпизоды всегда воспроизводимы.
-- `options=` — синоним `config`, как в Gymnasium.
-- Конфиг и действие можно передать JSON-строкой.
-- **Зависшая** политика прерывается по таймеру: `truncated=true`, пустой ответ.
-- **Падающая** политика не роняет прогон: её действие считается неверным.
-- Адаптеры базовых политик: `auditgym.adapters.BASELINE_ADAPTERS` — `random_explorer`,
-  `simple_reconciliation`, `flag_all_attack`, `oracle_grader_only`.
-- Внешний агент на любом языке подключается по протоколу JSON lines:
-  `python -m auditgym.server --mode eval` (описан в `auditgym/server.py`).
+**`run_policy(isolated=True)`** (по умолчанию) — официальный запуск:
+- среда и оценщик — в одном отдельном процессе, **политика — в другом, свежем**. Туда
+  передаются сама политика (pickle; функции и классы, которые другой процесс не найдёт по
+  имени — из `__main__`, `lambda`, вложенные, — передаются **по значению**, кодом) и
+  наблюдения; обратно — только действия. Политику, которую нельзя передать, отвергает
+  `TypeError` с подсказкой;
+- политике **недоступны**: seed и config эпизода, клиент среды с токеном оценщика, итог эпизода
+  (`grader_report`), пути к файлам эпизода; `run_policy` нельзя вызвать из процесса политики;
+- рабочая папка (cwd) и `TMPDIR` процесса политики — **личная временная папка**, удаляемая
+  после эпизода; процесс завершается вместе со всеми порождёнными им процессами;
+- **macOS**: процесс политики запускается в песочнице `sandbox-exec`: запись только в эту
+  временную папку (и в уже открытые stdout/stderr), чтение `truth.json`, `provenance.json`,
+  `pre_injection/`, `grader/EP-*/` запрещено (по каноническому пути: регистр, ссылки и `..` не
+  помогают), сигналы — только своим процессам;
+- **Linux**: песочницы нет — только отдельный процесс. В Docker-образе код среды и оценщика
+  принадлежит root, и пользователь прогона не может его изменить;
+- лимит 60 с соблюдается и для зависшей политики (`truncated=true`, пустой ответ); исключение в
+  политике — неверное действие (шаг израсходован);
+- результат: `summary`, `grader` (итог оценщика), `grader_log`, `diagnostics` (время эпизода —
+  отдельно от итога, поэтому `grader` при повторе совпадает точно), `trajectory`.
 
-**Пресеты** (`config={"preset": …}`, остальные ключи их переопределяют):
-- `clean`, `clean_hard` — без ошибок;
-- `interacting`, `interacting_partial_fx_boundary`, `interacting_masked_duplicate`;
-- `four_types`, `mixed`, `heavy` (12 ошибок);
-- `only_duplicate_invoice`, `only_payment_allocation`, `only_fx_rate`, `only_period_cutoff`.
+`isolated=False` — **доверенный режим**: политика и среда в процессе оркестратора, изоляции
+нет. `check`, `jury` и `run` запускают встроенные (доверенные) политики в процессе
+оркестратора, а среду с оценщиком — в отдельном процессе (с `run --in-process` — тоже в
+процессе оркестратора).
 
-Скрытый набор жюри «20 эпизодов, из них 5 чистых и 5 с взаимодействующими ошибками»
-собирается так: 5 × `clean`, 5 × `interacting`, 10 × `mixed`, с любыми закрытыми seed.
+**Ответ получает только oracle**, которую создаёт сама среда по явному запросу: строка
+`"oracle"` или `make_policy("oracle")` (`BASELINE_ADAPTERS["oracle_grader_only"]`). Проверка — по
+тождеству объекта в реестре: `Oracle()`, созданный снаружи, подкласс или подмена `__class__`
+ответа не получают.
+
+Адаптеры базовых политик (раздел 06): `auditgym.adapters.BASELINE_ADAPTERS` —
+`random_explorer`, `simple_reconciliation`, `flag_all_attack`, `oracle_grader_only`; в протоколе
+жюри — `judge_adapter.baseline(...)`.
+
+### Протокол процесса среды (`auditgym.server`, JSON lines)
+
+Один JSON-объект на строку; канал — только ASCII. Команды: `reset`, `step`, `grader_report`,
+`oracle`, `close` (описание — в `auditgym/server.py`). Два режима:
+
+- `python -m auditgym.server --mode eval` — **открытый, для внешних агентов** на любом языке:
+  `reset`, `step` и `close` без токена; команды оценщика (`grader_report`, `oracle`) запрещены
+  (`{"ok": false, "error": "forbidden"}`).
+- `python -m auditgym.server --mode eval --token-stdin` — **режим оркестратора** (так процесс
+  запускает `SubprocessEnv`): первая строка stdin — токен оценщика; `reset`, `grader_report`,
+  `oracle` и `close` требуют его, без токена доступен только `step`. Токен не попадает ни в
+  окружение, ни в аргументы процесса.
+
+Строка не длиннее 16 МиБ (`MAX_REQUEST_CHARS`). Слишком длинная или неразборчивая строка с
+командой `step` верхнего уровня — неверное действие (ограниченная ошибка, шаг израсходован);
+остальные такие строки — `{"ok": false, "error": "invalid request"}`. Действие можно передать
+JSON-строкой не длиннее 1 000 000 символов (`MAX_ACTION_CHARS`); длиннее, глубже допустимой
+вложенности или неразборчивое — неверное действие, а не исключение. Лишние аргументы:
+`invalid_arguments` с сообщением `лишние аргументы (N): a, b, c, …` — не больше трёх имён, каждое
+не длиннее 16 символов. `AuditEnv.close()` (повторный вызов безопасен) и `with AuditEnv() as env`
+— как в Gymnasium; `SubprocessEnv` тоже контекстный менеджер.
+
+### Схемы (`schemas/`, JSON Schema draft-04)
+
+`action.schema.json` (внутренний формат действия), `findings.schema.json` (ответ),
+`truth.schema.json` (эталон), `observation.schema.json` (наблюдения и info `AuditEnv`; ключей
+эталона в наблюдении нет — `additionalProperties: false`). Draft-04 выбран намеренно: в нём
+`integer` — число без дробной части в записи (`50.0` отвергается), как в коде.
+`tests/test_schemas.py` сверяет схемы с поведением кода на наборах обычных и крайних действий,
+ответов и наблюдений целого эпизода.
 
 ---
 
 ## Эпизод и форматы данных
 
-Эпизод — одна компания и один месяц. На 600 эпизодах с конфигурацией по умолчанию и
-пресетами измерено:
-- 420–621 строка книги;
-- 204–291 бухгалтерская запись, то есть ≥ 200 при любом прочтении слова «проводки»;
-- 104–166 документов;
+Эпизод — одна компания и один месяц. Измерено на 520 эпизодах (конфиг по умолчанию и все 12
+пресетов, по 40 seed):
+- 419–607 строк книги;
+- 204–287 бухгалтерских записей, то есть ≥ 200 при любом прочтении слова «проводки»;
+- 108–168 документов;
 - 0–12 ошибок.
 
-В опубликованных train/dev — 460–591 строка, 212–278 записей, 118–163 документа. Не больше
-200 документов генератор гарантирует при любой конфигурации.
+В опубликованных train/dev — 439–615 строк, 213–285 записей, 110–162 документа. Не больше 200
+документов гарантировано для любого принятого конфига.
 
-**Открытые записи** (`episodes/<split>/public/<episode_id>/`):
+**Открытые записи** (`episodes/<split>/public/<episode_id>/` или плоский каталог адаптера):
 
 - `manifest.json`: `schema_version`, `generator_version`, `config_version`, `episode_id`,
   `company_name`, `base_currency`, `currency_exponents`, `period_start`/`period_end`
   (полуинтервал), `timezone`, `counts` (строки, записи, документы), правила округления,
-  `csv_null_token`.
+  `csv_null_token`, `fx_id_format`.
 - `ledger.csv`: `row_id, timestamp, account, debit_minor, credit_minor, currency, entity_id, invoice_id, payment_id`.
   Все строки в базовой валюте. Счета — с кодом и русским названием, например
   `1200 Дебиторская задолженность`. Есть фоновые операционные проводки без документов: аренда,
-  зарплата, комиссии банка.
+  зарплата, комиссии банка. Строк с нулевыми дебетом и кредитом нет (`policy.json →
+  posting.zero_rows`).
 - `invoices.jsonl`: `doc_id, invoice_id, entity_id, issued_at, due_at, currency, total_minor, line_items`.
 - `payments.jsonl`: `doc_id, payment_id, timestamp, currency, amount_minor, invoice_refs`.
   `invoice_refs` — список `[{invoice_id, amount_minor}]` или явный `null`.
-- `fx.csv`: `date, source_currency, target_currency, rate`. ID строки курса: `FX-<date>-<src>-<tgt>`.
+- `fx.csv`: `date, source_currency, target_currency, rate`. Столбца ID нет: ID строки курса
+  собирается по `manifest.fx_id_format` (`FX-{date}-{source_currency}-{target_currency}`), тот же
+  шаблон — в `policy.json → fx.fx_id_template`. При смене ID он не меняется.
 - `policy.json`: план счетов, выбор даты курса, границы периода, округление, правила проводок,
-  определение каждого типа вывода (какие ID, какая сумма, какие доказательства), допуск.
+  определение каждого типа вывода, правила matcher и τ.
 
-Форматы значений:
-- Время — ISO-8601 со смещением. Принадлежность к периоду определяется моментом времени.
-- Деньги — целые минимальные единицы, разрядность в `currency_exponents` (JPY=0, KWD=3).
-- Курсы — десятичные строки. Конвертация: `ROUND_HALF_EVEN(amount × rate × 10^(exp_base − exp_src))`.
-- Отсутствующие ссылки — `null` (в CSV буквально `null`). Все файлы — UTF-8.
+Форматы значений: время — ISO-8601 со смещением, принадлежность к периоду — по моменту
+времени; деньги — целые минимальные единицы, разрядность в `currency_exponents` (JPY=0, KWD=3);
+курсы — десятичные строки, конвертация `ROUND_HALF_EVEN(amount × rate × 10^(exp_base −
+exp_src))`; отсутствующие ссылки — `null` (в CSV буквально `null`); все файлы — UTF-8.
 
-**Закрытые файлы оценщика** (`episodes/<split>/grader/<episode_id>/`):
+**Закрытые файлы оценщика** (`episodes/<split>/grader/<episode_id>/` или в плоском каталоге):
 
-- `truth.json`: `issue_id, type, affected_ids, expected_amount_minor, currency, tolerance_minor, evidence_sets, mutation_id`.
-- `provenance.json`:
-  - seed, конфигурация, шаги генерации;
-  - каждое изменение с описанием на русском и проводками до и после;
-  - **полный дифф книги** `ledger_diff`: каждая изменённая строка с причиной — `direct` или
-    `consequence` (например, платёж, закрывающий счёт с неверным курсом);
-  - `documents_added`, `reverse_procedure`, отвлекающие случаи;
-  - `canonical_ids` — карта «публичный ID → сущность истории».
-- `pre_injection/`: книги до внесения ошибок (они же восстанавливаются из provenance.json).
+- `truth.json`: `issue_id, type, affected_ids, expected_amount_minor, currency, tolerance_minor (0), evidence_sets, mutation_id`.
+- `provenance.json`: seed, конфигурация, шаги генерации; каждое изменение с описанием на
+  русском, вариантом и проводками до и после; **полный дифф книги** `ledger_diff` (каждая
+  изменённая строка с причиной `direct` или `consequence`); `documents_added`,
+  `reverse_procedure`; отвлекающие случаи; **`actual`** — что из конфига выполнено и как
+  (клиенты и фактическая доля валютных, обычные счета, случаи и ошибки по видам, добавленные
+  документы-цели, числа документов и строк); `canonical_ids` — «публичный ID → сущность истории».
+- `pre_injection/` (только в `episodes/`): книги до внесения ошибок; в плоском каталоге их нет —
+  они восстанавливаются из `provenance.json`.
 
----
-
-## Контракт среды
-
-| Действие | Аргументы | Результат |
-|---|---|---|
-| `list_records` | `table ∈ {ledger, invoices, payments, fx}`, `cursor`, `limit` (≤50, больше обрезается) | `rows`, `next_cursor` (стабильный `table:offset`), `total` |
-| `get_record` | `table`, `id` (row_id / invoice_id или doc_id / payment_id или doc_id / fx_id) | `record` |
-| `get_document` | `doc_id` | `document` |
-| `calculator` | `expression` | `value` (строка Decimal; только числа и `+ - * / // % ( )`) |
-| `submit` | `findings` = findings.json | завершает эпизод, `terminated=true` |
-
-- **Первое наблюдение:** задача (на русском), `episode_id`, `manifest`, `policy`, справка по
-  действиям, `steps_remaining=100`.
-- **Наблюдение шага:** `step`, `steps_remaining`, `action`, `result` или
-  `error {code, message}`. Код ошибки латиницей, сообщение на русском.
-- **Ошибки:** неизвестное действие, ID, таблица, курсор или аргумент дают короткую ограниченную
-  ошибку и **расходуют шаг**.
-- **Завершение:** максимум 100 шагов, включая `submit`. Если лимит шагов или 60 с исчерпаны,
-  эпизод заканчивается с `truncated=true` и **пустым** итоговым ответом. `step` после конца
-  возвращает `episode_finished` и ничего не меняет.
-- **Награда:** по ходу эпизода 0. Терминальная награда возвращается политике **только в
-  `train`** вместе с P/R/F1. В `eval` политика получает 0 и пустой `info`.
-- **Неверная структура `findings`:** награда −1, эпизод завершается, ошибка пишется только в
-  журнал оценщика.
-- **Воспроизводимость:** одинаковые `seed`, `config`, версия и действия воспроизводят всё
-  точно. `reset` полностью изолирует эпизод.
-- **Эпизод из файлов**, в том числе внешне преобразованный:
-  `reset(0, {"episode_files": {"root": DIR, "episode_id": "EP-…"}})`.
-
-### Конфигурация (`config_version: "3.0"`)
+### Конфигурация (`config_version: "3.2"`)
 
 ```json
 {"preset": "mixed",
  "errors": {"duplicate_invoice": 1, "payment_allocation": 1, "fx_rate": 2, "period_cutoff": 1},
  "interactions": {"partial_fx_boundary": 1, "masked_duplicate": 0},
+ "variants": {"payment_allocation": "partial", "fx_rate": "random", "period_cutoff": "next_period"},
  "distractors": {"split_payment": 2, "multi_invoice_payment": 2, "partial_open": 2, "refund": 1,
                  "recurring_amount": 1, "tz_boundary": 2, "unremitted_payment": 1,
                  "next_period_doc": 2, "same_day_repeat": 1, "prior_period_doc": 1},
@@ -277,13 +461,27 @@ result["grader"]["reward"], result["grader"]["f1"], result["trajectory"]
  "foreign_share": 0.45, "id_salt": "default", "order_seed": 0}
 ```
 
-- Все ключи необязательны.
-- Неизвестные ключи и значения вне границ дают `ConfigError` с сообщением на русском.
-- Не больше 12 ошибок на эпизод; сценарий взаимодействия считается за 2.
+- Все ключи необязательны; неизвестные ключи и значения вне границ дают `ConfigError` с
+  сообщением на русском. Не больше 12 ошибок на эпизод; сценарий взаимодействия считается за 2.
+- `errors`, `interactions` и `distractors` выполняются **точно**: не хватает подходящей цели —
+  генератор добавляет в историю корректный документ-цель (он есть и в книгах до внесения, и в
+  `provenance.actual.supplied_targets`); не хватает свободного счёта — случай строится на своём.
+- `n_invoices` — число **обычных** счетов до отвлекающих случаев и ошибок; уменьшается, если
+  иначе документов было бы больше 200 (фактическое — `provenance.actual.regular_invoices`).
+- `foreign_share` — вероятность для каждого клиента вести счета в иностранной валюте; только
+  если заказаны `fx_rate` или `partial_fx_boundary`, а валютного клиента не выпало, первый
+  клиент становится валютным (фактическая доля — в `provenance.actual`).
+- `variants` — вариант независимых ошибок (таблица типов выше); без ключа или `"random"` —
+  выбор генератора.
+- Предел 200 документов: конфиг, которому даже без обычных счетов может понадобиться больше
+  (`config.document_bound`: цена каждого случая и ошибки в документах), отвергается
+  `ConfigError`.
 - `id_salt` и `order_seed` — безвредные преобразования: меняют ID и порядок, не экономику.
-- Если конфигурацию нельзя разместить, генератор делает детерминированную повторную попытку с
-  меньшей компанией. 1000 случайных экстремальных конфигураций сгенерированы и проверены без
-  единого сбоя.
+- Фаззинг (Python 3.13): 1000 случайных экстремальных конфигураций (0–4 ошибки каждого типа,
+  0–2 сценария, 0–6 случаев каждого вида, случайные размеры, доля валют и варианты) — все 1000
+  приняты, сгенерированы и прошли все проверки данных (`check_episode`), максимум 179
+  документов. С 0–12 случаями каждого вида 99 из 300 конфигураций отвергнуты `ConfigError`
+  (предел документов), остальные 201 сгенерированы без единой проблемы.
 
 ---
 
@@ -291,14 +489,7 @@ result["grader"]["reward"], result["grader"]["f1"], result["trajectory"]
 
 Сначала строится согласованная скрытая история, затем она проводится по опубликованной
 политике и проверяются равенства. Только потом вносятся ошибки как записанные причинные
-изменения.
-
-| Тип (формулировка ТЗ) | Варианты | `affected_ids` | Сумма (базовая валюта) |
-|---|---|---|---|
-| `duplicate_invoice` — дубли счетов | тот же счёт (клиент, момент, сумма, строки включая PO) внесён повторно под новым номером | оба invoice_id | проводка 1200 одной копии |
-| `payment_allocation` — пропущенное или частичное распределение платежа | всё на 2900; часть на 2900; зачтено на чужой счёт | `[payment_id, invoice_id из расписки]` | ошибочная кредитовая строка, как проведена |
-| `fx_rate` — неверная **дата или курс** конвертации | курс другой даты; вручную округлённый курс; перевёрнутый курс (только для пар около паритета) | `[invoice_id]` или `[payment_id]` | `\|проведено − верно\|` по основной строке |
-| `period_cutoff` — ошибка отнесения к периоду | счёт или оплата следующего периода задним числом; счёт прошлого периода проведён поздно | `[invoice_id]` или `[payment_id]` | основная строка, проведённая в периоде |
+изменения. Четыре типа и их варианты — в таблице «Соответствие четырёх типов ошибок».
 
 **Взаимодействующие сценарии:**
 1. `partial_fx_boundary` — **частичный платёж в другой валюте на границе периода**: последний
@@ -321,89 +512,184 @@ result["grader"]["reward"], result["grader"]["f1"], result["trajectory"]
 
 ---
 
-## Matcher и награда (код: `auditgym/matcher.py`)
+## Что проверяет `check` (по критериям оценки ТЗ)
 
-- **Нормализация:** ID обрезаются по пробелам и сравниваются как множества. `doc_id` и
-  `invoice_id`/`payment_id` — взаимные синонимы. Валюта приводится к верхнему регистру.
-- **TP требует всего сразу:**
-  - совпадения типа;
-  - совпадения множества канонических `affected_ids`;
-  - совпадения валюты;
-  - `|claimed − expected| ≤ max(1, floor(|expected| × 0.0005))`;
-  - хотя бы один допустимый набор доказательств целиком.
-- **Неоднозначность:** взаимно однозначное максимальное паросочетание (Кун). Выводы
-  обрабатываются в порядке отправки, ошибки эталона по возрастанию `issue_id`.
-  Несопоставленные выводы — FP, пропущенные ошибки — FN.
-- **Метрики:** P, R, F1 точно по ТЗ, включая крайние случаи.
-- **Общая награда:** `clip(2*F1 - 1 - 0.002*inspection_steps, -1, 1)`.
-- **Экспериментальная награда** показывается отдельно и никогда не подменяет общую.
-- **Структура:** ≤30 выводов, ≤10 ID доказательств, ≤1000 символов объяснения. Нарушение
-  даёт −1.
+| Раздел | Критерий | Что именно проверяется |
+|---|---|---|
+| `unit_tests` (166) | все | официальные определения C01–C20, D01–D20, 1–20, M01–M12, P01–P20; reset/step, схемы, лимиты, завершение, неверный ввод, тайм-аут, режимы, атакующие ответы, изоляция политики, гарантии генератора |
+| `determinism` | Воспроизводимость | одинаковые seed+config → побайтно одинаковый эпизод; совпадение с опубликованными `episodes/*/index.json` |
+| `data_and_truth` (220 эпизодов) | Данные и эталон | книги до ошибок **восстанавливаются из provenance.json** и проходят все равенства; у каждого изменения книги есть причина; **независимая перепроводка** совпадает с чистой книгой полностью, а с книгой после внесения — везде, кроме объявленных ошибок; эталонный аудитор не находит ничего на чистых книгах и ровно эталон на книгах с ошибками; каждый набор доказательств сам по себе доказывает ошибку |
+| `baselines` | Надёжность награды | 4 базовые политики и скриптовый аудитор в режиме **eval** в **отдельном процессе**: `flag_all < reconciler < rule_auditor ≤ oracle = 1.0` |
+| `no_leakage` | Контракт и изоляция | каждое наблюдение прогонов `check` и опубликованного `trajectories.jsonl` — на закрытые ключи и issue_id; версия траекторий совпадает с текущей |
+| `paired_checks` (30) | Воспроизводимость | 10 точных повторов; 10 смен ID и порядка через конфиг; 10 внешних преобразований файлов |
+| `jury_rehearsal` | все пять | репетиция оценки жюри, см. ниже |
+
+### Репетиция оценки жюри и мутационный тест
+
+`jury` реализует **наше прочтение** раздела 10 как чёрный ящик: 20 проверок контракта против
+среды в отдельном процессе, 20 свежих «скрытых» эпизодов (5 чистых, 5 с взаимодействующими
+ошибками, 10 смешанных) с проверкой только по файлам, 20 проверок награды через среду (τ берётся
+из опубликованного policy.json), 20 парных проверок и 5 пунктов инженерии. Это самооценка, а не
+гарантия баллов. Текущий результат: **100 / 100** (`reports/jury_scorecard.md`).
+
+`scripts/mutation_test.py` по одному вносит **настоящие баги** во временную копию проекта и
+запускает `jury`. Каждый должен снять баллы в своём критерии (измерено на 3.2.0):
+
+| Внесённый баг | Что поймало | Итог |
+|---|---|---|
+| matcher не проверяет доказательства | Надёжность 19/20 | 98.8 |
+| страница больше 50 строк | Контракт 19/20 | 98.8 |
+| эталон в `info` после `reset` | Контракт 19/20 | 98.8 |
+| усечение вместо банковского округления | Данные 0/20, Воспроизводимость 18/20 | 73.5 |
+| дата курса по UTC вместо часового пояса компании | Данные 9/20 | 86.2 |
+| допуск 10% вместо опубликованного τ = 0 | Надёжность 19/20 | 98.8 |
+| недетерминированный генератор | Воспроизводимость 5/20, Контракт 19/20 | 87.5 |
+| сопоставление без «один к одному» | Надёжность 18/20 | 97.5 |
+| награда видна политике в режиме eval | Контракт 19/20 | 98.8 |
+| provenance теряет изменённые строки | Данные 8/20 | 85.0 |
+| платёж без расписки проведён не по политике (на 1 минимальную единицу) | Данные 0/20 | 75.0 |
+
+Пойманы **11 из 11**. Ради двух из этих мутантов проверяющая сторона (`audit_rules.py`) **не
+использует общий с генератором код** денег и времени: конвертация — на точных дробях с явным
+банковским округлением, даты и границы периода — ручной арифметикой смещений UTC.
 
 ---
 
 ## Базовые политики (режим eval, отдельный процесс)
 
-`train` (10 эпизодов, 39 ошибок, 2 чистых):
+`train` (10 эпизодов, 39 ошибок, 2 чистых). Время — среднее на эпизод, с (оркестратор, вместе с
+reset в процессе среды):
 
-| политика | P | R | F1 | возврат | шаги | FP | FN |
-|---|---|---|---|---|---|---|---|
-| oracle (только у оценщика) | 0.80* | 0.80* | **1.000** | **1.000** | 1.0 | 0 | 0 |
-| rule_auditor (скриптовый, без эталона) | 0.80* | 0.80* | 1.000 | 0.967 | 17.3 | 0 | 0 |
-| reconciler (простой алгоритм сверки) | 0.254 | 0.690 | 0.360 | −0.307 | 17.3 | 87 | 5 |
-| random (seed 0) | 0.000 | 0.000 | 0.100 | −0.804 | 18.3 | 10 | 39 |
-| flag_all (атака) | 0.000 | 0.000 | 0.000 | −1.000 | 4.4 | 300 | 39 |
+| политика | P | R | F1 | возврат | шаги | время, с | TP | FP | FN |
+|---|---|---|---|---|---|---|---|---|---|
+| oracle (только у оценщика) | 0.80* | 0.80* | **1.000** | **1.000** | 1.0 | 0.018 | 39 | 0 | 0 |
+| rule_auditor (скриптовый, без эталона) | 0.80* | 0.80* | 1.000 | 0.967 | 17.3 | 0.026 | 39 | 0 | 0 |
+| reconciler (простой алгоритм сверки) | 0.228 | 0.654 | 0.329 | −0.369 | 17.3 | 0.026 | 33 | 103 | 6 |
+| random (seed 0) | 0.000 | 0.000 | 0.200 | −0.605 | 17.9 | 0.027 | 0 | 8 | 39 |
+| flag_all (атака) | 0.000 | 0.000 | 0.000 | −1.000 | 4.5 | 0.020 | 0 | 300 | 39 |
 
-`dev` (10 эпизодов, 34 ошибки): oracle 1.000, rule_auditor 0.966, reconciler −0.461,
-random −0.607, flag_all −1.000.
+`dev` (10 эпизодов, 34 ошибки, 2 чистых):
+
+| политика | P | R | F1 | возврат | шаги | время, с | TP | FP | FN |
+|---|---|---|---|---|---|---|---|---|---|
+| oracle | 0.80* | 0.80* | 1.000 | 1.000 | 1.0 | 0.017 | 34 | 0 | 0 |
+| rule_auditor | 0.80* | 0.80* | 1.000 | 0.967 | 17.7 | 0.024 | 34 | 0 | 0 |
+| reconciler | 0.225 | 0.658 | 0.314 | −0.399 | 17.7 | 0.025 | 28 | 89 | 6 |
+| random | 0.000 | 0.000 | 0.100 | −0.803 | 18.3 | 0.026 | 0 | 8 | 34 |
+| flag_all | 0.000 | 0.000 | 0.000 | −1.000 | 4.4 | 0.019 | 0 | 300 | 34 |
 
 \* На чистых эпизодах по ТЗ P=R=0 (нулевой знаменатель), но F1=1; отсюда среднее 0.8.
-
-**Измеренный разбор сбоев** (`reports/check_report.json → failure_analysis`, dev). Простой
-reconciler даёт 106 FP:
-
-| Источник ложных срабатываний | FP |
-|---|---|
-| обычные документы в другом смещении (берёт курс напечатанной даты) | 27 |
-| документы на границе периода (`tz_boundary`) | 24 |
-| повторяющиеся суммы (`recurring_amount`) | 23 |
-| повторные заказы в один день (`same_day_repeat`) | 11 |
-| платежи без расписки (`unremitted_payment`) | 10 |
-| прочее | 11 |
-
-Все 6 его FN — во взаимодействующих сценариях. Скриптовый `rule_auditor` по одним открытым
-записям получает F1=1: задачи разрешимы, доказательств достаточно.
+Источник — `reports/check_report.md`; время немного меняется от прогона к прогону.
 
 **Высокая награда oracle сама по себе баллов не даёт и не доказывает пригодность для
 реального аудита.**
 
 ---
 
+## Измеренный разбор сбоев
+
+### Сбои базовой политики (`reports/check_report.json → failure_analysis`, dev)
+
+Простой reconciler даёт 89 FP:
+
+| Источник ложных срабатываний | FP |
+|---|---|
+| документы на границе периода (`tz_boundary`) | 24 |
+| повторяющиеся суммы (`recurring_amount`) | 22 |
+| обычные записи без ловушки (курс напечатанной даты и т. п.) | 15 |
+| платежи без расписки (`unremitted_payment`) | 12 |
+| повторные заказы в один день (`same_day_repeat`) | 11 |
+| прочее (`multi_invoice_payment` 3, `refund` 1, `split_payment` 1) | 5 |
+
+Из 6 его FN (4 `fx_rate`, 2 `payment_allocation`) 5 — во взаимодействующих сценариях.
+Скриптовый `rule_auditor` по одним открытым записям получает F1=1: задачи разрешимы,
+доказательств достаточно.
+
+### Атаки на изоляцию: до и после исправления
+
+Внешний аудит (команда, коммит `de26f77`, версия 3.0.0) запускал атакующие решения через
+`run_policy(mode="eval")` на пяти задачах: T1 — train 1002 (чистая), T2 — train 1003, T3 — dev
+2005, T4 — dev 2009, T5 — seed 987654, пресет `heavy`. Каждое решение — дважды. После
+исправления (3.2.0) те же решения запущены снова; в репозитории те же атаки повторяют тесты
+(доверенный запуск `isolated=False` показывает, что атака настоящая, официальный — что она
+закрыта):
+
+| Атака | Что делает | Было (3.0.0) | Стало (3.2.0) | Воспроизвести |
+|---|---|---|---|---|
+| stack-seed | читает seed и config из стека оркестратора, пересоздаёт эталон генератором | 1.0 на T2–T5 | −1 на T2–T5 | `python3 -m unittest tests.test_policy_sandbox.GapsOfPreviousAudit.test_gap1_stack_seed` |
+| gc-oracle | находит в памяти клиента среды с токеном и запрашивает ответ oracle | 1.0 на T2–T5 | −1 на T2–T5 | `… GapsOfPreviousAudit.test_gap2_gc_oracle` |
+| patch-report | подменяет `grader_report` в своём процессе | `run_policy` вернул 1.0 и «все TP» при пустом ответе | −1, методы оркестратора не изменены | `… GapsOfPreviousAudit.test_gap3_patch_report` |
+| tamper-grader | дописывает `matcher.py`; следующие эпизоды оцениваются изменённым кодом | 1.0 у пустых и неверных ответов (`t2_empty`, `t5_empty`, `t5_cheat_format_only`, `t3_wrong_type`) | −1 у всех четырёх в обоих повторах, `matcher.py` не изменён | `… GapsOfPreviousAudit.test_gap4_tamper_grader_code_in_copy` (macOS) |
+| disk-truth | читает `episodes/*/grader/*/truth.json` | 1.0 на T1–T4 | −1 на T2–T4 | `python3 -m unittest tests.test_policy_sandbox.GraderFilesOnDisk` (macOS) |
+| crash-action | действие — JSON-строка с вложенностью от 10 000 уровней | прогон падал (`RemoteError: internal error`) на T1, T2, T5 | ограниченная ошибка, шаг израсходован; −1 на T2 и T5 после 100 шагов (на чистой T1 — 0.8, см. ограничения) | `python3 -m unittest tests.test_policy_sandbox.BrokenActionsThroughProcesses tests.test_env_contract` |
+
+Не закрыто и измерено: `seed-from-id` (восстановить seed по `episode_id` для опубликованного
+пресета и соли по умолчанию) — по-прежнему 1.0 на T5 за 1 шаг (на T2, где конфиг не пресет,
+−1); политика без ответа на чистой T1 — 0.8. Оба случая — в «Честных ограничениях».
+
+---
+
 ## Траектории
 
 `trajectories/trajectories.jsonl` — одна строка на шаг: `episode_id, policy, split, step,
-action, observation, reward, terminated, truncated`. Покрыты train и dev, политики random,
-reconciler, flag_all и rule_auditor, режим `train`. Прогоны oracle не публикуются: их
-действия построены из эталона. `check` сканирует все наблюдения на утечки.
+action, observation, reward, terminated, truncated` и `mode, env_version, generator_version`.
+104 прогона на train и dev (2663 шага):
+- 80 прогонов в режиме `train`: random, reconciler, flag_all, rule_auditor на всех 20 эпизодах;
+- 6 прогонов `random_no_submit` (случайный исследователь без ответа) в режиме `train`: эпизод
+  заканчивается **по лимиту 100 шагов** (`truncated=true`, пустой ответ);
+- 18 прогонов в режиме **`eval`** (rule_auditor, reconciler, random_no_submit на трёх первых
+  эпизодах каждого split): награда политике 0, `info` пуст; 6 из них — по лимиту шагов.
+
+Прогоны oracle не публикуются: их действия построены из эталона. `check` сканирует все
+наблюдения опубликованного файла на закрытые ключи и issue_id и сверяет версию.
 
 ---
 
 ## Честные ограничения
 
-- `jury` — **самооценка** по нашему прочтению раздела 10. Определения проверок жюри могут
-  отличаться, поэтому 100/100 в репетиции не гарантирует той же оценки.
+Каждое ограничение связано со сценарием, который его показывает.
+
+- **`episode_id` и manifest позволяют восстановить seed** для опубликованного пресета и соли
+  ID по умолчанию: открытый генератор перебирает seed, пока `episode_id` не совпадёт
+  (`seed-from-id` → 1.0 на T5 с seed 987654). Для закрытой проверки нужны случайные большие
+  seed и секретная `id_salt` (рекомендация — в [JURY.md](JURY.md)).
+- **На Linux вне Docker песочницы политики нет**: только отдельный процесс; запись в код и
+  чтение `episodes/*/grader/` ограничивают лишь права на файлы. Тесты песочницы
+  (`test_gap4…`, `GraderFilesOnDisk`) на Linux пропускаются.
+- **Код участника, исполняемый в процессе оркестратора до `begin`/`act`** — импорт модуля
+  решения и создание объекта политики (`make_policy()` в его файле) — **не изолирован**: он
+  работает с правами оркестратора. Изолированы только `begin` и `act` после передачи политики в
+  её процесс.
+- **Тайм-аут или лимит шагов на чистой компании дают 0.8**, а не ≤ 0: пустой ответ на пустом
+  эталоне — F1 = 1, и `2·1 − 1 − 0.002·100 = 0.8`. Так требует формула ТЗ (`noop_timeout`,
+  `crash-action` на T1 → 0.8); экспериментальная награда это тоже не меняет.
+- **Часть конфигов с очень большим числом отвлекающих случаев отвергается `ConfigError`**
+  (предел 200 документов): с 0–12 случаями каждого вида — 99 из 300.
+- **Docker после правок не проверен запуском**: на машине разработки Docker нет. Проверка
+  прошла на Python 3.13 (macOS) напрямую; образ закреплён на Python 3.11.11. Перед сдачей
+  нужно выполнить `docker build` и `docker run` из раздела «Единая команда проверки».
+- `jury` — **самооценка** по нашему прочтению раздела 10; официальные определения покрыты
+  тестами `test_judge_adapter` и `test_judge_pairs`, но прогон жюри может отличаться.
 - Синтетические книги с упрощённым планом счетов: дебиторка, выручка, курсовые разницы и
   несколько операционных расходов; нет кредиторки, НДС, начислений и переоценки. Это
   программная задача, не аудиторское заключение.
-- Суммы ошибок определены опубликованным соглашением (`policy.json → finding_types`).
-- Дубли — точные копии; «нечёткие» дубли не генерируются.
-- Один часовой пояс на компанию, без перехода на летнее время.
-- Встроенные политики работают в процессе оркестратора, а среда и оценщик — в отдельном.
-  Враждебную политику нужно запускать в отдельном процессе или контейнере (протокол
-  `auditgym.server`).
-- Эталонный аудитор и генератор следуют одной опубликованной политике: его F1=1 доказывает
-  согласованность и разрешимость, но не единственность трактовки. Общий код денег и времени
-  при этом намеренно разделён.
+- Суммы ошибок определены опубликованным соглашением (`policy.json → finding_types`), τ = 0:
+  ответ, посчитанный по другому соглашению об округлении, не совпадёт. Честный аудитор,
+  написанный отдельно по тексту policy.json, получает ровно максимум `1 − 0.002·шаги` на
+  5 + 240 + 36 эпизодах внешнего аудита.
+- Дубли — точные копии; «нечёткие» дубли не генерируются. Один часовой пояс на компанию, без
+  перехода на летнее время.
+- Эталонный аудитор и генератор следуют одной опубликованной политике: F1=1 доказывает
+  согласованность и разрешимость, но не единственность трактовки. Общий код денег и времени при
+  этом намеренно разделён.
 - Обучение весов не проводилось, заявлений об улучшении модели нет.
-- Docker-образ в среде разработки не собирался: там не было Docker-демона. Проверка
-  запускалась на Python 3.11.18 напрямую, без сети (`unshare -rn`) и в C-локали.
+
+---
+
+## Использование ИИ-инструментов
+
+Среда — генератор, оценщик и matcher, адаптер жюри, тесты и документация — написана с помощью
+Claude (Anthropic, модели семейства Opus) в Claude Code. Команда ставила задачи, проверяла
+результат, проводила аудит атакующими решениями (внешний набор: 64 решения на пяти задачах,
+изменение оценщика с диска) и принимала решения: что считать пробелом, что исправлять, какие
+ограничения оставить. Цифры в этом README получены запуском команд из репозитория.

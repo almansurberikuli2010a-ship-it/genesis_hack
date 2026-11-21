@@ -4,7 +4,10 @@
 (копия-дубль, документ соседнего периода). Каждое изменение получает mutation_id и
 описание; эталон строится из этих записей, а не поиском «подозрительных строк».
 Цели блокируются (locked_*), чтобы ошибки не пересекались случайно; сценарии
-взаимодействия кладут два изменения на один документ намеренно.
+взаимодействия кладут два изменения на один документ намеренно. Если подходящей цели в
+истории не осталось (её заняли отвлекающие случаи или другие ошибки), в историю добавляется
+корректный документ-цель (StoryBuilder.supply_*): он есть и в книгах до внесения, и в
+provenance.actual.supplied_targets. Поэтому каждая заказанная ошибка размещается всегда.
 
 Типы (формулировки ТЗ):
   duplicate_invoice  — дубли счетов;
@@ -20,7 +23,6 @@ import copy
 from datetime import datetime, timedelta
 from decimal import Decimal
 
-from . import money
 from .config import ERROR_TYPES, INTERACTIONS
 from .money import convert_minor, local_date, rate_str, sig_round, tz_from_offset
 from .story import GenerationError
@@ -40,8 +42,11 @@ def inject(b) -> None:
     for n, t in enumerate(plan):
         mid = "M%02d" % (n + 1)
         ok = INJECTORS[t](b, mid, pairs)
+        if not ok and t in SUPPLY:  # цели не осталось — добавить корректный документ-цель
+            SUPPLY[t](b)
+            ok = INJECTORS[t](b, mid, pairs)
         if not ok:
-            raise GenerationError("не удалось разместить %s (эпизод мал для конфига)" % t)
+            raise GenerationError("не удалось разместить %s" % t)
 
 
 def _issue(b, itype, affected, evidence, mid):
@@ -82,7 +87,9 @@ def inj_payment_allocation(b, mid, pairs):
     if not p:
         return False
     amt = p["refs"][0][1]
-    if b.rng.random() < 0.45:
+    want = b.cfg["variants"]["payment_allocation"]
+    roll = b.rng.random()
+    if want == "missing" or (want == "random" and roll < 0.45):
         u, variant = amt, "missing"
         text = "платёж расписан на счёт, но не распределён: вся сумма осталась на 2900"
     else:
@@ -98,6 +105,12 @@ def inj_payment_allocation(b, mid, pairs):
 
 # ------------------------------------------------------------------ дата или курс конвертации
 
+def _noticeable(diff: int) -> bool:
+    """Расхождение курса заметно: не меньше 50 минимальных единиц и 0.2% суммы расхождения
+    (порог генератора, не допуск matcher'а: matcher сравнивает суммы точно, τ = 0)."""
+    return diff >= max(50, max(1, diff * 5 // 10000) * 4)
+
+
 def _wrong_date(b, cur, true_d, amount):
     ks = [1, -1, 2, -2, 3, 5, 7, -3]
     b.rng.shuffle(ks)
@@ -106,7 +119,7 @@ def _wrong_date(b, cur, true_d, amount):
         if not (b.fx_dates[0] <= d <= b.fx_dates[1]):
             continue
         diff = abs(b.conv(amount, cur, d) - b.conv(amount, cur, true_d))
-        if diff >= max(50, money.amount_tolerance(diff) * 4):
+        if _noticeable(diff):
             return d, k
     return None, None
 
@@ -119,7 +132,10 @@ def inj_fx_rate(b, mid, pairs):
                 if p["posted"] and p["currency"] != b.base and p["key"] not in b.locked_pay and p["amount"] > 0]
     r.shuffle(targets)
     u = r.random()
-    if u < 0.5:
+    want = b.cfg["variants"]["fx_rate"]
+    if want != "random":
+        order = [want]
+    elif u < 0.5:
         order = ["wrong_date", "rounded_rate", "inverted_rate"]
     elif u < 0.75:
         order = ["rounded_rate", "wrong_date", "inverted_rate"]
@@ -148,7 +164,7 @@ def inj_fx_rate(b, mid, pairs):
                         continue  # перевёрнутый курс правдоподобен только для пар около паритета
                     bad = sig_round(Decimal(1) / true_rate, 6)
                 diff = abs(convert_minor(amount, doc["currency"], b.base, bad) - correct)
-                if bad != true_rate and diff >= max(50, money.amount_tolerance(diff) * 4):
+                if bad != true_rate and _noticeable(diff):
                     chosen = (variant, {"rate": bad}, bad, {})
             if chosen:
                 break
@@ -173,7 +189,9 @@ def _backdate_ts(b, not_before=None):
                   r.randint(0, 59), tzinfo=b.tzc)
     if not_before is not None and ts <= not_before:
         ts = (not_before + timedelta(minutes=r.randint(1, 15))).astimezone(b.tzc)
-    if ts >= b.p_end:
+        if ts >= b.p_end:  # счёт выставлен в последние минуты периода — проводка между ним и концом
+            ts = (not_before + (b.p_end - not_before) / 2).replace(microsecond=0).astimezone(b.tzc)
+    if ts >= b.p_end or (not_before is not None and ts <= not_before):
         raise GenerationError("нельзя провести задним числом внутри периода")
     return ts
 
@@ -186,8 +204,9 @@ def _frontdate_ts(b):
 
 def inj_period_cutoff(b, mid, pairs):
     r = b.rng
+    want = b.cfg["variants"]["period_cutoff"]
     open_inv = []
-    if r.random() < 0.4:  # оплата, полученная в следующем периоде, проведена задним числом
+    if r.random() < 0.4 and want != "prior_period":  # оплата, полученная в следующем периоде, проведена задним числом
         paid = {ik for p in b.payments for ik, _ in (p["refs"] or [])}
         open_inv = [i for i in b.invoices if i["posted"] and i["key"] not in paid and i["key"] not in b.unremitted_inv
                     and i["key"] not in b.locked_inv and i["issued"] < b.p_end]
@@ -204,7 +223,8 @@ def inj_period_cutoff(b, mid, pairs):
         _issue(b, "period_cutoff", [("pay", p["key"])], ("cutoff", "pay", p["key"]), mid)
         return True
     ent = r.choice(b.customers)
-    if r.random() < 0.4:
+    roll = r.random()
+    if want == "prior_period" or (want == "random" and roll < 0.4):
         inv = b.new_invoice(ent, b.prior_period_instant())
         post_ts, variant, text = _frontdate_ts(b), "prior_period", "счёт прошлого периода проведён поздно, в этом периоде"
     else:
@@ -280,6 +300,27 @@ def inj_masked_duplicate(b, mid, pairs):
     _issue(b, "payment_allocation", [("pay", p["key"]), ("inv", inv["key"])], ("misapplied", p["key"], dup["key"]), mid)
     return True
 
+
+def _supply_fx_target(b):
+    """Валютный счёт-цель ошибки курса. Для заказанного варианта inverted_rate — в валюте, курс
+    которой к базовой около паритета (иначе перевёрнутый курс неправдоподобен)."""
+    if b.cfg["variants"]["fx_rate"] != "inverted_rate":
+        return b.supply_invoice(foreign=True, min_usd=2000)
+    d = b.p_start.date()
+    near = {c["currency"] for c in b.customers if c["currency"] != b.base
+            and Decimal("0.2") <= b.rate(c["currency"], d) <= Decimal(5)}
+    if not near:
+        raise GenerationError("нет валюты около паритета для варианта inverted_rate")
+    return b.supply_invoice(foreign=True, min_usd=2000, currencies=near)
+
+
+# Корректный документ-цель для типа, если подходящего в истории не осталось.
+SUPPLY = {
+    "duplicate_invoice": lambda b: b.supply_invoice(),
+    "payment_allocation": lambda b: b.supply_paid_invoice(),
+    "masked_duplicate": lambda b: b.supply_paid_invoice(),
+    "fx_rate": _supply_fx_target,
+}
 
 INJECTORS = {
     "duplicate_invoice": inj_duplicate_invoice,

@@ -2,8 +2,8 @@
 проекта и убеждаемся, что `python -m auditgym jury` снимает баллы в нужном критерии.
 Проверка, которая не падает на заведомо сломанной среде, ничего не стоит.
 
-    python3.11 scripts/mutation_test.py                  # все мутанты (~2–3 мин)
-    python3.11 scripts/mutation_test.py rounding_broken  # один мутант
+    python3 scripts/mutation_test.py                  # все мутанты (~2–3 мин), Python ≥ 3.11
+    python3 scripts/mutation_test.py rounding_broken  # один мутант
 """
 import shutil
 import subprocess
@@ -16,7 +16,7 @@ SRC = Path(__file__).resolve().parent.parent
 # имя: (файл, исходный фрагмент, испорченный фрагмент, что это за баг)
 MUTANTS = {
     "evidence_ignored": ("auditgym/matcher.py",
-                         'return any(set(es) <= nf["evidence"] for es in issue["evidence_sets"])', "return True",
+                         'return any(frozenset(es) <= nf["evidence"] for es in issue["evidence_sets"])', "return True",
                          "matcher не проверяет доказательства"),
     "page_limit_broken": ("auditgym/env.py", "limit = min(limit, PAGE_MAX)", "limit = limit",
                           "страница больше 50 строк"),
@@ -29,15 +29,16 @@ MUTANTS = {
     "local_date_utc": ("auditgym/money.py", "return dt.astimezone(tz_from_offset(company_offset)).date()",
                        'return dt.astimezone(tz_from_offset("+00:00")).date()',
                        "дата курса по UTC вместо часового пояса компании"),
-    "tolerance_10pct": ("auditgym/matcher.py", "return max(1, abs(int(expected)) * 5 // 10000)",
-                        "return max(1, abs(int(expected)) // 10)", "допуск 10% вместо 0.05%"),
+    "tolerance_10pct": ("auditgym/matcher.py", 'if abs(nf["amount"] - issue["expected_amount_minor"]) > tolerance(issue):',
+                        'if abs(nf["amount"] - issue["expected_amount_minor"]) > abs(issue["expected_amount_minor"]) // 10:',
+                        "допуск 10% вместо опубликованного τ = 0"),
     "nondeterministic_story": ("auditgym/story.py", 'self.rng = rng("story", self.story_hash)',
                                'import os; self.rng = rng("story", self.story_hash, os.urandom(4).hex())',
                                "недетерминированный генератор"),
-    "no_one_to_one": ("auditgym/matcher.py", "            if seen[j]:\n                continue",
-                      "            if False:\n                continue", "сопоставление без «один к одному»"),
-    "eval_leaks_reward": ("auditgym/env.py", 'reward = res["reward"] if self.mode == "train" else 0.0\n        return self._obs("submit"',
-                          'reward = res["reward"]\n        return self._obs("submit"', "награда видна политике в режиме eval"),
+    "no_one_to_one": ("auditgym/matcher.py", '"fp": len(findings) - len(pairs),', '"fp": sum(1 for a in adj if not a),',
+                      "сопоставление без «один к одному»: повторы верного вывода не считаются FP"),
+    "eval_leaks_reward": ("auditgym/env.py", 'reward = res["reward"] if self.mode == "train" else 0.0\n        # ответ о структуре',
+                          'reward = res["reward"]\n        # ответ о структуре', "награда видна политике в режиме eval"),
     "provenance_drops_changes": ("auditgym/render.py", "if rid not in after or after[rid][1] != rec:", "if rid not in after:",
                                  "provenance теряет изменённые строки (книги до ошибок не восстановить)"),
     "off_policy_posting": ("auditgym/posting.py", "            susp = cash\n", "            susp = cash - 1\n",

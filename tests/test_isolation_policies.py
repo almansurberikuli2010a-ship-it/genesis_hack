@@ -1,5 +1,7 @@
 """Отдельный процесс оценщика, калькулятор-песочница, базовые политики, адаптеры, эпизоды из файлов."""
+import copy
 import json
+import random
 import tempfile
 import unittest
 from pathlib import Path
@@ -11,11 +13,11 @@ from auditgym.calculator import CalcError, evaluate
 from auditgym.datachecks import check_episode, check_records
 from auditgym.env import AuditEnv
 from auditgym.export import load_episode_files, write_episode
-from auditgym.policies import make_policy
+from auditgym.policies import SimpleReconciler, make_policy
 from auditgym.runner import run_episode
 from auditgym.server import RemoteError, SubprocessEnv
 from auditgym.transform import transform_episode
-from tests.helpers import ERRS, oracle_findings
+from tests.helpers import ERRS, grade, oracle_findings
 
 
 def silent(obs):
@@ -66,14 +68,19 @@ class Baselines(unittest.TestCase):
     def test_ordering(self):
         for cfg in (ERRS, {}):
             env = AuditEnv(mode="eval")
-            r = {p: run_episode(env, make_policy(p), 14, cfg)["reward"] for p in ("oracle", "rule_auditor", "flag_all", "random")}
+            res = {p: run_episode(env, make_policy(p), 14, cfg) for p in ("oracle", "rule_auditor", "flag_all", "random")}
+            r = {p: x["reward"] for p, x in res.items()}
             self.assertEqual(r["oracle"], 1.0)
             self.assertGreater(r["rule_auditor"], 0.9)
             self.assertLess(r["flag_all"], 0)
-            if cfg:  # на чистых книгах молчание случайной политики может сравняться с аудитором
+            if cfg:
                 self.assertGreater(r["rule_auditor"], r["random"])
             else:
-                self.assertGreaterEqual(r["rule_auditor"], r["random"])
+                # на чистых книгах случайная политика, рано отправившая пустой ответ, получает F1 = 1 и
+                # тратит меньше шагов, чем аудитор, читающий все таблицы, — её награда может быть выше.
+                # Свойство здесь — аудитор не обвиняет ложно: F1 = 1 и не ниже, чем у случайной
+                self.assertEqual(res["rule_auditor"]["f1"], 1.0)
+                self.assertGreaterEqual(res["rule_auditor"]["f1"], res["random"]["f1"])
 
     def test_random_explorer_is_seeded(self):
         a = run_episode(AuditEnv(), make_policy("random", seed=3), 9, ERRS)
@@ -112,6 +119,35 @@ class Api(unittest.TestCase):
               for k, f in BASELINE_ADAPTERS.items()}
         self.assertEqual(rw["oracle_grader_only"], 1.0)
         self.assertEqual(rw["flag_all_attack"], -1.0)
+
+
+class ReconcilerPairs(unittest.TestCase):
+    """Базовая политика reconciler не зависит от порядка строк и от ID (парные проверки, команда pair)."""
+
+    def test_row_order_does_not_change_reward(self):
+        rng = random.Random(7)
+        for preset in ("mixed", "heavy", "interacting"):
+            for seed in range(4):
+                ep = generate(seed, {"preset": preset})
+                base = grade(ep, SimpleReconciler().decide(copy.deepcopy(ep.public)))["reward"]
+                for _ in range(3):
+                    shuffled = {k: rng.sample(v, len(v)) if isinstance(v, list) else v for k, v in copy.deepcopy(ep.public).items()}
+                    self.assertEqual(grade(ep, SimpleReconciler().decide(shuffled))["reward"], base, (preset, seed))
+
+    def test_new_ids_and_order_keep_reward(self):
+        env = AuditEnv(mode="eval")
+        with tempfile.TemporaryDirectory() as d:
+            for preset in ("mixed", "heavy"):
+                for seed in range(4):
+                    cfg = {"preset": preset}
+                    ep = generate(seed, cfg)
+                    root = Path(d) / ("%s%d" % (preset, seed))
+                    write_episode(ep, root / "a")
+                    new = transform_episode(root / "a", ep.episode_id, root / "b", salt="t%d" % seed, order_seed=seed)
+                    rw = [run_episode(env, make_policy("reconciler"), seed, cfg)["reward"],
+                          run_episode(env, make_policy("reconciler"), seed, dict(cfg, id_salt="p%d" % seed, order_seed=99))["reward"],
+                          run_episode(env, make_policy("reconciler"), 0, {"episode_files": {"root": str(root / "b"), "episode_id": new}})["reward"]]
+                    self.assertEqual(len(set(rw)), 1, (preset, seed, rw))
 
 
 class FileEpisodes(unittest.TestCase):

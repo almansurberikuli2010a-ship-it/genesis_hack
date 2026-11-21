@@ -1,0 +1,98 @@
+{
+  "episode_id": "EP-KR2UD2MPAW",
+  "schema_version": "3.2",
+  "base_currency": "GBP",
+  "issues": [
+    {
+      "issue_id": "ISS-5MI3RSZE",
+      "type": "duplicate_invoice",
+      "affected_ids": [
+        "INV-LFJ7UHX",
+        "INV-QFCTE4R"
+      ],
+      "expected_amount_minor": 1876980,
+      "currency": "GBP",
+      "tolerance_minor": 0,
+      "evidence_sets": [
+        [
+          "DOC-OSPCCR7C",
+          "DOC-TFDWZBLP",
+          "L-EIUEEHAR"
+        ],
+        [
+          "DOC-OSPCCR7C",
+          "DOC-TFDWZBLP",
+          "L-GKMBALTP"
+        ],
+        [
+          "DOC-OSPCCR7C",
+          "DOC-TFDWZBLP",
+          "L-NFM4NUAD"
+        ],
+        [
+          "DOC-OSPCCR7C",
+          "DOC-TFDWZBLP",
+          "L-FGE7GL6P"
+        ]
+      ],
+      "mutation_id": "M04"
+    },
+    {
+      "issue_id": "ISS-DW3HIAZA",
+      "type": "payment_allocation",
+      "affected_ids": [
+        "INV-ETPY73Z",
+        "PAY-PGAR52W"
+      ],
+      "expected_amount_minor": 966685,
+      "currency": "GBP",
+      "tolerance_minor": 0,
+      "evidence_sets": [
+        [
+          "DOC-7FPQYFKS",
+          "L-KVJUD67F"
+        ]
+      ],
+      "mutation_id": "M01"
+    },
+    {
+      "issue_id": "ISS-M7JBBX6H",
+      "type": "period_cutoff",
+      "affected_ids": [
+        "INV-OQR5LNO"
+      ],
+      "expected_amount_minor": 645593,
+      "currency": "GBP",
+      "tolerance_minor": 0,
+      "evidence_sets": [
+        [
+          "DOC-22KF57UY",
+          "L-EDG5HEOR"
+        ],
+        [
+          "DOC-22KF57UY",
+          "L-DTK5ZCL3"
+        ]
+      ],
+      "mutation_id": "M02"
+    },
+    {
+      "issue_id": "ISS-TFOWDLQZ",
+      "type": "fx_rate",
+      "affected_ids": [
+        "PAY-NLVAJOL"
+      ],
+      "expected_amount_minor": 66,
+      "currency": "GBP",
+      "tolerance_minor": 0,
+      "evidence_sets": [
+        [
+          "DOC-EQC5H7IN",
+          "FX-2025-10-14-JPY-GBP",
+          "L-XOE7JYHB"
+        ]
+      ],
+      "mutation_id": "M03"
+    }
+  ]
+}

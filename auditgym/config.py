@@ -4,15 +4,41 @@
 именованный набор значений, остальные ключи его переопределяют. Результат нормализации
 никогда не содержит ``preset``: развёрнутый пресет и эквивалентный явный конфиг дают
 побайтно одинаковый эпизод.
+
+Что гарантируется для любого конфига, который принимает ``normalize_config``:
+  * ``errors`` и ``interactions`` выполняются ТОЧНО (каждая ошибка размещается; не хватает
+    подходящей цели — генератор добавляет в историю корректный документ-цель);
+  * ``distractors`` выполняются ТОЧНО (не хватает свободного счёта — случай строится на своём
+    счёте);
+  * ``n_customers`` и ``background_entries`` выполняются точно;
+  * ``n_invoices`` — число ОБЫЧНЫХ счетов до отвлекающих случаев и ошибок; оно уменьшается,
+    если иначе документов было бы больше MAX_DOCUMENTS (фактическое число — в
+    provenance.actual.regular_invoices);
+  * ``foreign_share`` — вероятность для каждого клиента вести счета в иностранной валюте; если
+    заказаны fx_rate или partial_fx_boundary, а иностранного клиента не выпало, первый клиент
+    становится иностранным (фактическая доля — в provenance.actual);
+  * документов не больше MAX_DOCUMENTS. Конфиг, которому даже без обычных счетов может
+    понадобиться больше (см. ``document_bound``), отвергается ConfigError;
+  * ``variants`` задаёт вариант каждой НЕЗАВИСИМОЙ ошибки типа (``errors``; сценарии
+    взаимодействия свои варианты не меняют), например
+    ``{"errors": {"payment_allocation": 1}, "variants": {"payment_allocation": "partial"}}``:
+      payment_allocation: missing (расписанный платёж целиком остался на 2900) | partial (часть)
+      fx_rate:            wrong_date (курс другой даты) | rounded_rate (вручную округлённый курс)
+                          | inverted_rate (1 / курс; только для пар валют около паритета)
+      period_cutoff:      prior_period (документ прошлого периода проведён поздно)
+                          | next_period (документ следующего периода проведён задним числом)
+    "random" (по умолчанию) — вариант выбирается случайно, как без ключа ``variants``. Конфиг без
+    ``variants`` или со всеми "random" даёт побайтно тот же эпизод, что и до появления ключа.
+    Фактический вариант каждой ошибки — в provenance.mutations[].variant.
 """
 from __future__ import annotations
 
 import copy
 import json
 
-GENERATOR_VERSION = "3.0.0"
-SCHEMA_VERSION = "3.0"
-CONFIG_VERSION = "3.0"
+GENERATOR_VERSION = "3.2.0"
+SCHEMA_VERSION = "3.2"
+CONFIG_VERSION = "3.2"
 
 ERROR_TYPES = ("duplicate_invoice", "payment_allocation", "fx_rate", "period_cutoff")
 INTERACTIONS = ("partial_fx_boundary", "masked_duplicate")
@@ -28,9 +54,41 @@ DISTRACTORS = (
     "same_day_repeat",        # два одинаковых заказа в один день с разными PO
     "prior_period_doc",       # счёт прошлого периода, правильно НЕ проведён
 )
+# Варианты независимых ошибок (ключ конфига "variants"); "random" — случайный выбор генератора.
+VARIANTS = {
+    "payment_allocation": ("missing", "partial"),
+    "fx_rate": ("wrong_date", "rounded_rate", "inverted_rate"),
+    "period_cutoff": ("prior_period", "next_period"),
+}
+RANDOM_VARIANT = "random"
 MAX_ISSUES = 12
 MAX_DOCUMENTS = 200
 MAX_ATTEMPTS = 12
+
+# Наибольшее число документов, которое может добавить один случай сверх обычных счетов (обычный
+# счёт — не больше двух документов: сам счёт и его оплата). Случай, взявший обычный счёт, тратит
+# его «два документа» и не больше своей цены сверху. Сумма даёт строгую верхнюю границу размера.
+DISTRACTOR_DOCS = {
+    "split_payment": 3,          # счёт + 2 платежа
+    "multi_invoice_payment": 3,  # 2 счёта + 1 платёж
+    "partial_open": 2,           # счёт + платёж
+    "refund": 3,                 # счёт + переплата + возврат
+    "recurring_amount": 6,       # 3 счёта + их оплаты
+    "tz_boundary": 2,            # счёт (+ оплата) или счёт + платёж у границы
+    "unremitted_payment": 2,     # счёт + платёж без расписки
+    "next_period_doc": 2,        # счёт следующего периода или счёт + оплата после конца
+    "same_day_repeat": 4,        # 2 счёта + их оплаты
+    "prior_period_doc": 1,       # счёт прошлого периода
+}
+ISSUE_DOCS = {
+    "duplicate_invoice": 2,      # копия (+ счёт-цель, если подходящего нет)
+    "payment_allocation": 2,     # счёт-цель + платёж-цель, если подходящих нет
+    "fx_rate": 3,                # запас валютных счетов с оплатой (2) + счёт-цель, если подходящего нет
+    "period_cutoff": 1,          # документ соседнего периода
+    "partial_fx_boundary": 2,    # валютный счёт + частичная оплата на границе
+    "masked_duplicate": 3,       # копия + счёт и платёж-цель, если подходящих нет
+}
+FX_RESERVE = 2                   # запас валютных счетов сверх числа fx_rate (см. story.build_story)
 
 DEFAULT_CONFIG = {
     "config_version": CONFIG_VERSION,
@@ -52,6 +110,7 @@ DEFAULT_CONFIG = {
         "same_day_repeat": 1,
         "prior_period_doc": 1,
     },
+    "variants": {t: RANDOM_VARIANT for t in VARIANTS},
     "id_salt": "default",
     "order_seed": 0,
 }
@@ -110,7 +169,16 @@ def _overlay(cfg: dict, config: dict) -> dict:
     for k, v in config.items():
         if k not in cfg:
             raise ConfigError("неизвестный ключ конфига: %s" % k)
-        if isinstance(cfg[k], dict):
+        if k == "variants":
+            if not isinstance(v, dict):
+                raise ConfigError("variants должен быть объектом")
+            for kk, vv in v.items():
+                if kk not in VARIANTS:
+                    raise ConfigError("неизвестный ключ variants.%s; доступны: %s" % (kk, ", ".join(VARIANTS)))
+                if vv != RANDOM_VARIANT and vv not in VARIANTS[kk]:
+                    raise ConfigError("variants.%s: одно из %s" % (kk, ", ".join((RANDOM_VARIANT,) + VARIANTS[kk])))
+                cfg[k][kk] = vv
+        elif isinstance(cfg[k], dict):
             if not isinstance(v, dict):
                 raise ConfigError("%s должен быть объектом" % k)
             for kk, vv in v.items():
@@ -142,9 +210,34 @@ def _validate(cfg: dict) -> dict:
     n_issues = sum(cfg["errors"].values()) + 2 * sum(cfg["interactions"].values())
     if n_issues > MAX_ISSUES:
         raise ConfigError("не больше %d ошибок на эпизод (сценарий взаимодействия считается за 2)" % MAX_ISSUES)
+    need = document_bound(cfg)
+    if need > MAX_DOCUMENTS:
+        raise ConfigError("отвлекающие случаи и ошибки могут потребовать до %d документов даже без обычных счетов, "
+                          "а эпизод ограничен %d документами; уменьшите distractors (цена случая в документах: %s)"
+                          % (need, MAX_DOCUMENTS, ", ".join("%s=%d" % kv for kv in DISTRACTOR_DOCS.items())))
     return cfg
 
 
+def document_bound(cfg: dict) -> int:
+    """Строгая верхняя граница числа документов эпизода БЕЗ обычных счетов.
+    Документов всего не больше ``document_bound(cfg) + 2 × обычных счетов``."""
+    e, it = cfg["errors"], cfg["interactions"]
+    total = sum(DISTRACTOR_DOCS[k] * v for k, v in cfg["distractors"].items())
+    total += sum(ISSUE_DOCS[k] * v for k, v in e.items()) + sum(ISSUE_DOCS[k] * v for k, v in it.items())
+    if e["fx_rate"]:
+        total += 2 * FX_RESERVE
+    return total
+
+
+def safe_regular_invoices(cfg: dict) -> int:
+    """Сколько обычных счетов гарантированно помещается в MAX_DOCUMENTS."""
+    return max(0, (MAX_DOCUMENTS - document_bound(cfg)) // 2)
+
+
 def story_part(cfg: dict) -> dict:
-    """Часть конфига, определяющая экономику истории (без безвредных преобразований)."""
-    return {k: v for k, v in cfg.items() if k not in ("id_salt", "order_seed")}
+    """Часть конфига, определяющая экономику истории (без безвредных преобразований). ``variants``
+    со всеми "random" в неё не входит: такие конфиги дают те же эпизоды, что и до появления ключа."""
+    out = {k: v for k, v in cfg.items() if k not in ("id_salt", "order_seed")}
+    if all(v == RANDOM_VARIANT for v in out.get("variants", {}).values()):
+        out.pop("variants", None)
+    return out

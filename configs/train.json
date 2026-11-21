@@ -1,5 +1,5 @@
 {
-  "config_version": "3.0",
+  "config_version": "3.2",
   "split": "train",
   "description": "Открытые конфигурации и seed (train). Закрытые seed жюри с ними не пересекаются.",
   "episodes": [
@@ -7,7 +7,7 @@
       "name": "чистая_компания",
       "seed": 1001,
       "config": {
-        "config_version": "3.0",
+        "config_version": "3.2",
         "errors": {
           "duplicate_invoice": 0,
           "payment_allocation": 0,
@@ -24,7 +24,7 @@
       "name": "чистая_много_ловушек",
       "seed": 1002,
       "config": {
-        "config_version": "3.0",
+        "config_version": "3.2",
         "errors": {
           "duplicate_invoice": 0,
           "payment_allocation": 0,
@@ -53,7 +53,7 @@
       "name": "дубль_и_распределение",
       "seed": 1003,
       "config": {
-        "config_version": "3.0",
+        "config_version": "3.2",
         "errors": {
           "duplicate_invoice": 1,
           "payment_allocation": 1,
@@ -70,7 +70,7 @@
       "name": "курс_и_период",
       "seed": 1004,
       "config": {
-        "config_version": "3.0",
+        "config_version": "3.2",
         "errors": {
           "duplicate_invoice": 0,
           "payment_allocation": 0,
@@ -87,7 +87,7 @@
       "name": "четыре_типа",
       "seed": 1005,
       "config": {
-        "config_version": "3.0",
+        "config_version": "3.2",
         "errors": {
           "duplicate_invoice": 1,
           "payment_allocation": 1,
@@ -104,7 +104,7 @@
       "name": "четыре_типа_x2",
       "seed": 1006,
       "config": {
-        "config_version": "3.0",
+        "config_version": "3.2",
         "errors": {
           "duplicate_invoice": 2,
           "payment_allocation": 2,
@@ -121,7 +121,7 @@
       "name": "взаимодействие_частичный_валютный_платёж",
       "seed": 1007,
       "config": {
-        "config_version": "3.0",
+        "config_version": "3.2",
         "errors": {
           "duplicate_invoice": 0,
           "payment_allocation": 0,
@@ -138,7 +138,7 @@
       "name": "взаимодействие_замаскированный_дубль",
       "seed": 1008,
       "config": {
-        "config_version": "3.0",
+        "config_version": "3.2",
         "errors": {
           "duplicate_invoice": 0,
           "payment_allocation": 0,
@@ -155,7 +155,7 @@
       "name": "оба_взаимодействия",
       "seed": 1009,
       "config": {
-        "config_version": "3.0",
+        "config_version": "3.2",
         "errors": {
           "duplicate_invoice": 0,
           "payment_allocation": 1,
@@ -172,7 +172,7 @@
       "name": "нагрузка_10",
       "seed": 1010,
       "config": {
-        "config_version": "3.0",
+        "config_version": "3.2",
         "errors": {
           "duplicate_invoice": 3,
           "payment_allocation": 3,

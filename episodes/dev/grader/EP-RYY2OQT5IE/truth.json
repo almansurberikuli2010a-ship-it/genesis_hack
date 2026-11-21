@@ -1,0 +1,77 @@
+{
+  "episode_id": "EP-RYY2OQT5IE",
+  "schema_version": "3.2",
+  "base_currency": "GBP",
+  "issues": [
+    {
+      "issue_id": "ISS-73RACGZE",
+      "type": "period_cutoff",
+      "affected_ids": [
+        "PAY-X7OQXSB"
+      ],
+      "expected_amount_minor": 1610340,
+      "currency": "GBP",
+      "tolerance_minor": 0,
+      "evidence_sets": [
+        [
+          "DOC-DYVUWGFK",
+          "L-ETTD4GZJ"
+        ]
+      ],
+      "mutation_id": "M04"
+    },
+    {
+      "issue_id": "ISS-7WFE5X77",
+      "type": "payment_allocation",
+      "affected_ids": [
+        "INV-EDSMGI7",
+        "PAY-6KJRXTG"
+      ],
+      "expected_amount_minor": 43822,
+      "currency": "GBP",
+      "tolerance_minor": 0,
+      "evidence_sets": [
+        [
+          "DOC-R5UGDYIG",
+          "L-MM2R6FLJ"
+        ]
+      ],
+      "mutation_id": "M01"
+    },
+    {
+      "issue_id": "ISS-C4WJT3KF",
+      "type": "payment_allocation",
+      "affected_ids": [
+        "INV-MZ4EG3U",
+        "PAY-QYM5JDM"
+      ],
+      "expected_amount_minor": 190040,
+      "currency": "GBP",
+      "tolerance_minor": 0,
+      "evidence_sets": [
+        [
+          "DOC-LDL7P6EM",
+          "L-Q4WLHT3N"
+        ]
+      ],
+      "mutation_id": "M03"
+    },
+    {
+      "issue_id": "ISS-LYCE7DZH",
+      "type": "period_cutoff",
+      "affected_ids": [
+        "PAY-ZRTTP6D"
+      ],
+      "expected_amount_minor": 444643,
+      "currency": "GBP",
+      "tolerance_minor": 0,
+      "evidence_sets": [
+        [
+          "DOC-WRL6EQHT",
+          "L-IGD2TZQQ"
+        ]
+      ],
+      "mutation_id": "M02"
+    }
+  ]
+}

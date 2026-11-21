@@ -1,11 +1,18 @@
 {
-  "env_version": "3.0.0",
-  "generator_version": "3.0.0",
-  "python": "3.11.18",
+  "env_version": "3.2.0",
+  "generator_version": "3.2.0",
+  "schema_version": "3.2",
+  "config_version": "3.2",
+  "git": {
+    "commit": "f4bf54b2ea1bd74ae9d3efa8056fe728546b59c8",
+    "dirty": true
+  },
+  "python": "3.13.17",
+  "platform": "darwin",
   "sections": {
     "unit_tests": {
       "passed": true,
-      "run": 63,
+      "run": 166,
       "failed": 0,
       "failures": []
     },
@@ -19,16 +26,16 @@
       "episodes": 220,
       "problems": [],
       "ledger_rows": [
-        235,
-        735
+        309,
+        729
       ],
       "journal_entries": [
-        109,
-        338
+        142,
+        337
       ],
       "documents": [
-        80,
-        169
+        69,
+        170
       ],
       "issues": [
         0,
@@ -45,9 +52,9 @@
             "recall": 0.0,
             "f1": 0.0,
             "return": -1.0,
-            "experimental_return": -0.989,
-            "steps": 4.4,
-            "time_s": 0.031,
+            "experimental_return": -1.0,
+            "steps": 4.5,
+            "time_s": 0.02,
             "tp": 0,
             "fp": 300,
             "fn": 39,
@@ -61,7 +68,7 @@
             "return": 1.0,
             "experimental_return": 1.0,
             "steps": 1,
-            "time_s": 0.025,
+            "time_s": 0.018,
             "tp": 39,
             "fp": 0,
             "fn": 0,
@@ -71,28 +78,28 @@
             "episodes": 10,
             "precision": 0.0,
             "recall": 0.0,
-            "f1": 0.1,
-            "return": -0.804,
-            "experimental_return": -0.804,
-            "steps": 18.3,
-            "time_s": 0.036,
+            "f1": 0.2,
+            "return": -0.605,
+            "experimental_return": -0.605,
+            "steps": 17.9,
+            "time_s": 0.027,
             "tp": 0,
-            "fp": 10,
+            "fp": 8,
             "fn": 39,
             "invalid": 0
           },
           "reconciler": {
             "episodes": 10,
-            "precision": 0.254,
-            "recall": 0.69,
-            "f1": 0.36,
-            "return": -0.307,
-            "experimental_return": -0.307,
+            "precision": 0.228,
+            "recall": 0.654,
+            "f1": 0.329,
+            "return": -0.369,
+            "experimental_return": -0.369,
             "steps": 17.3,
-            "time_s": 0.039,
-            "tp": 34,
-            "fp": 87,
-            "fn": 5,
+            "time_s": 0.026,
+            "tp": 33,
+            "fp": 103,
+            "fn": 6,
             "invalid": 0
           },
           "rule_auditor": {
@@ -103,7 +110,7 @@
             "return": 0.967,
             "experimental_return": 0.967,
             "steps": 17.3,
-            "time_s": 0.039,
+            "time_s": 0.026,
             "tp": 39,
             "fp": 0,
             "fn": 0,
@@ -117,9 +124,9 @@
             "recall": 0.0,
             "f1": 0.0,
             "return": -1.0,
-            "experimental_return": -1.0,
-            "steps": 4.7,
-            "time_s": 0.036,
+            "experimental_return": -0.996,
+            "steps": 4.4,
+            "time_s": 0.019,
             "tp": 0,
             "fp": 300,
             "fn": 34,
@@ -133,7 +140,7 @@
             "return": 1.0,
             "experimental_return": 1.0,
             "steps": 1,
-            "time_s": 0.03,
+            "time_s": 0.017,
             "tp": 34,
             "fp": 0,
             "fn": 0,
@@ -143,27 +150,27 @@
             "episodes": 10,
             "precision": 0.0,
             "recall": 0.0,
-            "f1": 0.2,
-            "return": -0.607,
-            "experimental_return": -0.607,
-            "steps": 21.9,
-            "time_s": 0.043,
+            "f1": 0.1,
+            "return": -0.803,
+            "experimental_return": -0.803,
+            "steps": 18.3,
+            "time_s": 0.026,
             "tp": 0,
-            "fp": 12,
+            "fp": 8,
             "fn": 34,
             "invalid": 0
           },
           "reconciler": {
             "episodes": 10,
-            "precision": 0.188,
-            "recall": 0.683,
-            "f1": 0.283,
-            "return": -0.461,
-            "experimental_return": -0.461,
-            "steps": 18.1,
-            "time_s": 0.044,
+            "precision": 0.225,
+            "recall": 0.658,
+            "f1": 0.314,
+            "return": -0.399,
+            "experimental_return": -0.399,
+            "steps": 17.7,
+            "time_s": 0.025,
             "tp": 28,
-            "fp": 106,
+            "fp": 89,
             "fn": 6,
             "invalid": 0
           },
@@ -172,10 +179,10 @@
             "precision": 0.8,
             "recall": 0.8,
             "f1": 1.0,
-            "return": 0.966,
-            "experimental_return": 0.966,
-            "steps": 18.1,
-            "time_s": 0.046,
+            "return": 0.967,
+            "experimental_return": 0.967,
+            "steps": 17.7,
+            "time_s": 0.024,
             "tp": 34,
             "fp": 0,
             "fn": 0,
@@ -187,7 +194,13 @@
     },
     "no_leakage": {
       "passed": true,
-      "observations_scanned": 1321,
+      "observations_scanned": 1271,
+      "published_trajectories": {
+        "rows": 2663,
+        "runs": 104,
+        "runs_truncated": 12,
+        "runs_eval": 18
+      },
       "problems": []
     },
     "paired_checks": {
@@ -205,7 +218,7 @@
           "passed": true,
           "rewards": [
             1.0,
-            0.964
+            0.962
           ]
         },
         {
@@ -215,12 +228,12 @@
           "rewards": {
             "a": [
               1.0,
-              0.964,
+              0.962,
               -1.0
             ],
             "b": [
               1.0,
-              0.964,
+              0.962,
               -1.0
             ]
           }
@@ -236,7 +249,7 @@
           "passed": true,
           "rewards": [
             1.0,
-            0.966
+            0.97
           ]
         },
         {
@@ -246,12 +259,12 @@
           "rewards": {
             "a": [
               1.0,
-              0.966,
+              0.97,
               -1.0
             ],
             "b": [
               1.0,
-              0.966,
+              0.97,
               -1.0
             ]
           }
@@ -278,12 +291,12 @@
             "a": [
               1.0,
               0.97,
-              -0.5855555555555556
+              -0.6663636363636364
             ],
             "b": [
               1.0,
               0.97,
-              -0.5855555555555556
+              -0.6663636363636364
             ]
           }
         },
@@ -298,7 +311,7 @@
           "passed": true,
           "rewards": [
             1.0,
-            0.97
+            0.962
           ]
         },
         {
@@ -308,13 +321,13 @@
           "rewards": {
             "a": [
               1.0,
-              0.97,
-              -0.7223076923076923
+              0.962,
+              -0.7303076923076923
             ],
             "b": [
               1.0,
-              0.97,
-              -0.7223076923076923
+              0.962,
+              -0.7303076923076923
             ]
           }
         },
@@ -329,7 +342,7 @@
           "passed": true,
           "rewards": [
             1.0,
-            0.964
+            0.968
           ]
         },
         {
@@ -339,13 +352,13 @@
           "rewards": {
             "a": [
               1.0,
-              0.964,
-              0.030666666666666648
+              0.968,
+              0.03466666666666665
             ],
             "b": [
               1.0,
-              0.964,
-              0.030666666666666648
+              0.968,
+              0.03466666666666665
             ]
           }
         },
@@ -371,12 +384,12 @@
             "a": [
               1.0,
               0.968,
-              -0.032
+              0.03466666666666665
             ],
             "b": [
               1.0,
               0.968,
-              -0.032
+              0.03466666666666665
             ]
           }
         },
@@ -391,7 +404,7 @@
           "passed": true,
           "rewards": [
             1.0,
-            0.962
+            0.968
           ]
         },
         {
@@ -401,13 +414,13 @@
           "rewards": {
             "a": [
               1.0,
-              0.962,
-              -0.42261538461538456
+              0.968,
+              -0.30472727272727274
             ],
             "b": [
               1.0,
-              0.962,
-              -0.42261538461538456
+              0.968,
+              -0.30472727272727274
             ]
           }
         },
@@ -433,12 +446,12 @@
             "a": [
               1.0,
               0.966,
-              -0.5895555555555556
+              -0.7006666666666668
             ],
             "b": [
               1.0,
               0.966,
-              -0.5895555555555556
+              -0.7006666666666668
             ]
           }
         },
@@ -453,7 +466,7 @@
           "passed": true,
           "rewards": [
             1.0,
-            0.964
+            0.968
           ]
         },
         {
@@ -463,13 +476,13 @@
           "rewards": {
             "a": [
               1.0,
-              0.964,
-              -0.27409523809523817
+              0.968,
+              -0.09082352941176472
             ],
             "b": [
               1.0,
-              0.964,
-              -0.27409523809523817
+              0.968,
+              -0.09082352941176472
             ]
           }
         },
@@ -495,12 +508,12 @@
             "a": [
               1.0,
               0.964,
-              -0.010358974358974454
+              0.43066666666666653
             ],
             "b": [
               1.0,
               0.964,
-              -0.010358974358974454
+              0.43066666666666653
             ]
           }
         }
@@ -526,54 +539,52 @@
         "fn_by_type": {
           "payment_allocation": 12,
           "duplicate_invoice": 9,
-          "period_cutoff": 7,
-          "fx_rate": 11
+          "fx_rate": 11,
+          "period_cutoff": 7
         },
         "fn_in_interaction": 8,
         "fp_by_type": {
-          "duplicate_invoice": 4,
-          "fx_rate": 3,
-          "period_cutoff": 3
+          "period_cutoff": 1,
+          "fx_rate": 2,
+          "duplicate_invoice": 3,
+          "payment_allocation": 2
         },
         "fp_by_distractor": {
-          "ordinary_record": 7,
-          "tz_boundary": 1,
-          "split_payment": 1,
-          "multi_invoice_payment": 1
+          "ordinary_record": 6,
+          "same_day_repeat": 1,
+          "recurring_amount": 1,
+          "next_period_doc": 1
         }
       },
       "reconciler": {
         "fn_by_type": {
-          "fx_rate": 2,
-          "payment_allocation": 2,
-          "period_cutoff": 1
+          "fx_rate": 3,
+          "payment_allocation": 3
         },
-        "fn_in_interaction": 4,
+        "fn_in_interaction": 5,
         "fp_by_type": {
-          "duplicate_invoice": 34,
-          "period_cutoff": 22,
-          "payment_allocation": 11,
-          "fx_rate": 20
+          "duplicate_invoice": 33,
+          "period_cutoff": 25,
+          "fx_rate": 34,
+          "payment_allocation": 11
         },
         "fp_by_distractor": {
+          "recurring_amount": 23,
           "same_day_repeat": 11,
-          "recurring_amount": 22,
-          "tz_boundary": 23,
-          "unremitted_payment": 11,
-          "ordinary_record": 13,
-          "refund": 2,
-          "multi_invoice_payment": 1,
-          "real_issue_wrong_fields": 2,
-          "split_payment": 2,
-          "prior_period_doc": 1
+          "tz_boundary": 22,
+          "unremitted_payment": 12,
+          "ordinary_record": 29,
+          "partial_open": 2,
+          "split_payment": 3,
+          "real_issue_wrong_fields": 1
         }
       },
       "flag_all": {
         "fn_by_type": {
           "payment_allocation": 12,
           "duplicate_invoice": 9,
-          "period_cutoff": 7,
-          "fx_rate": 11
+          "fx_rate": 11,
+          "period_cutoff": 7
         },
         "fn_in_interaction": 8,
         "fp_by_type": {
@@ -583,18 +594,16 @@
           "period_cutoff": 70
         },
         "fp_by_distractor": {
-          "ordinary_record": 212,
-          "prior_period_doc": 8,
-          "tz_boundary": 4,
-          "partial_open": 2,
-          "multi_invoice_payment": 4,
-          "recurring_amount": 20,
-          "split_payment": 4,
-          "refund": 4,
           "same_day_repeat": 8,
-          "real_issue_wrong_fields": 26,
-          "unremitted_payment": 4,
-          "next_period_doc": 4
+          "ordinary_record": 210,
+          "split_payment": 18,
+          "refund": 12,
+          "tz_boundary": 16,
+          "partial_open": 8,
+          "multi_invoice_payment": 12,
+          "real_issue_wrong_fields": 8,
+          "next_period_doc": 4,
+          "recurring_amount": 4
         }
       },
       "oracle": {
@@ -620,39 +629,37 @@
         },
         "fn_in_interaction": 10,
         "fp_by_type": {
-          "fx_rate": 4,
-          "period_cutoff": 4,
-          "payment_allocation": 2,
-          "duplicate_invoice": 2
+          "duplicate_invoice": 4,
+          "period_cutoff": 3,
+          "payment_allocation": 1
         },
         "fp_by_distractor": {
-          "ordinary_record": 9,
+          "ordinary_record": 5,
           "multi_invoice_payment": 1,
-          "partial_open": 1,
-          "tz_boundary": 1
+          "tz_boundary": 1,
+          "partial_open": 1
         }
       },
       "reconciler": {
         "fn_by_type": {
-          "fx_rate": 3,
-          "payment_allocation": 3
+          "fx_rate": 4,
+          "payment_allocation": 2
         },
-        "fn_in_interaction": 6,
+        "fn_in_interaction": 5,
         "fp_by_type": {
           "duplicate_invoice": 33,
-          "period_cutoff": 25,
-          "payment_allocation": 10,
-          "fx_rate": 38
+          "period_cutoff": 23,
+          "fx_rate": 22,
+          "payment_allocation": 11
         },
         "fp_by_distractor": {
-          "recurring_amount": 23,
+          "recurring_amount": 22,
           "same_day_repeat": 11,
           "tz_boundary": 24,
-          "unremitted_payment": 10,
           "multi_invoice_payment": 3,
-          "ordinary_record": 27,
-          "partial_open": 2,
-          "real_issue_wrong_fields": 5,
+          "unremitted_payment": 12,
+          "ordinary_record": 15,
+          "refund": 1,
           "split_payment": 1
         }
       },
@@ -671,14 +678,15 @@
           "period_cutoff": 70
         },
         "fp_by_distractor": {
-          "ordinary_record": 226,
-          "tz_boundary": 26,
-          "split_payment": 2,
-          "partial_open": 14,
-          "real_issue_wrong_fields": 2,
-          "next_period_doc": 12,
-          "recurring_amount": 14,
-          "refund": 4
+          "ordinary_record": 194,
+          "same_day_repeat": 16,
+          "partial_open": 16,
+          "refund": 8,
+          "recurring_amount": 24,
+          "multi_invoice_payment": 12,
+          "next_period_doc": 4,
+          "tz_boundary": 4,
+          "real_issue_wrong_fields": 22
         }
       },
       "oracle": {
@@ -696,16 +704,16 @@
     }
   },
   "resources": {
-    "max_episode_time_s": 0.0654,
-    "max_steps_used": 31,
-    "peak_rss_mb_orchestrator": 72.8,
-    "peak_rss_mb_env_process": 44.0,
+    "max_episode_time_s": 0.0832,
+    "max_steps_used": 28,
+    "peak_rss_mb_orchestrator": 136.9,
+    "peak_rss_mb_env_process": 70.8,
     "limits": {
       "time_per_episode_s": 60,
       "steps": 100,
       "ram_gb": 4
     }
   },
-  "elapsed_s": 49.9,
+  "elapsed_s": 62.4,
   "passed": true
 }

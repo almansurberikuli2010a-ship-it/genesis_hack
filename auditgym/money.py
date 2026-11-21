@@ -74,11 +74,6 @@ def rate_str(x: Decimal) -> str:
     return s
 
 
-def amount_tolerance(expected_minor: int) -> int:
-    """Опубликованный допуск сопоставления: max(1, floor(|expected| × 0.0005))."""
-    return max(1, abs(int(expected_minor)) * 5 // 10000)
-
-
 # ----------------------------------------------------------------- время
 
 def tz_from_offset(offset: str) -> timezone:

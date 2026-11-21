@@ -1,9 +1,11 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "auditgym/action.schema.json",
-  "title": "step(action) — действие агента (словарь или JSON-строка)",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "auditgym/action.schema.json",
+  "title": "step(action) — действие агента",
+  "description": "Действие — JSON-объект или JSON-строка с ним (строка не длиннее 1 000 000 символов разбирается json.loads; схема применяется к результату). Draft-04 выбран намеренно: в нём integer — число без дробной части в записи, как в коде (limit 50.0 отвергается). Схема описывает всё, что проверяется без данных эпизода; среда сверх неё проверяет только зависящее от данных: есть ли запись с таким id или doc_id, укладывается ли смещение курсора в таблицу (0..total), разбирается ли выражение калькулятора как арифметика (не больше 200 узлов, результат в пределах 10^±60). Действие вне схемы (кроме submit) даёт ограниченную ошибку и расходует шаг; submit вне схемы завершает эпизод с наградой −1.",
   "oneOf": [
     {
+      "title": "list_records",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -12,7 +14,9 @@
       ],
       "properties": {
         "type": {
-          "const": "list_records"
+          "enum": [
+            "list_records"
+          ]
         },
         "table": {
           "enum": [
@@ -26,16 +30,84 @@
           "type": [
             "string",
             "null"
-          ]
+          ],
+          "description": "null — с начала; иначе next_cursor прошлой страницы той же таблицы: «<table>:<смещение>»"
         },
         "limit": {
           "type": "integer",
           "minimum": 1,
-          "description": "больше 50 обрезается до 50"
+          "description": "по умолчанию 50; больше 50 обрезается до 50"
         }
-      }
+      },
+      "anyOf": [
+        {
+          "properties": {
+            "table": {
+              "enum": [
+                "ledger"
+              ]
+            },
+            "cursor": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^ledger:\\s*[+-]?\\d+(?:_\\d+)*\\s*$"
+            }
+          }
+        },
+        {
+          "properties": {
+            "table": {
+              "enum": [
+                "invoices"
+              ]
+            },
+            "cursor": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^invoices:\\s*[+-]?\\d+(?:_\\d+)*\\s*$"
+            }
+          }
+        },
+        {
+          "properties": {
+            "table": {
+              "enum": [
+                "payments"
+              ]
+            },
+            "cursor": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^payments:\\s*[+-]?\\d+(?:_\\d+)*\\s*$"
+            }
+          }
+        },
+        {
+          "properties": {
+            "table": {
+              "enum": [
+                "fx"
+              ]
+            },
+            "cursor": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^fx:\\s*[+-]?\\d+(?:_\\d+)*\\s*$"
+            }
+          }
+        }
+      ]
     },
     {
+      "title": "get_record",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -45,7 +117,9 @@
       ],
       "properties": {
         "type": {
-          "const": "get_record"
+          "enum": [
+            "get_record"
+          ]
         },
         "table": {
           "enum": [
@@ -56,11 +130,13 @@
           ]
         },
         "id": {
-          "type": "string"
+          "type": "string",
+          "description": "row_id | invoice_id или doc_id | payment_id или doc_id | fx_id"
         }
       }
     },
     {
+      "title": "get_document",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -69,7 +145,9 @@
       ],
       "properties": {
         "type": {
-          "const": "get_document"
+          "enum": [
+            "get_document"
+          ]
         },
         "doc_id": {
           "type": "string"
@@ -77,6 +155,7 @@
       }
     },
     {
+      "title": "calculator",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -85,15 +164,20 @@
       ],
       "properties": {
         "type": {
-          "const": "calculator"
+          "enum": [
+            "calculator"
+          ]
         },
         "expression": {
           "type": "string",
-          "maxLength": 300
+          "maxLength": 300,
+          "pattern": "^(?![\\s\\S]*\\*\\*)(?=[\\s\\S]*[0-9])[0-9\\s.+\\-*/%()]*$",
+          "description": "только цифры, десятичная точка, пробелы, + - * / // % и скобки; без **"
         }
       }
     },
     {
+      "title": "submit",
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -102,7 +186,9 @@
       ],
       "properties": {
         "type": {
-          "const": "submit"
+          "enum": [
+            "submit"
+          ]
         },
         "findings": {
           "$ref": "findings.schema.json"

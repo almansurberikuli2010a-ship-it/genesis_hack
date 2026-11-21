@@ -1,0 +1,77 @@
+{
+  "episode_id": "EP-SZADQBKZ3Q",
+  "schema_version": "3.2",
+  "base_currency": "GBP",
+  "issues": [
+    {
+      "issue_id": "ISS-34O6MDH2",
+      "type": "fx_rate",
+      "affected_ids": [
+        "PAY-DGXG3T5"
+      ],
+      "expected_amount_minor": 721,
+      "currency": "GBP",
+      "tolerance_minor": 0,
+      "evidence_sets": [
+        [
+          "DOC-Q4WCVJ2I",
+          "FX-2026-10-31-USD-GBP",
+          "L-XJCDDBEB"
+        ]
+      ],
+      "mutation_id": "M01"
+    },
+    {
+      "issue_id": "ISS-OV3D7YUM",
+      "type": "duplicate_invoice",
+      "affected_ids": [
+        "INV-EOO5O2N",
+        "INV-YX27ECG"
+      ],
+      "expected_amount_minor": 1500729,
+      "currency": "GBP",
+      "tolerance_minor": 0,
+      "evidence_sets": [
+        [
+          "DOC-J6TLE2T5",
+          "DOC-VYGJYRI7",
+          "L-NIGF37UR"
+        ],
+        [
+          "DOC-J6TLE2T5",
+          "DOC-VYGJYRI7",
+          "L-3PLJUT2I"
+        ],
+        [
+          "DOC-J6TLE2T5",
+          "DOC-VYGJYRI7",
+          "L-VVN43QCR"
+        ],
+        [
+          "DOC-J6TLE2T5",
+          "DOC-VYGJYRI7",
+          "L-NIXA6CSA"
+        ]
+      ],
+      "mutation_id": "M02"
+    },
+    {
+      "issue_id": "ISS-SHTVVQ3J",
+      "type": "payment_allocation",
+      "affected_ids": [
+        "INV-AIA3TTU",
+        "PAY-DGXG3T5"
+      ],
+      "expected_amount_minor": 69897,
+      "currency": "GBP",
+      "tolerance_minor": 0,
+      "evidence_sets": [
+        [
+          "DOC-Q4WCVJ2I",
+          "L-NJBLMII7"
+        ]
+      ],
+      "mutation_id": "M01"
+    }
+  ]
+}

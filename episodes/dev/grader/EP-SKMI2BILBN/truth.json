@@ -1,0 +1,41 @@
+{
+  "episode_id": "EP-SKMI2BILBN",
+  "schema_version": "3.2",
+  "base_currency": "EUR",
+  "issues": [
+    {
+      "issue_id": "ISS-O3EUVZ4G",
+      "type": "duplicate_invoice",
+      "affected_ids": [
+        "INV-C22K53B",
+        "INV-IDHNYBX"
+      ],
+      "expected_amount_minor": 892350,
+      "currency": "EUR",
+      "tolerance_minor": 0,
+      "evidence_sets": [
+        [
+          "DOC-3LTNHLUD",
+          "DOC-J7TRH3TS",
+          "L-AWAHB3DB"
+        ],
+        [
+          "DOC-3LTNHLUD",
+          "DOC-J7TRH3TS",
+          "L-QGVPKJVO"
+        ],
+        [
+          "DOC-3LTNHLUD",
+          "DOC-J7TRH3TS",
+          "L-JS5FVLML"
+        ],
+        [
+          "DOC-3LTNHLUD",
+          "DOC-J7TRH3TS",
+          "L-22L4YRRB"
+        ]
+      ],
+      "mutation_id": "M01"
+    }
+  ]
+}

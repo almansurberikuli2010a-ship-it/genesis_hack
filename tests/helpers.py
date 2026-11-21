@@ -3,7 +3,7 @@ import copy
 
 from auditgym.env import AuditEnv
 from auditgym.generator import generate
-from auditgym.matcher import build_aliases, score
+from auditgym.matcher import match_context, score
 
 ERRS = {"errors": {"duplicate_invoice": 1, "payment_allocation": 1, "fx_rate": 1, "period_cutoff": 1}}
 CLEAN = {}
@@ -24,7 +24,7 @@ def oracle_findings(ep):
 
 
 def grade(ep, findings, steps=0):
-    return score({"episode_id": ep.episode_id, "findings": findings}, ep.truth, build_aliases(ep.public), steps)
+    return score({"episode_id": ep.episode_id, "findings": findings}, ep.truth, match_context(ep.public), steps)
 
 
 def submit(env, ep, findings):

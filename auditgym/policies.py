@@ -10,10 +10,17 @@
   flag_all     — атака «пометить всё»: каждый документ каждым типом;
   oracle       — только для оценщика: отправляет верные выводы (получает их от оценщика);
   rule_auditor — демо: скриптовый аудитор, буквально применяющий policy.json, без эталона.
+
+Ответ получает только oracle, созданная самой средой по явному запросу: ``make_policy("oracle")``
+(или ``BASELINE_ADAPTERS["oracle_grader_only"]``). Такие экземпляры записаны в реестр этого модуля;
+``is_grader_oracle`` проверяет запись по тождеству объекта, поэтому ни ``Oracle()``, созданный
+снаружи, ни подкласс, ни объект с подменённым классом ответа не получают.
 """
 from __future__ import annotations
 
+import json
 import random
+import weakref
 from collections import defaultdict
 from decimal import Decimal
 
@@ -79,6 +86,22 @@ class RuleAuditor(_Reader):
         return rule_audit(public)
 
 
+_ID_FIELDS = frozenset(("row_id", "doc_id", "invoice_id", "payment_id", "entity_id", "fx_id"))
+
+
+def _without_ids(v):
+    if isinstance(v, dict):
+        return {k: _without_ids(x) for k, x in v.items() if k not in _ID_FIELDS}
+    if isinstance(v, list):
+        return [_without_ids(x) for x in v]
+    return v
+
+
+def _content(record) -> str:
+    """Ключ сортировки записи по её содержимому без ID."""
+    return json.dumps(_without_ids(record), sort_keys=True, ensure_ascii=False)
+
+
 class SimpleReconciler(_Reader):
     """Типичная первая попытка: сверка книги с документами по НАПЕЧАТАННОЙ дате, дубли — по
     клиенту и сумме, любая проводка 2900 — ошибка."""
@@ -89,9 +112,12 @@ class SimpleReconciler(_Reader):
         m = public["manifest"]
         base = m["base_currency"]
         p0, p1 = m["period_start"][:10], m["period_end"][:10]
-        rates = {(f["source_currency"], f["date"]): (Decimal(f["rate"]), f["fx_id"]) for f in public["fx"]}
+        # Записи обходятся в порядке их содержимого без ID: ответ не зависит ни от порядка строк в
+        # таблицах, ни от самих ID (парные проверки раздела 06 ТЗ меняют и то и другое).
+        invoices, payments = sorted(public["invoices"], key=_content), sorted(public["payments"], key=_content)
+        rates = {(f["source_currency"], f["date"]): (Decimal(f["rate"]), f["fx_id"]) for f in sorted(public["fx"], key=_content)}
         inv_rows, pay_rows = defaultdict(list), defaultdict(list)
-        for r in public["ledger"]:
+        for r in sorted(public["ledger"], key=_content):
             if r["payment_id"]:
                 pay_rows[r["payment_id"]].append(r)
             elif r["invoice_id"]:
@@ -103,15 +129,15 @@ class SimpleReconciler(_Reader):
                         "evidence_ids": ev[:10], "explanation": "расхождение при сверке"})
 
         groups = defaultdict(list)
-        for inv in public["invoices"]:
+        for inv in invoices:
             groups[(inv["entity_id"], inv["currency"], inv["total_minor"])].append(inv)
-        for g in groups.values():
+        for g in groups.values():  # группы и пары внутри них — в порядке содержимого, а не строк
             for a, b in zip(g, g[1:]):
                 ar = next((r for r in inv_rows[b["invoice_id"]] if r["account"].startswith("1200")), None)
                 if ar:
                     add("duplicate_invoice", [a["invoice_id"], b["invoice_id"]], ar["debit_minor"],
                         [a["doc_id"], b["doc_id"], ar["row_id"]])
-        for kind, docs, rowsmap in (("inv", public["invoices"], inv_rows), ("pay", public["payments"], pay_rows)):
+        for kind, docs, rowsmap in (("inv", invoices, inv_rows), ("pay", payments, pay_rows)):
             for d in docs:
                 ts = d["issued_at"] if kind == "inv" else d["timestamp"]
                 amount = d["total_minor"] if kind == "inv" else d["amount_minor"]
@@ -218,7 +244,8 @@ class RandomExplorer(Policy):
 
 
 class Oracle(Policy):
-    """Только для оценщика: отправляет на первом шаге выводы, полученные от оценщика."""
+    """Только для оценщика: отправляет на первом шаге выводы, полученные от оценщика. Выводы получает
+    лишь экземпляр из ``make_policy("oracle")``; любой другой отправит пустой (неверный) ответ."""
 
     name = "oracle"
 
@@ -232,10 +259,27 @@ class Oracle(Policy):
         return {"type": "submit", "findings": self.findings}
 
 
+_GRADER_ORACLES: dict = {}  # id(экземпляр) -> weakref: oracle, созданные самой средой
+
+
+def _grader_oracle() -> Oracle:
+    o = Oracle()
+    key = id(o)
+    _GRADER_ORACLES[key] = weakref.ref(o, lambda _ref, key=key: _GRADER_ORACLES.pop(key, None))
+    return o
+
+
+def is_grader_oracle(policy) -> bool:
+    """Создана ли эта политика средой по явному запросу ``make_policy("oracle")``: проверка по
+    тождеству объекта в реестре, а не по классу — подкласс или подмена ``__class__`` её не проходят."""
+    ref = _GRADER_ORACLES.get(id(policy))
+    return ref is not None and ref() is policy and type(policy) is Oracle
+
+
 BASELINES = ("random", "reconciler", "flag_all", "oracle")
 ALL_POLICIES = BASELINES + ("rule_auditor",)
 
 
 def make_policy(name: str, seed: int = 0) -> Policy:
     return {"random": lambda: RandomExplorer(seed), "reconciler": SimpleReconciler, "flag_all": FlagAll,
-            "oracle": Oracle, "rule_auditor": RuleAuditor}[name]()
+            "oracle": _grader_oracle, "rule_auditor": RuleAuditor}[name]()

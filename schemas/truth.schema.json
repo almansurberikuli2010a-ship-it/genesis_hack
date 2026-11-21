@@ -1,6 +1,6 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "auditgym/truth.schema.json",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "auditgym/truth.schema.json",
   "title": "truth.json — эталон (только для оценщика)",
   "type": "object",
   "required": [
@@ -61,7 +61,8 @@
           },
           "tolerance_minor": {
             "type": "integer",
-            "minimum": 1
+            "minimum": 0,
+            "description": "допуск суммы τ: |claimed − expected| <= τ; равен опубликованному policy.matching.amount_tolerance_minor[type] (по умолчанию 0)"
           },
           "evidence_sets": {
             "type": "array",

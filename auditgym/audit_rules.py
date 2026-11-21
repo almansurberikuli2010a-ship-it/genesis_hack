@@ -175,6 +175,8 @@ def book_invariants(public: dict, subledger: bool = True) -> list[str]:
             v.append("строка %s вне периода" % r["row_id"])
         if r["debit_minor"] < 0 or r["credit_minor"] < 0 or (r["debit_minor"] and r["credit_minor"]):
             v.append("строка %s: недопустимые дебет/кредит" % r["row_id"])
+        if r["debit_minor"] == 0 and r["credit_minor"] == 0:
+            v.append("строка %s: нулевые дебет и кредит" % r["row_id"])
         if r["currency"] != b.base:
             v.append("строка %s не в базовой валюте" % r["row_id"])
     for key, rows in list(b.inv_rows.items()) + list(b.pay_rows.items()) + list(b.op_rows.items()):
@@ -242,7 +244,7 @@ def expected_postings(public: dict) -> tuple[dict, list[str]]:
                 credits.append((ik, c))
         link = credits[0][0] if d["invoice_refs"] is not None and len(d["invoice_refs"]) == 1 else None
         rows = [(CASH, max(cash, 0), max(-cash, 0), link)]
-        rows += [(AR, max(-c, 0), max(c, 0), ik) for ik, c in credits]
+        rows += [(AR, max(-c, 0), max(c, 0), ik) for ik, c in credits if c]  # нулевых строк нет
         if susp:
             rows.append((UNAPPLIED, max(-susp, 0), max(susp, 0), None))
         fx = cash - sum(c for _, c in credits) - susp

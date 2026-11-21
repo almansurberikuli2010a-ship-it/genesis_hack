@@ -12,7 +12,9 @@
  5. эталонный аудитор воспроизводит эталон точно (F1 = 1): всё объявленное обнаружимо по
     открытым записям, необъявленного нет;
  6. каждый набор доказательств каждой ошибки сам по себе доказывает её;
- 7. счётчики manifest совпадают, закрытые значения не встречаются в открытых записях.
+ 7. счётчики manifest совпадают, закрытые значения не встречаются в открытых записях;
+ 8. fx_id каждой строки курса собирается по шаблону manifest.fx_id_format из её столбцов;
+ 9. допуск суммы каждой ошибки (tolerance_minor) равен опубликованному τ её типа в policy.json.
 Все проверки работают и по экспортированным ФАЙЛАМ (check_records), без генератора.
 """
 from __future__ import annotations
@@ -21,7 +23,7 @@ import json
 
 from .audit_rules import (book_invariants, posting_breaks, repost_differences, rule_audit, unsettled_invoices,
                           verify_evidence)
-from .matcher import build_aliases, score
+from .matcher import match_context, score
 from .provenance_tools import reconstruct_pre_injection, same_books, unattributed_changes
 
 GRADER_ONLY_KEYS = ("expected_amount_minor", "evidence_sets", "mutation_id", "ledger_diff", "story_hash",
@@ -55,7 +57,7 @@ def check_records(pub: dict, clean: dict, truth: dict, provenance: dict) -> list
             problems.append("необъявленное нарушение «проведён ⇔ в периоде»: %s %s" % (kind, key))
     for f in rule_audit(clean):
         problems.append("эталонный аудитор нашёл «ошибку» в чистых книгах: %s %s" % (f["type"], f["affected_ids"]))
-    s = score({"episode_id": pub["manifest"]["episode_id"], "findings": rule_audit(pub)[:30]}, truth, build_aliases(pub), 0)
+    s = score({"episode_id": pub["manifest"]["episode_id"], "findings": rule_audit(pub)[:30]}, truth, match_context(pub), 0)
     if s["f1"] != 1.0:
         problems.append("эталонный аудитор не воспроизводит эталон: tp=%d fp=%d fn=%d" % (s["tp"], s["fp"], s["fn"]))
     for t in truth["issues"]:
@@ -63,6 +65,16 @@ def check_records(pub: dict, clean: dict, truth: dict, provenance: dict) -> list
             problems.append("доказательства %s (%s): %s" % (t["issue_id"], t["type"], p))
         if t["expected_amount_minor"] <= 0:
             problems.append("неположительная ожидаемая сумма")
+        tau = pub["policy"].get("matching", {}).get("amount_tolerance_minor", {}).get(t["type"])
+        if not isinstance(tau, int) or isinstance(tau, bool) or tau < 0 or t.get("tolerance_minor") != tau:
+            problems.append("допуск %s (%s) не равен опубликованному τ" % (t["issue_id"], t.get("tolerance_minor")))
+    fmt = pub["manifest"].get("fx_id_format")
+    if not fmt:
+        problems.append("в manifest нет правила fx_id_format")
+    else:
+        for f in pub["fx"]:
+            if f["fx_id"] != fmt["template"].format(**{k: f[k] for k in fmt["fields"]}):
+                problems.append("fx_id %s не собирается по шаблону manifest" % f["fx_id"])
     c = pub["manifest"]["counts"]
     for k in ("ledger", "invoices", "payments", "fx"):
         if c[k] != len(pub[k]):

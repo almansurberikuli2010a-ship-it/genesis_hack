@@ -3,7 +3,7 @@ import json
 import unittest
 
 from auditgym.config import ConfigError
-from auditgym.env import MAX_STEPS, AuditEnv
+from auditgym.env import MAX_ACTION_CHARS, MAX_STEPS, AuditEnv
 from tests.helpers import ERRS, episode, oracle_findings, submit
 
 FORBIDDEN = {"issue_id", "issues", "expected_amount_minor", "evidence_sets", "mutation_id", "mutations", "story_hash",
@@ -137,7 +137,10 @@ class Contract(unittest.TestCase):
             obs, r, te, tr, info = env.step(bad)
             self.assertEqual((te, r), (True, -1.0))
             self.assertEqual(env.grader_report()["log"][0]["event"], "invalid_submission")
-            self.assertEqual((obs["result"], obs["error"]), ({"submitted": True}, None))  # детали — только у оценщика
+            # политике — только ограниченная ошибка о структуре, без оценки правильности
+            self.assertIsNone(obs["result"])
+            self.assertEqual(obs["error"]["code"], "invalid_submission")
+            self.assertLess(len(obs["error"]["message"]), 120)
             self.assertNotIn("error", info.get("grading", {}))
 
     def test_step_limit_truncates_with_empty_answer(self):
@@ -239,6 +242,80 @@ class NoLeakage(unittest.TestCase):
         pos = [ids.index(a) for a in affected if a in ids]
         self.assertTrue(pos)
         self.assertFalse(all(p >= len(ids) - len(pos) for p in pos))
+
+
+def deep(depth, leaf=None):
+    """Вложенный список глубины depth без рекурсии."""
+    v = leaf
+    for _ in range(depth):
+        v = [v]
+    return v
+
+
+class HostileInput(unittest.TestCase):
+    """Любое неверное действие — ограниченная ошибка и израсходованный шаг, а не исключение."""
+
+    def assert_bounded(self, env, action, step):
+        obs, r, te, tr, info = env.step(action)
+        self.assertIsNotNone(obs["error"])
+        self.assertIsNone(obs["result"])
+        self.assertLess(len(obs["error"]["message"]), 120)
+        self.assertEqual((obs["step"], r, te, tr, info), (step, 0.0, False, False, {}))
+
+    def test_deep_long_and_strange_actions(self):
+        env = AuditEnv()
+        env.reset(5, ERRS)
+        actions = ["[" * 100_000 + "]" * 100_000, "[" * 9_999 + "]" * 9_999, '{"type": ' * 50_000 + "1" + "}" * 50_000,
+                   json.dumps({"type": "calculator", "expression": "1", "pad": "x" * MAX_ACTION_CHARS}),
+                   b"[" * 100_000 + b"]" * 100_000, bytearray(b"{"), deep(100_000), {"type": deep(100_000)},
+                   {"type": "get_record", "table": "ledger", "id": deep(100_000)}, {"type": "calculator", "expression": deep(10)},
+                   {"type": "list_records", "table": "ledger", "cursor": deep(10)}, {"type": {"a": 1}}, {"type": ["submit"]},
+                   {(1, 2): 3, "type": "calculator", "expression": "1"}, float("nan"), object()]
+        for i, a in enumerate(actions, 1):
+            self.assert_bounded(env, a, i)
+        obs = env.step({"type": "calculator", "expression": "1+1"})[0]  # среда работает дальше
+        self.assertEqual((obs["result"], obs["step"]), ({"value": "2"}, len(actions) + 1))
+
+    def test_deep_submit_is_invalid_answer(self):
+        env = AuditEnv(mode="train")
+        env.reset(5, ERRS)
+        obs, r, te, tr, info = env.step({"type": "submit", "findings": deep(100_000)})
+        self.assertEqual((r, te, tr), (-1.0, True, False))
+        self.assertFalse(env.grader_report()["result"]["valid"])
+        env.reset(5, ERRS)
+        f = {"type": "fx_rate", "affected_ids": deep(50_000), "claimed_amount_minor": 1, "currency": "USD",
+             "evidence_ids": [], "explanation": ""}
+        obs, r, te, tr, info = env.step({"type": "submit", "findings": {"episode_id": env._ep.episode_id, "findings": [f]}})
+        self.assertEqual((r, te), (-1.0, True))
+
+    def test_extra_argument_names_are_not_echoed_in_full(self):
+        env = AuditEnv()
+        env.reset(5, ERRS)
+        a = {"type": "list_records", "table": "ledger"}
+        a.update({("k%d" % i) * 200_000: 1 for i in range(5)})
+        obs = env.step(a)[0]
+        self.assertEqual(obs["error"]["code"], "invalid_arguments")
+        self.assertLess(len(obs["error"]["message"]), 120)
+        self.assertEqual(obs["step"], 1)
+        a = env.step({"type": "get_document", "doc_id": "x", "sql": 1})[0]["error"]["message"]
+        self.assertIn("sql", a)
+
+
+class Lifecycle(unittest.TestCase):
+    def test_close_and_context_manager(self):
+        env = AuditEnv()
+        env.close()  # без эпизода — тоже без ошибки
+        env.reset(5, ERRS)
+        env.close()
+        env.close()
+        with self.assertRaises(RuntimeError):
+            env.step({"type": "calculator", "expression": "1"})
+        self.assertEqual(env.reset(5, ERRS)[0]["step"], 0)  # после close снова можно reset
+        with AuditEnv(mode="train") as e:
+            e.reset(5, ERRS)
+            self.assertEqual(e.step({"type": "calculator", "expression": "2*3"})[0]["result"]["value"], "6")
+        with self.assertRaises(RuntimeError):
+            e.step({"type": "calculator", "expression": "1"})
 
 
 if __name__ == "__main__":

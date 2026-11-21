@@ -11,6 +11,11 @@
 где refs — список (ключ счёта, сумма в валюте платежа) или None (нет расписки),
 role — вид отвлекающего случая (для provenance) или None,
 posted — должен ли документ проводиться в этом периоде (документы вне периода — нет).
+
+Каждый заказанный отвлекающий случай строится ТОЧНО: если свободного обычного счёта нет или
+время оплаты не помещается в период, случай строится на своём счёте в начале периода.
+Фактические числа (обычные счета, клиенты в валюте, случаи, добавленные цели) собирает
+``actual()``; они попадают в provenance.actual.
 """
 from __future__ import annotations
 
@@ -18,13 +23,19 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal
 
 from . import money
-from .config import GENERATOR_VERSION, MAX_DOCUMENTS, story_part
+from .config import (DISTRACTORS, FX_RESERVE, GENERATOR_VERSION, MAX_ATTEMPTS, MAX_DOCUMENTS, safe_regular_invoices,
+                     story_part)
 from .money import convert_minor, sig_round, tz_from_offset
 from .util import canonical_json, h, rng
 
 
 class GenerationError(RuntimeError):
     """Конфигурацию нельзя разместить в выбранной истории (генератор попробует снова)."""
+
+
+# Последние попытки генерации берут число обычных счетов, при котором предел документов
+# гарантирован (config.safe_regular_invoices).
+GUARANTEED_ATTEMPTS = 4
 
 
 BASE_CHOICES = ["USD", "EUR", "KZT", "GBP"]
@@ -78,6 +89,10 @@ class StoryBuilder:
         self.unremitted_inv: set = set() # открытые счета, «оплаченные» платежом без расписки
         self.boundary_pairs: list = []   # (счёт, платёж) для сценария partial_fx_boundary
         self.role = None                 # текущая роль отвлекающего случая
+        self.n_regular = 0               # фактическое число обычных счетов
+        self.distractor_counts = {k: 0 for k in DISTRACTORS}
+        self.fresh_distractors = {k: 0 for k in DISTRACTORS}  # случаи, построенные на своём счёте
+        self.supplied: list = []         # корректные документы-цели, добавленные для внесения ошибок
 
     # ------------------------------------------------------------ ключи и курсы
     def next_key(self, kind: str) -> int:
@@ -112,8 +127,9 @@ class StoryBuilder:
         for _ in range(r.randint(*self.cfg["n_customers"])):
             cur = r.choice(self.foreign) if r.random() < self.cfg["foreign_share"] else self.base
             self.customers.append({"key": self.next_key("ent"), "currency": cur})
-        if not any(c["currency"] != self.base for c in self.customers):
-            self.customers[0]["currency"] = self.foreign[0]
+        need_foreign = self.cfg["errors"]["fx_rate"] or self.cfg["interactions"]["partial_fx_boundary"]
+        if need_foreign and not any(c["currency"] != self.base for c in self.customers):
+            self.customers[0]["currency"] = self.foreign[0]  # ошибкам курса нужен валютный клиент
         # дневная траектория курсов: случайное блуждание, 6 значащих цифр
         d0 = self.p_start.date() - timedelta(days=3)
         d1 = self.p_end.date() + timedelta(days=9)
@@ -233,11 +249,17 @@ class StoryBuilder:
         extras = (2 * sum(d.values()) + 2 * d["recurring_amount"] + 2 * sum(it.values())
                   + 3 * it["masked_duplicate"] + e["duplicate_invoice"] + e["period_cutoff"] + 4)
         n_inv = max(10, min(n_inv, int((MAX_DOCUMENTS - extras) / 1.8)))
-        n_inv = max(10, int(n_inv * (0.85 ** self.attempt)))  # повторная попытка — компания меньше
+        if self.attempt:  # повторная попытка — компания меньше; последние — с гарантией предела
+            safe = safe_regular_invoices(self.cfg)
+            if self.attempt >= MAX_ATTEMPTS - GUARANTEED_ATTEMPTS:
+                n_inv = min(n_inv, safe)
+            else:
+                n_inv = min(n_inv, max(safe, int(n_inv * (0.85 ** self.attempt))))
+        self.n_regular = n_inv
         for _ in range(n_inv):
             self.invoices.append(self.new_invoice(r.choice(self.customers), self.local_dt(r.randint(1, self.last_day))))
         # запас валютных счетов под заказанные ошибки курса
-        need = e["fx_rate"] + 2 if e["fx_rate"] else 0
+        need = e["fx_rate"] + FX_RESERVE if e["fx_rate"] else 0
         fents = [c for c in self.customers if c["currency"] != self.base]
         while sum(1 for i in self.invoices if i["currency"] != self.base) < need:
             self.invoices.append(self.new_invoice(r.choice(fents), self.local_dt(r.randint(1, self.last_day))))
@@ -266,6 +288,19 @@ class StoryBuilder:
             self.background.append({"key": self.next_key("bg"), "ts": self.local_dt(r.randint(1, self.last_day), 7, 20),
                                     "account": account, "amount": max(1, int(major * (Decimal(10) ** exp)))})
 
+    def actual(self) -> dict:
+        """Фактические числа истории (что из конфига выполнено и как)."""
+        n_foreign = sum(1 for c in self.customers if c["currency"] != self.base)
+        return {
+            "customers": len(self.customers),
+            "foreign_customers": n_foreign,
+            "foreign_share": round(n_foreign / len(self.customers), 4),
+            "regular_invoices": self.n_regular,
+            "background_entries": len(self.background),
+            "distractors": dict(self.distractor_counts),
+            "distractors_on_own_invoice": {k: v for k, v in self.fresh_distractors.items() if v},
+        }
+
     def check_unique_lines(self) -> None:
         seen = set()
         for inv in self.invoices:
@@ -276,41 +311,67 @@ class StoryBuilder:
 
     # ------------------------------------------------------------ отвлекающие случаи (все корректны)
     def build_distractors(self) -> None:
+        """Каждый заказанный случай строится ровно один раз: сначала на свободном обычном счёте,
+        а если его нет или оплата не помещается в период — на своём счёте в начале периода."""
         d = self.cfg["distractors"]
         for kind in ("split_payment", "multi_invoice_payment", "partial_open", "refund", "recurring_amount",
                      "tz_boundary", "unremitted_payment", "same_day_repeat", "next_period_doc", "prior_period_doc"):
             self.role = kind
             fn = getattr(self, "d_" + kind)
             for i in range(d[kind]):
-                fn(i)
+                if not fn(i):
+                    if not fn(i, fresh=True):
+                        raise GenerationError("не удалось построить отвлекающий случай %s" % kind)
+                    self.fresh_distractors[kind] += 1
+                self.distractor_counts[kind] += 1
         self.role = None
 
-    def d_split_payment(self, i):
+    def early_invoice(self, ent=None) -> dict:
+        """Свой счёт случая в первые дни периода: любая оплата после него помещается в период."""
         r = self.rng
-        cands = self.free_invoices(latest_day=self.last_day - 8)
-        if not cands:
-            return
-        inv = r.choice(cands)
+        inv = self.new_invoice(ent or r.choice(self.customers), self.local_dt(r.randint(1, 5)))
+        self.invoices.append(inv)
+        return inv
+
+    def pick_free(self, latest_day, fresh):
+        """Свободный обычный счёт, выставленный не позже ``latest_day``, или, при ``fresh``, свой
+        счёт случая в начале периода."""
+        if fresh:
+            return self.early_invoice()
+        cands = self.free_invoices(latest_day=latest_day)
+        return self.rng.choice(cands) if cands else None
+
+    def d_split_payment(self, i, fresh=False):
+        r = self.rng
+        inv = self.pick_free(self.last_day - 8, fresh)
+        if inv is None:
+            return False
         t1 = self.pay_time(inv["issued"], 1, 3)
         t2 = self.pay_time(t1, 1, 4) if t1 else None
         if not t2:
-            return
+            return False
         a = max(1, int(inv["total"] * Decimal(str(r.uniform(0.3, 0.7)))))
         self.assigned.add(inv["key"])
         self.payments.append(self.new_payment(inv["entity"], inv["currency"], t1, a, [(inv["key"], a)]))
         b = inv["total"] - a
         self.payments.append(self.new_payment(inv["entity"], inv["currency"], t2, b, [(inv["key"], b)]))
+        return True
 
-    def d_multi_invoice_payment(self, i):
+    def d_multi_invoice_payment(self, i, fresh=False):
         r = self.rng
-        groups = {}
-        for inv in self.free_invoices(latest_day=self.last_day - 5):
-            groups.setdefault((inv["entity"], inv["currency"]), []).append(inv)
-        groups = [g for g in groups.values() if len(g) >= 2]
+        new = None
+        if fresh:
+            ent = r.choice(self.customers)
+            groups = [[self.early_invoice(ent), self.early_invoice(ent)]]
+        else:
+            groups = {}
+            for inv in self.free_invoices(latest_day=self.last_day - 5):
+                groups.setdefault((inv["entity"], inv["currency"]), []).append(inv)
+            groups = [g for g in groups.values() if len(g) >= 2]
         if not groups:
             cands = self.free_invoices(latest_day=self.last_day - 5)
             if not cands:
-                return
+                return False
             base_inv = r.choice(cands)
             new = self.new_invoice(self.customer(base_inv["entity"]), self.local_dt(r.randint(1, self.last_day - 5)))
             self.invoices.append(new)
@@ -318,41 +379,44 @@ class StoryBuilder:
         a, b = r.sample(r.choice(groups), 2)
         t = self.pay_time(max(a["issued"], b["issued"]), 1, 3)
         if not t:
-            return
+            if new is not None:  # счёт, созданный для неудавшегося случая, в историю не идёт
+                self.invoices.remove(new)
+            return False
         self.assigned.update({a["key"], b["key"]})
         self.payments.append(self.new_payment(a["entity"], a["currency"], t, a["total"] + b["total"],
                                               [(a["key"], a["total"]), (b["key"], b["total"])]))
+        return True
 
-    def d_partial_open(self, i):
+    def d_partial_open(self, i, fresh=False):
         r = self.rng
-        cands = self.free_invoices(latest_day=self.last_day - 3)
-        if not cands:
-            return
-        inv = r.choice(cands)
+        inv = self.pick_free(self.last_day - 3, fresh)
+        if inv is None:
+            return False
         t = self.pay_time(inv["issued"], 1, 6)
         if not t:
-            return
+            return False
         a = max(1, int(inv["total"] * Decimal(str(r.uniform(0.2, 0.8)))))
         self.assigned.add(inv["key"])
         self.payments.append(self.new_payment(inv["entity"], inv["currency"], t, a, [(inv["key"], a)]))
+        return True
 
-    def d_refund(self, i):
+    def d_refund(self, i, fresh=False):
         r = self.rng
-        cands = self.free_invoices(latest_day=self.last_day - 9)
-        if not cands:
-            return
-        inv = r.choice(cands)
+        inv = self.pick_free(self.last_day - 9, fresh)
+        if inv is None:
+            return False
         t1 = self.pay_time(inv["issued"], 1, 3)
         t2 = self.pay_time(t1, 1, 4) if t1 else None
         if not t2:
-            return
+            return False
         x = max(1, int(inv["total"] * Decimal(str(r.uniform(0.02, 0.12)))))
         self.assigned.add(inv["key"])
         self.payments.append(self.new_payment(inv["entity"], inv["currency"], t1, inv["total"] + x,
                                               [(inv["key"], inv["total"] + x)]))
         self.payments.append(self.new_payment(inv["entity"], inv["currency"], t2, -x, [(inv["key"], -x)]))
+        return True
 
-    def d_recurring_amount(self, i):
+    def d_recurring_amount(self, i, fresh=False):
         r = self.rng
         ent = r.choice(self.customers)
         prod = r.choice(PRODUCTS)
@@ -362,8 +426,9 @@ class StoryBuilder:
         for w in range(3):
             line = dict(template, description="%s — неделя %d (заказ PO-%d)" % (prod[0], w + 1, r.randint(10000, 99999)))
             self.invoices.append(self.new_invoice(ent, self.local_dt(min(self.last_day, start + 7 * w)), lines=[line]))
+        return True
 
-    def d_tz_boundary(self, i):
+    def d_tz_boundary(self, i, fresh=False):
         """Документ у границы периода: момент внутри, а напечатанная дата — в соседнем месяце."""
         r = self.rng
         as_payment = i % 2 == 1
@@ -379,16 +444,15 @@ class StoryBuilder:
         disp = next((instant.astimezone(tz_from_offset(o)) for o in offs
                      if instant.astimezone(tz_from_offset(o)).date() == want), None)
         if disp is None:
-            return
+            return False
         if as_payment:
-            cands = self.free_invoices(latest_day=self.last_day - 2)
-            if not cands:
-                return
-            inv = r.choice(cands)
+            inv = self.pick_free(self.last_day - 2, fresh)
+            if inv is None:
+                return False
             self.assigned.add(inv["key"])
             self.payments.append(self.new_payment(inv["entity"], inv["currency"], disp, inv["total"],
                                                   [(inv["key"], inv["total"])], display=False))
-            return
+            return True
         inv = self.new_invoice(r.choice(self.customers), disp, display=False)
         self.invoices.append(inv)
         if not end_side:  # счёт в начале периода успевают оплатить
@@ -397,24 +461,24 @@ class StoryBuilder:
             if t:
                 self.payments.append(self.new_payment(inv["entity"], inv["currency"], t, inv["total"],
                                                       [(inv["key"], inv["total"])]))
+        return True
 
-    def d_unremitted_payment(self, i):
+    def d_unremitted_payment(self, i, fresh=False):
         """Платёж без расписки на сумму открытого счёта: связь угадывать нельзя."""
-        r = self.rng
-        cands = self.free_invoices(latest_day=self.last_day - 4)
-        if not cands:
-            return
-        inv = r.choice(cands)
+        inv = self.pick_free(self.last_day - 4, fresh)
+        if inv is None:
+            return False
         t = self.pay_time(inv["issued"], 1, 5)
         if not t:
-            return
+            return False
         self.assigned.add(inv["key"])
         self.unremitted_inv.add(inv["key"])
         if inv["role"] is None:
             inv["role"] = "unremitted_payment"
         self.payments.append(self.new_payment(inv["entity"], inv["currency"], t, inv["total"], None))
+        return True
 
-    def d_same_day_repeat(self, i):
+    def d_same_day_repeat(self, i, fresh=False):
         """Два одинаковых заказа в один день: та же сумма, разные PO и время."""
         r = self.rng
         ent = r.choice(self.customers)
@@ -428,8 +492,9 @@ class StoryBuilder:
             when = datetime(self.p_start.year, self.p_start.month, day, hh, r.randint(0, 59), r.randint(0, 59),
                             tzinfo=self.tzc)
             self.invoices.append(self.new_invoice(ent, when, lines=[l2]))
+        return True
 
-    def d_next_period_doc(self, i):
+    def d_next_period_doc(self, i, fresh=False):
         """Документ следующего периода (последующая оплата или счёт после закрытия) — НЕ проводится."""
         r = self.rng
         after = self.next_period_instant()
@@ -441,20 +506,62 @@ class StoryBuilder:
             p["posted"] = False
             self.payments.append(p)
             self.locked_pay.add(p["key"])
-            return
+            return True
         inv = self.new_invoice(r.choice(self.customers), after)
         inv["posted"] = False
         self.assigned.add(inv["key"])
         self.invoices.append(inv)
         self.locked_inv.add(inv["key"])
+        return True
 
-    def d_prior_period_doc(self, i):
+    def d_prior_period_doc(self, i, fresh=False):
         """Счёт прошлого периода: проведён в прошлых книгах, в этом периоде НЕ проводится."""
         inv = self.new_invoice(self.rng.choice(self.customers), self.prior_period_instant())
         inv["posted"] = False
         self.assigned.add(inv["key"])
         self.invoices.append(inv)
         self.locked_inv.add(inv["key"])
+        return True
+
+    # ------------------------------------------------------------ документы-цели для внесения ошибок
+    @staticmethod
+    def ensure_min_total(inv: dict, usd: int) -> None:
+        """Увеличить количество в первой строке, пока сумма не станет не меньше ``usd`` в долларах."""
+        floor_minor = Decimal(usd) / money.REF_USD_VALUE[inv["currency"]] * (Decimal(10) ** money.exponent(inv["currency"]))
+        while inv["total"] < floor_minor:
+            ln = inv["lines"][0]
+            ln["quantity"] += 3
+            ln["amount_minor"] = ln["quantity"] * ln["unit_price_minor"]
+            inv["total"] = sum(l["amount_minor"] for l in inv["lines"])
+
+    def supply_invoice(self, foreign: bool = False, min_usd: int = 0, currencies=None) -> dict:
+        """Корректный обычный счёт в начале периода — цель ошибки, если подходящей в истории нет.
+        Документ принадлежит истории (есть и в книгах до внесения) и записывается в provenance.
+        ``currencies`` — ограничить клиентов этими валютами."""
+        r = self.rng
+        pool = [c for c in self.customers if c["currency"] != self.base] if foreign else self.customers
+        if currencies is not None:
+            pool = [c for c in pool if c["currency"] in currencies]
+        if not pool:
+            raise GenerationError("нет клиента в иностранной валюте для ошибки курса")
+        inv = self.new_invoice(r.choice(pool), self.local_dt(r.randint(1, 5)))
+        if min_usd:
+            self.ensure_min_total(inv, min_usd)
+        self.invoices.append(inv)
+        self.assigned.add(inv["key"])
+        self.supplied.append(("inv", inv["key"]))
+        return inv
+
+    def supply_paid_invoice(self) -> tuple:
+        """Корректные счёт и его полная оплата одним платежом — цель ошибки распределения."""
+        inv = self.supply_invoice()
+        t = self.pay_time(inv["issued"], 1, 5)
+        if t is None:
+            raise GenerationError("оплата счёта-цели не помещается в период")
+        p = self.new_payment(inv["entity"], inv["currency"], t, inv["total"], [(inv["key"], inv["total"])])
+        self.payments.append(p)
+        self.supplied.append(("pay", p["key"]))
+        return inv, p
 
     # ------------------------------------------------------------ документы сценария partial_fx_boundary
     def build_boundary_pairs(self) -> None:
@@ -466,12 +573,7 @@ class StoryBuilder:
         for _ in range(self.cfg["interactions"]["partial_fx_boundary"]):
             ent = r.choice(fents)
             inv = self.new_invoice(ent, self.local_dt(r.randint(1, max(1, self.last_day - 12))))
-            floor_minor = Decimal(2000) / money.REF_USD_VALUE[inv["currency"]] * (Decimal(10) ** money.exponent(inv["currency"]))
-            while inv["total"] < floor_minor:  # сумма должна быть существенной
-                ln = inv["lines"][0]
-                ln["quantity"] += 3
-                ln["amount_minor"] = ln["quantity"] * ln["unit_price_minor"]
-                inv["total"] = sum(l["amount_minor"] for l in inv["lines"])
+            self.ensure_min_total(inv, 2000)  # сумма должна быть существенной
             self.invoices.append(inv)
             self.assigned.add(inv["key"])
             off_h = int(self.offset[:3])

@@ -1,5 +1,5 @@
 {
-  "config_version": "3.0",
+  "config_version": "3.2",
   "split": "dev",
   "description": "Открытые конфигурации и seed (dev). Закрытые seed жюри с ними не пересекаются.",
   "episodes": [
@@ -7,7 +7,7 @@
       "name": "чистая_компания",
       "seed": 2001,
       "config": {
-        "config_version": "3.0",
+        "config_version": "3.2",
         "errors": {
           "duplicate_invoice": 0,
           "payment_allocation": 0,
@@ -24,7 +24,7 @@
       "name": "чистая_часовые_пояса",
       "seed": 2002,
       "config": {
-        "config_version": "3.0",
+        "config_version": "3.2",
         "errors": {
           "duplicate_invoice": 0,
           "payment_allocation": 0,
@@ -54,7 +54,7 @@
       "name": "один_дубль",
       "seed": 2003,
       "config": {
-        "config_version": "3.0",
+        "config_version": "3.2",
         "errors": {
           "duplicate_invoice": 1,
           "payment_allocation": 0,
@@ -71,7 +71,7 @@
       "name": "один_курс",
       "seed": 2004,
       "config": {
-        "config_version": "3.0",
+        "config_version": "3.2",
         "errors": {
           "duplicate_invoice": 0,
           "payment_allocation": 0,
@@ -89,7 +89,7 @@
       "name": "распределение_и_период",
       "seed": 2005,
       "config": {
-        "config_version": "3.0",
+        "config_version": "3.2",
         "errors": {
           "duplicate_invoice": 0,
           "payment_allocation": 2,
@@ -106,7 +106,7 @@
       "name": "четыре_типа",
       "seed": 2006,
       "config": {
-        "config_version": "3.0",
+        "config_version": "3.2",
         "errors": {
           "duplicate_invoice": 1,
           "payment_allocation": 1,
@@ -123,7 +123,7 @@
       "name": "взаимодействие_частичный_валютный_платёж",
       "seed": 2007,
       "config": {
-        "config_version": "3.0",
+        "config_version": "3.2",
         "errors": {
           "duplicate_invoice": 1,
           "payment_allocation": 0,
@@ -140,7 +140,7 @@
       "name": "взаимодействие_замаскированный_дубль",
       "seed": 2008,
       "config": {
-        "config_version": "3.0",
+        "config_version": "3.2",
         "errors": {
           "duplicate_invoice": 0,
           "payment_allocation": 0,
@@ -157,7 +157,7 @@
       "name": "оба_взаимодействия_смесь",
       "seed": 2009,
       "config": {
-        "config_version": "3.0",
+        "config_version": "3.2",
         "errors": {
           "duplicate_invoice": 1,
           "payment_allocation": 0,
@@ -174,7 +174,7 @@
       "name": "нагрузка_12",
       "seed": 2010,
       "config": {
-        "config_version": "3.0",
+        "config_version": "3.2",
         "errors": {
           "duplicate_invoice": 2,
           "payment_allocation": 2,

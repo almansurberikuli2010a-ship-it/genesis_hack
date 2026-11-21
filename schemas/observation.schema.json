@@ -1,0 +1,600 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "id": "auditgym/observation.schema.json",
+  "title": "наблюдения и info: reset() → (observation, info), step() → (observation, reward, terminated, truncated, info)",
+  "description": "Первое наблюдение (reset) или наблюдение шага (step). Наблюдение содержит только открытые записи, результат или ошибку и остаток шагов: ключей эталона в нём нет (additionalProperties: false). Схемы info — в definitions: reset_info и step_info.",
+  "oneOf": [
+    {
+      "$ref": "#/definitions/reset_observation"
+    },
+    {
+      "$ref": "#/definitions/step_observation"
+    }
+  ],
+  "definitions": {
+    "reset_observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "task",
+        "episode_id",
+        "manifest",
+        "policy",
+        "actions",
+        "step",
+        "steps_remaining"
+      ],
+      "properties": {
+        "task": {
+          "type": "string"
+        },
+        "episode_id": {
+          "type": "string"
+        },
+        "manifest": {
+          "$ref": "#/definitions/manifest"
+        },
+        "policy": {
+          "type": "object",
+          "description": "policy.json"
+        },
+        "actions": {
+          "type": "object",
+          "description": "справка по действиям"
+        },
+        "step": {
+          "enum": [
+            0
+          ]
+        },
+        "steps_remaining": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "title": "первое наблюдение"
+    },
+    "step_observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "step",
+        "steps_remaining",
+        "action",
+        "result",
+        "error"
+      ],
+      "properties": {
+        "step": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "сколько шагов израсходовано"
+        },
+        "steps_remaining": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "action": {
+          "enum": [
+            "list_records",
+            "get_record",
+            "get_document",
+            "calculator",
+            "submit",
+            null
+          ],
+          "description": "тип выполненного действия; null — неизвестное или неверное действие"
+        },
+        "result": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/definitions/list_result"
+            },
+            {
+              "$ref": "#/definitions/record_result"
+            },
+            {
+              "$ref": "#/definitions/document_result"
+            },
+            {
+              "$ref": "#/definitions/calculator_result"
+            },
+            {
+              "$ref": "#/definitions/submit_result"
+            }
+          ]
+        },
+        "error": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/definitions/error"
+            }
+          ]
+        }
+      },
+      "title": "наблюдение шага"
+    },
+    "error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "message"
+      ],
+      "properties": {
+        "code": {
+          "enum": [
+            "unknown_action",
+            "invalid_arguments",
+            "not_found",
+            "invalid_cursor",
+            "calculator_error",
+            "episode_finished",
+            "time_limit",
+            "invalid_submission"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "maxLength": 119
+        }
+      },
+      "title": "ограниченная ошибка: машиночитаемый код и короткое сообщение"
+    },
+    "manifest": {
+      "type": "object",
+      "additionalProperties": true,
+      "title": "manifest.json",
+      "required": [
+        "schema_version",
+        "episode_id",
+        "base_currency",
+        "period_start",
+        "period_end",
+        "timezone",
+        "counts",
+        "rounding",
+        "currency_exponents"
+      ],
+      "properties": {
+        "schema_version": {
+          "type": "string"
+        },
+        "episode_id": {
+          "type": "string"
+        },
+        "base_currency": {
+          "type": "string"
+        },
+        "period_start": {
+          "type": "string"
+        },
+        "period_end": {
+          "type": "string"
+        },
+        "timezone": {
+          "type": "string"
+        },
+        "counts": {
+          "type": "object"
+        },
+        "rounding": {
+          "type": "object"
+        },
+        "currency_exponents": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "ledger_row": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "row_id",
+        "timestamp",
+        "account",
+        "debit_minor",
+        "credit_minor",
+        "currency",
+        "entity_id",
+        "invoice_id",
+        "payment_id"
+      ],
+      "properties": {
+        "row_id": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string"
+        },
+        "account": {
+          "type": "string"
+        },
+        "debit_minor": {
+          "type": "integer"
+        },
+        "credit_minor": {
+          "type": "integer"
+        },
+        "currency": {
+          "type": "string"
+        },
+        "entity_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "invoice_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "payment_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "title": "строка ledger.csv"
+    },
+    "invoice": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "doc_id",
+        "invoice_id",
+        "entity_id",
+        "issued_at",
+        "due_at",
+        "currency",
+        "total_minor",
+        "line_items"
+      ],
+      "properties": {
+        "doc_id": {
+          "type": "string"
+        },
+        "invoice_id": {
+          "type": "string"
+        },
+        "entity_id": {
+          "type": "string"
+        },
+        "issued_at": {
+          "type": "string"
+        },
+        "due_at": {
+          "type": "string"
+        },
+        "currency": {
+          "type": "string"
+        },
+        "total_minor": {
+          "type": "integer"
+        },
+        "line_items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "line_no",
+              "description",
+              "quantity",
+              "unit_price_minor",
+              "amount_minor"
+            ],
+            "properties": {
+              "line_no": {
+                "type": "integer"
+              },
+              "description": {
+                "type": "string"
+              },
+              "quantity": {
+                "type": "integer"
+              },
+              "unit_price_minor": {
+                "type": "integer"
+              },
+              "amount_minor": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "title": "запись invoices.jsonl"
+    },
+    "payment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "doc_id",
+        "payment_id",
+        "timestamp",
+        "currency",
+        "amount_minor",
+        "invoice_refs"
+      ],
+      "properties": {
+        "doc_id": {
+          "type": "string"
+        },
+        "payment_id": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string"
+        },
+        "currency": {
+          "type": "string"
+        },
+        "amount_minor": {
+          "type": "integer"
+        },
+        "invoice_refs": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "invoice_id",
+                  "amount_minor"
+                ],
+                "properties": {
+                  "invoice_id": {
+                    "type": "string"
+                  },
+                  "amount_minor": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "title": "запись payments.jsonl (amount_minor < 0 — возврат)"
+    },
+    "fx_row": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fx_id",
+        "date",
+        "source_currency",
+        "target_currency",
+        "rate"
+      ],
+      "properties": {
+        "fx_id": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string"
+        },
+        "source_currency": {
+          "type": "string"
+        },
+        "target_currency": {
+          "type": "string"
+        },
+        "rate": {
+          "type": "string",
+          "description": "десятичная строка"
+        }
+      },
+      "title": "строка fx.csv (fx_id выводится из даты и валют)"
+    },
+    "list_result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "table",
+        "rows",
+        "total",
+        "next_cursor"
+      ],
+      "properties": {
+        "table": {
+          "enum": [
+            "ledger",
+            "invoices",
+            "payments",
+            "fx"
+          ]
+        },
+        "rows": {
+          "type": "array",
+          "maxItems": 50,
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/definitions/ledger_row"
+              },
+              {
+                "$ref": "#/definitions/invoice"
+              },
+              {
+                "$ref": "#/definitions/payment"
+              },
+              {
+                "$ref": "#/definitions/fx_row"
+              }
+            ]
+          }
+        },
+        "total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "next_cursor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "record_result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "table",
+        "record"
+      ],
+      "properties": {
+        "table": {
+          "enum": [
+            "ledger",
+            "invoices",
+            "payments",
+            "fx"
+          ]
+        },
+        "record": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ledger_row"
+            },
+            {
+              "$ref": "#/definitions/invoice"
+            },
+            {
+              "$ref": "#/definitions/payment"
+            },
+            {
+              "$ref": "#/definitions/fx_row"
+            }
+          ]
+        }
+      }
+    },
+    "document_result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "document"
+      ],
+      "properties": {
+        "document": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/invoice"
+            },
+            {
+              "$ref": "#/definitions/payment"
+            }
+          ]
+        }
+      }
+    },
+    "calculator_result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": "string",
+          "description": "десятичная строка"
+        }
+      }
+    },
+    "submit_result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "submitted"
+      ],
+      "properties": {
+        "submitted": {
+          "enum": [
+            true
+          ]
+        }
+      }
+    },
+    "reset_info": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "episode_id",
+        "mode",
+        "env_version"
+      ],
+      "properties": {
+        "episode_id": {
+          "type": "string"
+        },
+        "mode": {
+          "enum": [
+            "train",
+            "eval"
+          ]
+        },
+        "env_version": {
+          "type": "string"
+        }
+      }
+    },
+    "step_info": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "пустой объект; в режиме train на завершающем шаге — grading",
+      "properties": {
+        "grading": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "valid",
+            "reward",
+            "precision",
+            "recall",
+            "f1",
+            "inspection_steps"
+          ],
+          "properties": {
+            "valid": {
+              "type": "boolean"
+            },
+            "reward": {
+              "type": "number"
+            },
+            "precision": {
+              "type": "number"
+            },
+            "recall": {
+              "type": "number"
+            },
+            "f1": {
+              "type": "number"
+            },
+            "inspection_steps": {
+              "type": "integer"
+            }
+          }
+        }
+      }
+    }
+  }
+}

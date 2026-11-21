@@ -14,8 +14,9 @@ import copy
 
 from . import money
 from .config import GENERATOR_VERSION, SCHEMA_VERSION
+from .matcher import AMOUNT_TOLERANCE_MINOR
 from .money import fx_id, iso, local_date, rate_str
-from .policy_text import build_policy
+from .policy_text import FX_ID_FIELDS, FX_ID_TEMPLATE, build_policy
 from .posting import ACC_AR, ACC_CASH, ACC_REVENUE, ACC_UNAPPLIED
 from .story import GenerationError
 from .util import b32, canonical_json, h, rng
@@ -139,6 +140,12 @@ class Renderer:
             "rounding": {"mode": "ROUND_HALF_EVEN", "unit": "минимальная единица базовой валюты, по каждой строке книги"},
             "money_format": "целые минимальные единицы; основные единицы = значение / 10**currency_exponents[currency]",
             "fx_format": "десятичная строка: 1 единица source_currency = rate единиц target_currency",
+            "fx_id_format": {
+                "template": FX_ID_TEMPLATE,
+                "fields": list(FX_ID_FIELDS),
+                "rule": "в fx.csv столбца fx_id нет: ID строки курса собирается по шаблону из её date, "
+                        "source_currency и target_currency; этот ID используют доказательства, get_record и list_records",
+            },
             "timestamp_format": "ISO-8601 со смещением UTC",
             "csv_null_token": "null",
             "fictional": "все компании, лица, счета и суммы вымышлены",
@@ -236,7 +243,7 @@ class Renderer:
                 "affected_ids": sorted(self.biz_id(k, key) for k, key in iss["affected"]),
                 "expected_amount_minor": expected,
                 "currency": b.base,
-                "tolerance_minor": money.amount_tolerance(expected),
+                "tolerance_minor": AMOUNT_TOLERANCE_MINOR[t],
                 "evidence_sets": [sorted(s) for s in sets],
                 "mutation_id": iss["mutation"],
             })
@@ -287,6 +294,7 @@ class Renderer:
             "reverse_procedure": "книги до внесения = открытая книга минус строки ledger_diff.added (по row_id) "
                                  "плюс строки ledger_diff.removed; счета и платежи минус documents_added (по doc_id)",
             "distractors": self.distractors(),
+            "actual": self.actual(),
             "canonical_ids": {pid: "%s:%s" % (kind, key) for (kind, key), pid in sorted(self.id_map.items(), key=lambda kv: kv[1])},
         }
 
@@ -333,6 +341,29 @@ class Renderer:
         docs = [{"doc_id": self.doc_id(*m["document"]), "id": self.biz_id(*m["document"]), "caused_by": [m["mutation_id"]]}
                 for m in b.mutations if m["document"] not in story_keys]
         return {"removed": removed, "added": added}, docs
+
+    def actual(self):
+        """Фактические числа эпизода рядом с заказанными в конфиге (что выполнено и как)."""
+        b = self.b
+        issues_by_type = {}
+        for iss in b.issues:
+            issues_by_type[iss["type"]] = issues_by_type.get(iss["type"], 0) + 1
+        scenarios = {}
+        for m in b.mutations:
+            if m.get("scenario"):
+                scenarios[m["scenario"]] = scenarios.get(m["scenario"], 0) + 1
+        out = b.actual()
+        out.update({
+            "supplied_targets": [self.biz_id(kind, key) for kind, key in b.supplied],
+            "errors": {t: sum(1 for m in b.mutations if m["issue_type"] == t) for t in sorted(b.cfg["errors"])},
+            "interactions": {t: scenarios.get(t, 0) for t in sorted(b.cfg["interactions"])},
+            "issues_by_type": dict(sorted(issues_by_type.items())),
+            "invoices": len(self.invoices),
+            "payments": len(self.payments),
+            "documents": len(self.invoices) + len(self.payments),
+            "ledger_rows": len(self.rows),
+        })
+        return out
 
     def distractors(self):
         out = {}

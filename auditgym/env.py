@@ -8,7 +8,13 @@
 и доступно только через ``grader_report()`` — его вызывает оркестратор, а не политика, и
 только после эпизода. Режим ``eval``: политика получает награду 0 и пустой info. Режим
 ``train``: на завершающем шаге возвращается терминальная награда (и P/R/F1).
-Коды ошибок — латиницей (машиночитаемые), сообщения — на русском.
+Коды ошибок — латиницей (машиночитаемые), сообщения — на русском. submit с неверной структурой
+завершает эпизод (награда −1 у оценщика) и возвращает ограниченную ошибку invalid_submission —
+только о структуре, без оценки правильности. Любое неверное действие
+(в том числе JSON-строка длиннее ``MAX_ACTION_CHARS``, слишком глубоко вложенная или не
+разбираемая) даёт ограниченную ошибку и расходует шаг; исключение наружу не выходит.
+
+Как у Gymnasium: ``close()`` (повторный вызов безопасен) и контекстный менеджер ``with AuditEnv() as env``.
 """
 from __future__ import annotations
 
@@ -19,12 +25,14 @@ import time
 from . import calculator
 from .config import ConfigError
 from .generator import generate
-from .matcher import build_aliases, score
+from .matcher import match_context, score
 from .policy_text import ACTIONS_HELP, TASK_TEXT
 
-ENV_VERSION = "3.0.0"
+ENV_VERSION = "3.2.0"
 MAX_STEPS = 100
 PAGE_MAX = 50
+MAX_ACTION_CHARS = 1_000_000  # длина действия, переданного JSON-строкой
+MAX_ERROR_MESSAGE = 119
 TABLES = ("ledger", "invoices", "payments", "fx")
 ACTION_TYPES = ("list_records", "get_record", "get_document", "calculator", "submit")
 _ID_KEY = {"ledger": "row_id", "invoices": "invoice_id", "payments": "payment_id", "fx": "fx_id"}
@@ -40,6 +48,25 @@ class _Err(Exception):
 
 _NO_ANSWER = object()
 _INVALID = {"__invalid__": "неверно сформированное действие submit"}
+_SHOWN_KEYS, _SHOWN_KEY_LEN = 3, 16
+
+
+def _short(key) -> str:
+    k = key if isinstance(key, str) else repr(key)
+    return k if len(k) <= _SHOWN_KEY_LEN else k[:_SHOWN_KEY_LEN] + "…"
+
+
+def _parse_action(action):
+    """Действие-строку разобрать как JSON. Слишком длинная, слишком глубоко вложенная или неверная
+    строка — неверное действие (None), а не исключение."""
+    if not isinstance(action, (str, bytes, bytearray)):
+        return action
+    if len(action) > MAX_ACTION_CHARS:
+        return None
+    try:
+        return json.loads(action)
+    except (ValueError, RecursionError, MemoryError):
+        return None
 
 
 class AuditEnv:
@@ -59,6 +86,7 @@ class AuditEnv:
     def reset(self, seed: int | None = None, config=None, *, options=None):
         """``seed=None`` означает seed 0 (эпизоды всегда воспроизводимы). ``options`` —
         синоним ``config`` в стиле Gymnasium. ``config`` может быть JSON-строкой."""
+        t_start = self._clock()  # лимит времени эпизода отсчитывается от начала reset
         if config is None and options is not None:
             config = options
         if isinstance(config, (str, bytes)):
@@ -66,22 +94,25 @@ class AuditEnv:
                 config = json.loads(config)
             except ValueError:
                 raise ConfigError("конфиг должен быть объектом или JSON-строкой с объектом")
-        if isinstance(config, dict) and "episode_files" in config:
+        if isinstance(config, dict) and "episode_dir" in config:
+            ep = _episode_from_dir(config)  # эпизод задан плоским каталогом файлов; seed не используется
+        elif isinstance(config, dict) and "episode_files" in config:
             ep = _episode_from_files(config)  # эпизод задан файлами; seed не используется
         else:
             ep = generate(seed, config)
         pub = ep.public
         self._ep = ep
         self._tables = {t: pub[t] for t in TABLES}
-        self._index = {t: {r[_ID_KEY[t]]: r for r in pub[t]} for t in TABLES}
-        for t in ("invoices", "payments"):
-            for r in pub[t]:
-                self._index[t][r["doc_id"]] = r
+        # get_record(invoices|payments) принимает и doc_id; при совпадении строк основной ID таблицы
+        # (invoice_id / payment_id) важнее
+        self._index = {t: {r["doc_id"]: r for r in pub[t]} if t in ("invoices", "payments") else {} for t in TABLES}
+        for t in TABLES:
+            self._index[t].update({r[_ID_KEY[t]]: r for r in pub[t]})
         self._docs = {r["doc_id"]: r for t in ("invoices", "payments") for r in pub[t]}
         self._steps = 0
         self._done = self._terminated = self._truncated = False
-        self._t0 = self._clock()
-        self._grader = {"truth": ep.truth, "aliases": build_aliases(pub), "result": None, "log": []}
+        self._t0 = t_start
+        self._grader = {"truth": ep.truth, "context": match_context(pub), "result": None, "log": [], "diagnostics": None}
         obs = {
             "task": TASK_TEXT,
             "episode_id": ep.episode_id,
@@ -99,21 +130,21 @@ class AuditEnv:
         if self._done:
             obs = self._obs(None, None, _Err("episode_finished", "эпизод уже завершён; вызовите reset()"))
             return obs, 0.0, self._terminated, self._truncated, {}
-        if isinstance(action, (str, bytes)):  # действие можно передать JSON-строкой
-            try:
-                action = json.loads(action)
-            except ValueError:
-                action = None
+        action = _parse_action(action)  # действие можно передать JSON-строкой
         if self._clock() - self._t0 > self.time_limit_s:  # лимит времени проверяется до действия
             return self._truncate("time_limit")
         self._steps += 1
         atype = action.get("type") if isinstance(action, dict) else None
+        if not isinstance(atype, str):
+            atype = None
         if atype == "submit":
             return self._submit(action)
         try:
             result, err = self._dispatch(action), None
         except _Err as e:
             result, err = None, e
+        except Exception:  # непредусмотренный ввод (в том числе RecursionError, MemoryError): ошибка, шаг израсходован
+            result, err = None, _Err("invalid_arguments", "действие не удалось обработать")
         if self._steps >= self.max_steps:
             return self._truncate("step_limit", last=(atype, result, err))
         return self._obs(atype, result, err), 0.0, False, False, {}
@@ -125,10 +156,26 @@ class AuditEnv:
         g = self._grader
         return {"episode_id": self._ep.episode_id, "finished": self._done, "terminated": self._terminated,
                 "truncated": self._truncated, "result": copy.deepcopy(g["result"]), "log": list(g["log"]),
-                "n_issues": len(g["truth"]["issues"])}
+                "n_issues": len(g["truth"]["issues"]), "diagnostics": copy.deepcopy(g["diagnostics"])}
+
+    def close(self) -> None:
+        """Освободить эпизод (как ``Env.close`` в Gymnasium); повторный вызов безопасен. После close
+        нужен новый reset()."""
+        self._ep = None
+        self._grader = None
+        self._tables = self._index = self._docs = None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        self.close()
+        return False
 
     def oracle_findings(self) -> dict:
         """Oracle только для оценщика: верный ответ с первым набором доказательств каждой ошибки."""
+        if self._grader is None:
+            raise RuntimeError("эпизода нет")
         t = self._grader["truth"]
         return {"episode_id": t["episode_id"], "findings": [
             {"type": i["type"], "affected_ids": list(i["affected_ids"]), "claimed_amount_minor": i["expected_amount_minor"],
@@ -142,15 +189,20 @@ class AuditEnv:
             "steps_remaining": max(0, self.max_steps - self._steps),
             "action": atype if atype in ACTION_TYPES else None,
             "result": result,
-            "error": None if err is None else {"code": err.code, "message": err.message},
+            "error": None if err is None else {"code": err.code, "message": err.message[:MAX_ERROR_MESSAGE]},
         }
 
     def _finish(self, payload, reason):
         insp = self._steps - (1 if reason == "submit" else 0)
-        res = score(None if payload is _NO_ANSWER else payload, self._grader["truth"], self._grader["aliases"], insp)
+        try:
+            res = score(None if payload is _NO_ANSWER else payload, self._grader["truth"], self._grader["context"], insp)
+        except Exception:  # непредусмотренная структура ответа (например, RecursionError) — неверный ответ
+            res = score(_INVALID, self._grader["truth"], self._grader["context"], insp)
         res["end_reason"] = reason
-        res["elapsed_s"] = round(self._clock() - self._t0, 4)
         self._grader["result"] = res
+        # время — диагностика прогона, а не часть результата: result при повторе тех же seed, config и
+        # действий совпадает побайтно
+        self._grader["diagnostics"] = {"elapsed_s": round(self._clock() - self._t0, 4)}
         if not res["valid"]:
             self._grader["log"].append({"step": self._steps, "event": "invalid_submission", "error": res["error"]})
         self._grader["log"].append({"step": self._steps, "event": "graded", "reason": reason, "reward": res["reward"]})
@@ -169,7 +221,12 @@ class AuditEnv:
         res = self._finish(payload, "submit")
         self._terminated = True
         reward = res["reward"] if self.mode == "train" else 0.0
-        return self._obs("submit", {"submitted": True}, None), reward, True, False, self._public_info(res)
+        # ответ о структуре не зависит от эталона: правильность выводов политике не сообщается
+        if res["valid"]:
+            obs = self._obs("submit", {"submitted": True}, None)
+        else:
+            obs = self._obs("submit", None, _Err("invalid_submission", "неверная структура findings: %s" % res["error"]))
+        return obs, reward, True, False, self._public_info(res)
 
     def _truncate(self, reason, last=None):
         res = self._finish(_NO_ANSWER, reason)
@@ -185,8 +242,10 @@ class AuditEnv:
             raise _Err("unknown_action", "action.type должен быть одним из: %s" % ", ".join(ACTION_TYPES))
         t = a["type"]
         extra = set(a) - _ALLOWED_ARGS[t] - {"type"}
-        if extra:
-            raise _Err("invalid_arguments", "лишние аргументы: %s" % ", ".join(sorted(map(str, extra))[:5]))
+        if extra:  # имена ключей приходят от агента: показываются не больше трёх, каждое не длиннее 16 символов
+            shown = sorted(_short(k) for k in extra)[:_SHOWN_KEYS]
+            raise _Err("invalid_arguments", "лишние аргументы (%d): %s%s" % (
+                len(extra), ", ".join(shown), ", …" if len(extra) > _SHOWN_KEYS else ""))
         if t == "list_records":
             return self._list(a.get("table"), a.get("cursor"), a.get("limit", PAGE_MAX))
         if t == "get_record":
@@ -226,6 +285,24 @@ class AuditEnv:
         nxt = offset + len(rows)
         return {"table": table, "rows": copy.deepcopy(rows), "total": len(self._tables[table]),
                 "next_cursor": "%s:%d" % (table, nxt) if nxt < len(self._tables[table]) else None}
+
+
+def _episode_from_dir(config):
+    """Эпизод из плоского каталога (judge_adapter.generate_episode): manifest.json, ledger.csv,
+    invoices.jsonl, payments.jsonl, fx.csv, policy.json, truth.json, provenance.json. Записи и ID
+    берутся из файлов как есть (их могли переставить и переименовать снаружи)."""
+    from pathlib import Path
+
+    from .export import load_flat_episode
+    from .generator import Episode
+    d = config["episode_dir"]
+    if set(config) != {"episode_dir"} or not isinstance(d, str):
+        raise ConfigError("episode_dir должен быть строкой и единственным ключом")
+    try:
+        public, clean, truth, prov = load_flat_episode(Path(d))
+    except (OSError, ValueError, KeyError, TypeError):
+        raise ConfigError("не удалось прочитать файлы эпизода")
+    return Episode(public, truth, prov, clean, {"source": "episode_dir"})
 
 
 def _episode_from_files(config):

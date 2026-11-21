@@ -7,7 +7,7 @@ import time
 from pathlib import Path
 
 from .env import AuditEnv
-from .policies import Oracle, make_policy
+from .policies import is_grader_oracle, make_policy
 from .server import SubprocessEnv
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -48,11 +48,11 @@ def run_episode(env, policy, seed, config, split: str = "", record: list | None 
     t0 = time.perf_counter()
     obs, info = env.reset(seed, config)
     deadline = time.monotonic() + time_limit_s
-    if isinstance(policy, Oracle):
-        policy.set_findings(env.oracle_findings())  # привилегия только оценщика
+    if is_grader_oracle(policy):  # привилегия только oracle, созданной самой средой (make_policy("oracle"))
+        policy.set_findings(env.oracle_findings())
     try:
         _guarded(lambda: policy.begin(obs), deadline)
-    except _PolicyTimeout:
+    except Exception:  # зависание или падение политики в begin не роняет прогон: дальше её act
         pass
     ep_id = info["episode_id"]
     traj = [{"episode_id": ep_id, "policy": policy.name, "split": split, "step": 0, "action": None,

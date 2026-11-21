@@ -12,7 +12,8 @@
   * возврат: отрицательный платёж — Кт 1000 / Дт 1200;
   * платёж без расписки — целиком на 2900 (корректно);
   * фоновые операции: Дт 6xxx / Кт 1000, без документов;
-  * документы вне периода (posted = False) не проводятся.
+  * документы вне периода (posted = False) не проводятся;
+  * строк книги с нулевыми дебетом и кредитом нет.
 
 Переопределения (ключ ("inv"|"pay", key)):
   rate_date — курс другой даты; rate — явный (неверный) курс; unapplied — часть расписанной
@@ -110,7 +111,8 @@ def post(b, invoices, payments, overrides, background=()) -> list[dict]:
         entry = ("pay", key)
         row(ts, entry, ACC_CASH, max(cash, 0), max(-cash, 0), doc["entity"], link, key)
         for book, c in credits:
-            row(ts, entry, ACC_AR, max(-c, 0), max(c, 0), doc["entity"], book, key)
+            if c:  # строк с нулевой суммой нет (например, расписанная сумма целиком осталась на 2900)
+                row(ts, entry, ACC_AR, max(-c, 0), max(c, 0), doc["entity"], book, key)
         if susp:
             row(ts, entry, ACC_UNAPPLIED, max(-susp, 0), max(susp, 0), doc["entity"], None, key)
         fx = cash - sum(c for _, c in credits) - susp

@@ -3,6 +3,12 @@
 DIR/public/<episode_id>/   manifest.json ledger.csv invoices.jsonl payments.jsonl fx.csv policy.json
 DIR/grader/<episode_id>/   truth.json provenance.json pre_injection/{ledger.csv,invoices.jsonl,payments.jsonl}
 Каталог grader/ — только для оценщика; агенту он никогда не доступен.
+
+Плоский каталог эпизода (judge_adapter.generate_episode, единый способ подключения жюри):
+DIR/  manifest.json ledger.csv invoices.jsonl payments.jsonl fx.csv policy.json truth.json provenance.json
+Других файлов нет: книги до внесения ошибок восстанавливаются из provenance.json (ledger_diff,
+documents_added), поэтому после внешней перестановки записей и замены ID загрузка и оценка
+работают по этим восьми файлам.
 """
 from __future__ import annotations
 
@@ -13,7 +19,7 @@ import shutil
 from pathlib import Path
 
 from .generator import generate
-from .money import fx_id
+from .policy_text import FX_ID_FIELDS, FX_ID_TEMPLATE
 
 LEDGER_COLS = ["row_id", "timestamp", "account", "debit_minor", "credit_minor", "currency", "entity_id",
                "invoice_id", "payment_id"]
@@ -78,12 +84,18 @@ def export_split(entries, split: str, out_dir: Path) -> list[dict]:
     return index
 
 
+NULLABLE_LEDGER = ("entity_id", "invoice_id", "payment_id")
+
+
 def _read_ledger(path: Path) -> list[dict]:
+    """Строки ledger.csv. Отсутствующая ссылка — токен null (manifest.csv_null_token); пустая ячейка
+    в столбцах-ссылках тоже читается как null. Порядок столбцов не важен."""
     rows = []
     with path.open(encoding=ENC, newline="") as f:
         for r in csv.DictReader(f):
+            r = {k: r[k] for k in LEDGER_COLS}
             for k, v in r.items():
-                if v == NULL:
+                if v == NULL or (v == "" and k in NULLABLE_LEDGER):
                     r[k] = None
                 elif k in ("debit_minor", "credit_minor"):
                     r[k] = int(v)
@@ -96,20 +108,54 @@ def _read_jsonl(path: Path) -> list[dict]:
 
 
 def load_public_dir(pdir: Path) -> dict:
+    """Открытые записи из файлов. fx_id строки курса собирается по шаблону manifest.fx_id_format
+    (в fx.csv такого столбца нет), а не кодом генератора."""
+    manifest = json.loads((pdir / "manifest.json").read_text(encoding=ENC))
+    fmt = manifest.get("fx_id_format") or {"template": FX_ID_TEMPLATE, "fields": list(FX_ID_FIELDS)}
     fx = []
     with (pdir / "fx.csv").open(encoding=ENC, newline="") as f:
         for r in csv.DictReader(f):
-            r["fx_id"] = fx_id(r["date"], r["source_currency"], r["target_currency"])
-            fx.append({"fx_id": r["fx_id"], "date": r["date"], "source_currency": r["source_currency"],
+            fid = fmt["template"].format(**{k: r[k] for k in fmt["fields"]})
+            fx.append({"fx_id": fid, "date": r["date"], "source_currency": r["source_currency"],
                        "target_currency": r["target_currency"], "rate": r["rate"]})
     return {
-        "manifest": json.loads((pdir / "manifest.json").read_text(encoding=ENC)),
+        "manifest": manifest,
         "policy": json.loads((pdir / "policy.json").read_text(encoding=ENC)),
         "ledger": _read_ledger(pdir / "ledger.csv"),
         "invoices": _read_jsonl(pdir / "invoices.jsonl"),
         "payments": _read_jsonl(pdir / "payments.jsonl"),
         "fx": fx,
     }
+
+
+FLAT_FILES = ("manifest.json", "ledger.csv", "invoices.jsonl", "payments.jsonl", "fx.csv", "policy.json",
+              "truth.json", "provenance.json")
+
+
+def write_flat_episode(ep, out_dir: Path) -> Path:
+    """Эпизод в плоский каталог: шесть открытых файлов и закрытые truth.json, provenance.json."""
+    out_dir.mkdir(parents=True, exist_ok=True)
+    for name, text in public_files(ep.public).items():
+        (out_dir / name).write_text(text, encoding=ENC)
+    write_json(out_dir / "truth.json", ep.truth)
+    write_json(out_dir / "provenance.json", ep.provenance)
+    return out_dir
+
+
+def load_flat_episode(d: Path):
+    """→ (public, pre_injection | None, truth, provenance) из плоского каталога. Книги до внесения
+    восстанавливаются из provenance (если в нём нет ledger_diff / documents_added — None)."""
+    from .provenance_tools import reconstruct_pre_injection
+    public = load_public_dir(d)
+    truth = json.loads((d / "truth.json").read_text(encoding=ENC))
+    prov = json.loads((d / "provenance.json").read_text(encoding=ENC))
+    if not isinstance(truth, dict) or not isinstance(truth.get("issues"), list):
+        raise ValueError("truth.json: нет списка issues")
+    try:
+        clean = reconstruct_pre_injection(public, prov)
+    except (KeyError, TypeError):
+        clean = None
+    return public, clean, truth, prov
 
 
 def load_episode_files(root: Path, episode_id: str):

@@ -8,7 +8,7 @@
                           ошибками, 10 смешанных); эпизод пишется в файлы и проверяется ТОЛЬКО
                           по файлам;
 * надёжность награды   — 20 проверок, каждый ответ отправляется через среду; допуск берётся
-                          из опубликованной формулы, а не из кода;
+                          из опубликованного policy.json (τ = 0), а не из кода;
 * воспроизводимость    — 20 парных проверок: 10 точных повторов, 5 смен ID и порядка через
                           конфиг, 5 внешних преобразований файлов;
 * инженерия            — 5 пунктов, проверка наличия (0/1/2 каждый).
@@ -35,9 +35,9 @@ GRADER_KEYS = {"issue_id", "issues", "expected_amount_minor", "evidence_sets", "
                "story_hash", "truth", "tolerance_minor", "ledger_diff", "canonical_ids"}
 
 
-def published_tolerance(expected: int) -> int:
-    """Допуск ровно по опубликованной формуле (не из кода): max(1, floor(|expected| × 0.0005))."""
-    return max(1, abs(int(expected)) * 5 // 10000)
+def published_tolerance(obs: dict, itype: str) -> int:
+    """Допуск суммы, опубликованный в policy.json → matching.amount_tolerance_minor (не из кода)."""
+    return int(obs["policy"]["matching"]["amount_tolerance_minor"][itype])
 
 
 def _keys(o, acc):
@@ -187,8 +187,8 @@ def contract_checks(seed=HIDDEN_BASE + 1, cfg=None) -> list[dict]:
     def t_invalid(e, obs, info):
         o, r, te, tr, _ = e.step({"type": "submit", "findings": {"episode_id": obs["episode_id"], "findings": [{"type": "fx_rate"}]}})
         log = e.grader_report()["log"]
-        return (r == -1.0 and te and log and log[0]["event"] == "invalid_submission"
-                and o["result"] == {"submitted": True} and o["error"] is None), "неверная структура → −1, ошибка только в журнале оценщика"
+        return (r == -1.0 and te and log and log[0]["event"] == "invalid_submission" and o["result"] is None
+                and o["error"]["code"] == "invalid_submission"), "неверная структура → −1, журнал оценщика, ограниченная ошибка"
 
     def t_eval(e, obs, info):
         o, r, te, tr, inf = e.step({"type": "submit", "findings": e.oracle_findings()})
@@ -334,11 +334,11 @@ def reward_checks() -> list[dict]:
         return f
 
     def m_tol_ok(f, obs):
-        f["claimed_amount_minor"] += published_tolerance(f["claimed_amount_minor"])
+        f["claimed_amount_minor"] += published_tolerance(obs, f["type"])
         return f
 
     def m_tol_bad(f, obs):
-        f["claimed_amount_minor"] += published_tolerance(f["claimed_amount_minor"]) + 1
+        f["claimed_amount_minor"] += published_tolerance(obs, f["type"]) + 1
         return f
 
     def m_one_pct(f, obs):
@@ -400,7 +400,7 @@ def reward_checks() -> list[dict]:
     c("неполный набор доказательств — не TP", lambda: (first_with(err, m_less_evidence)["tp"] == 0, "без одного ID"))
     c("выдуманные доказательства — не TP", lambda: (first_with(err, m_fake_evidence)["tp"] == 0, "фиктивные ID"))
     c("чужая валюта — не TP", lambda: (first_with(err, m_currency)["tp"] == 0, "валюта изменена"))
-    c("допуск по сумме = опубликованная формула",
+    c("допуск по сумме = опубликованный τ",
       lambda: (first_with(err, m_tol_ok)["tp"] == 1 and first_with(err, m_tol_bad)["tp"] == 0 and first_with(err, m_one_pct)["tp"] == 0,
                "+допуск — TP, +допуск+1 — FP, +1% — FP"))
     c("неверный тип — FP", lambda: (lambda r: (r["tp"] == 0 and r["fp"] == 1, "tp=%d fp=%d" % (r["tp"], r["fp"])))(first_with(err, m_type)))

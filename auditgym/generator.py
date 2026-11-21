@@ -9,6 +9,11 @@
 История зависит только от (seed, экономическая часть конфига). ``id_salt`` и ``order_seed`` —
 безвредные преобразования: меняют ID и порядок, но не экономику, поэтому ответ oracle
 сохраняется с точностью до переименования.
+
+Любой конфиг, принятый ``normalize_config``, генерируется: ошибки и отвлекающие случаи
+выполняются точно (недостающие цели и счета добавляются в историю как корректные документы),
+а предел документов гарантирован последними попытками (config.safe_regular_invoices).
+Фактические числа — в provenance.actual.
 """
 from __future__ import annotations
 
@@ -46,8 +51,9 @@ def _build(seed: int, cfg: dict, attempt: int) -> Episode:
     b = StoryBuilder(seed, cfg, attempt)
     b.setup()
     b.build_story()
+    inject(b)              # может добавить в историю корректные документы-цели
+    b.check_unique_lines()
     clean_rows = post(b, b.invoices, b.payments, {}, b.background)
-    inject(b)
     rows = post(b, b.invoices + b.injected_invoices, b.payments + b.injected_payments, b.overrides, b.background)
     return Renderer(b, clean_rows, rows).render()
 
@@ -59,8 +65,9 @@ def generate(seed: int | None = 0, config=None) -> Episode:
         raise ConfigError("seed должен быть целым числом")
     cfg = normalize_config(config)
     last = None
-    # Детерминированные повторные попытки: если конфигурацию нельзя разместить в выбранной
-    # истории (или документов больше MAX_DOCUMENTS), следующая попытка берёт компанию меньше.
+    # Детерминированные повторные попытки: если документов больше MAX_DOCUMENTS (или случайная
+    # история не подошла), следующая попытка берёт другую историю и не больше обычных счетов;
+    # последние попытки берут число счетов, при котором предел гарантирован.
     for attempt in range(MAX_ATTEMPTS):
         try:
             ep = _build(seed, cfg, attempt)

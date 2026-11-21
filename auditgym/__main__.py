@@ -17,6 +17,7 @@ import argparse
 import json
 import random
 import resource
+import subprocess
 import sys
 import tempfile
 import time
@@ -30,7 +31,7 @@ from .env import ENV_VERSION, AuditEnv
 from .export import ENC, export_split, load_episode_files, write_episode, write_json
 from .generator import generate
 from .matcher import build_aliases, score
-from .policies import BASELINES, make_policy
+from .policies import BASELINES, RandomExplorer, make_policy
 from .runner import ROOT, load_split, run_episode, run_suite, summarize, write_jsonl
 from .server import SubprocessEnv
 from .transform import transform_episode
@@ -50,6 +51,33 @@ def _utf8_console():
 
 
 # ------------------------------------------------------------------ вспомогательное
+
+def versions() -> dict:
+    """Версии, от которых зависят эпизоды, переходы и награды (см. README, «Версии»)."""
+    return {"env_version": ENV_VERSION, "generator_version": C.GENERATOR_VERSION,
+            "schema_version": C.SCHEMA_VERSION, "config_version": C.CONFIG_VERSION}
+
+
+def git_state() -> dict:
+    """Коммит, на котором собраны отчёты, и есть ли незакоммиченные правки. Без git или без .git
+    (например, в Docker-образе: .git исключён в .dockerignore) — commit = null."""
+    def git(*a):
+        return subprocess.run(["git", "-C", str(ROOT), *a], capture_output=True, text=True, timeout=10)
+    try:
+        head = git("rev-parse", "HEAD")
+        if head.returncode != 0:
+            return {"commit": None, "dirty": None}
+        dirty = git("status", "--porcelain", "--", ".", ":(exclude)reports")  # отчёты пишет сама проверка
+        return {"commit": head.stdout.strip(), "dirty": bool(dirty.stdout.strip()) if dirty.returncode == 0 else None}
+    except (OSError, subprocess.SubprocessError):
+        return {"commit": None, "dirty": None}
+
+
+def peak_rss_mb(who) -> float:
+    """Пик резидентной памяти в МБ. ru_maxrss на macOS — в байтах, на Linux — в килобайтах."""
+    v = resource.getrusage(who).ru_maxrss
+    return round(v / (2 ** 20 if sys.platform == "darwin" else 2 ** 10), 1)
+
 
 def _keys(obj, acc):
     if isinstance(obj, dict):
@@ -179,6 +207,69 @@ def failure_analysis(entries, results, trajectories) -> dict:
     return {k: {kk: (dict(vv) if isinstance(vv, Counter) else vv) for kk, vv in v.items()} for k, v in out.items()}
 
 
+class StepLimitExplorer(RandomExplorer):
+    """Случайный исследователь, который НЕ отправляет ответ: эпизод заканчивается по лимиту
+    100 шагов (truncated=true, пустой ответ). Нужен журналу траекторий как пример усечения."""
+
+    name = "random_no_submit"
+
+    def begin(self, obs):
+        super().begin(obs)
+        self.budget = float("inf")
+
+    def act(self, obs):
+        # RandomExplorer отправляет ответ, когда шагов почти не осталось; здесь — никогда
+        return super().act(dict(obs, steps_remaining=max(2, obs.get("steps_remaining", 2))))
+
+
+def _traj_policy(name, seed=0):
+    return StepLimitExplorer(seed) if name == StepLimitExplorer.name else make_policy(name, seed)
+
+
+# Журнал траекторий: (режим, сколько первых эпизодов split, политики). Прогоны oracle не публикуются:
+# их действия построены из эталона.
+TRAJECTORY_PLAN = (
+    ("train", None, ("random", "reconciler", "flag_all", "rule_auditor")),
+    ("train", 3, (StepLimitExplorer.name,)),                     # конец по лимиту шагов: truncated=true
+    ("eval", 3, ("rule_auditor", "reconciler", StepLimitExplorer.name)),  # eval: награда 0, info пуст
+)
+
+
+def trajectory_rows() -> list[dict]:
+    rows = []
+    for split in ("train", "dev"):
+        entries = load_split(split)
+        for mode, n, policies in TRAJECTORY_PLAN:
+            with SubprocessEnv(mode=mode) as env:
+                for e in entries[:n]:
+                    for name in policies:
+                        rec = []
+                        run_episode(env, _traj_policy(name), e["seed"], e["config"], split, rec)
+                        for r in rec:
+                            r.update(mode=mode, env_version=ENV_VERSION, generator_version=C.GENERATOR_VERSION)
+                        rows += rec
+    return rows
+
+
+def published_trajectories_problems(truths) -> tuple[list[str], dict]:
+    """Опубликованный trajectories.jsonl: нет закрытых данных в наблюдениях, версия среды текущая."""
+    path = ROOT / "trajectories" / "trajectories.jsonl"
+    if not path.exists():
+        return ["нет trajectories/trajectories.jsonl"], {}
+    with path.open(encoding=ENC) as f:
+        rows = [json.loads(line) for line in f if line.strip()]
+    probs = leak_scan(rows, truths)
+    stale = sorted({str(r.get("env_version")) for r in rows} - {ENV_VERSION})
+    if stale:
+        probs.append("trajectories.jsonl собран другой версией среды (%s ≠ %s): пересоберите командой trajectories"
+                     % (", ".join(stale), ENV_VERSION))
+    runs = {(r["episode_id"], r["policy"], r.get("mode")) for r in rows}
+    stat = {"rows": len(rows), "runs": len(runs),
+            "runs_truncated": len({(r["episode_id"], r["policy"], r.get("mode")) for r in rows if r["truncated"]}),
+            "runs_eval": len({k for k in runs if k[2] == "eval"})}
+    return probs, stat
+
+
 def _table(summary) -> str:
     cols = ["политика", "P", "R", "F1", "возврат", "эксп. возврат", "шаги", "время, с", "TP", "FP", "FN"]
     lines = ["| " + " | ".join(cols) + " |", "|" + "---|" * len(cols)]
@@ -215,7 +306,7 @@ def _stress_entries(n):
 
 def cmd_check(args) -> int:
     t_start = time.perf_counter()
-    report = {"env_version": ENV_VERSION, "generator_version": C.GENERATOR_VERSION, "python": sys.version.split()[0],
+    report = {**versions(), "git": git_state(), "python": sys.version.split()[0], "platform": sys.platform,
               "sections": {}}
     ok_all = True
 
@@ -280,8 +371,11 @@ def cmd_check(args) -> int:
     section("baselines", not expect, {"summary": summ, "problems": expect})
 
     # 5. утечки в записанных траекториях
-    leaks = leak_scan(traj, [generate(e["seed"], e["config"]).truth for e in train + dev])
-    section("no_leakage", not leaks, {"observations_scanned": len(traj), "problems": leaks[:20]})
+    truths = [generate(e["seed"], e["config"]).truth for e in train + dev]
+    leaks = leak_scan(traj, truths)
+    pub_probs, pub_stat = published_trajectories_problems(truths)  # и опубликованный журнал траекторий
+    section("no_leakage", not leaks and not pub_probs,
+            {"observations_scanned": len(traj), "published_trajectories": pub_stat, "problems": (leaks + pub_probs)[:20]})
 
     # 6. парные проверки
     with tempfile.TemporaryDirectory() as d:
@@ -295,8 +389,8 @@ def cmd_check(args) -> int:
     report["resources"] = {
         "max_episode_time_s": max(r["time_s"] for r in all_res),
         "max_steps_used": max(r["steps"] for r in all_res),
-        "peak_rss_mb_orchestrator": round(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024, 1),
-        "peak_rss_mb_env_process": round(resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss / 1024, 1),
+        "peak_rss_mb_orchestrator": peak_rss_mb(resource.RUSAGE_SELF),
+        "peak_rss_mb_env_process": peak_rss_mb(resource.RUSAGE_CHILDREN),  # самый большой из дочерних процессов
         "limits": {"time_per_episode_s": 60, "steps": 100, "ram_gb": 4},
     }
     out = ROOT / "reports"
@@ -315,8 +409,10 @@ def cmd_check(args) -> int:
     report["elapsed_s"] = round(time.perf_counter() - t_start, 1)
     report["passed"] = ok_all
     write_json(out / "check_report.json", report)
-    md = ["# Отчёт проверки", "", "среда %s, генератор %s, python %s, %.1f с" % (
-        ENV_VERSION, C.GENERATOR_VERSION, report["python"], report["elapsed_s"]), ""]
+    g = report["git"]
+    md = ["# Отчёт проверки", "", "среда %s, генератор %s, схемы %s, конфиг %s; коммит %s%s; python %s (%s), %.1f с" % (
+        ENV_VERSION, C.GENERATOR_VERSION, C.SCHEMA_VERSION, C.CONFIG_VERSION, (g["commit"] or "неизвестен")[:12],
+        " + незакоммиченные правки" if g["dirty"] else "", report["python"], report["platform"], report["elapsed_s"]), ""]
     md += ["- **%s**: %s" % (name, "ПРОЙДЕНО" if sec["passed"] else "ПРОВАЛ") for name, sec in report["sections"].items()]
     for s in ("train", "dev"):
         md += ["", "## Базовые политики на %s (режим eval, отдельный процесс)" % s, "", _table(summ[s])]
@@ -346,13 +442,12 @@ def cmd_export(args) -> int:
 
 
 def cmd_trajectories(args) -> int:
-    rows = []
-    for split in ("train", "dev"):
-        # прогоны oracle не публикуются: их действия построены из эталона
-        run_suite(load_split(split), ["random", "reconciler", "flag_all", "rule_auditor"], mode="train", isolated=True,
-                  split=split, record=rows)
+    rows = trajectory_rows()
     write_jsonl(ROOT / "trajectories" / "trajectories.jsonl", rows)
-    print("записано шагов: %d → trajectories/trajectories.jsonl" % len(rows))
+    runs = {(r["episode_id"], r["policy"], r["mode"]) for r in rows}
+    print("записано шагов: %d, прогонов: %d (усечённых: %d, в режиме eval: %d) → trajectories/trajectories.jsonl" % (
+        len(rows), len(runs), len({(r["episode_id"], r["policy"], r["mode"]) for r in rows if r["truncated"]}),
+        sum(1 for k in runs if k[2] == "eval")))
     return 0
 
 
