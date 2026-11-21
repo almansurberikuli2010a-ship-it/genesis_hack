@@ -1,0 +1,42 @@
+name: update-reports
+
+# Пересобирает reports/ командой check на текущем main (Linux, Python 3.11) и коммитит их в main.
+# Коммит делается, только если check прошёл с песочницей Landlock и без пропущенных тестов.
+on:
+  push:
+    branches: [update-reports]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-reports:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - name: Единая команда проверки
+        run: python -m auditgym check 2>&1 | tee "$RUNNER_TEMP/check.log"; test "${PIPESTATUS[0]}" -eq 0
+        shell: bash
+      - name: Песочница Landlock и без пропусков
+        shell: bash
+        run: |
+          grep -q "песочница процесса политики: landlock-abi" "$RUNNER_TEMP/check.log"
+          grep -q '"skipped": 0' "$RUNNER_TEMP/check.log"
+          grep -q "ВСЕ ПРОВЕРКИ ПРОЙДЕНЫ" "$RUNNER_TEMP/check.log"
+      - name: Закоммитить отчёты в main
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git status --porcelain
+          python -c "import json,sys; g=json.load(open('reports/check_report.json'))['git']; print(g); sys.exit(0 if g['dirty'] is False else 1)"
+          git add reports/
+          git diff --cached --stat
+          git commit -m "Отчёты check с коммита $(git rev-parse --short HEAD) (Linux, Python 3.11, Landlock)"
+          git push origin HEAD:main

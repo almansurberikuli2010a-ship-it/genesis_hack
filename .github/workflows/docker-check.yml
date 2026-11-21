@@ -1,0 +1,16 @@
+name: docker-check
+
+on:
+  push:
+    branches: [ci-docker-check]
+  workflow_dispatch:
+
+jobs:
+  docker-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Сборка образа
+        run: docker build --build-arg GIT_COMMIT=${{ github.sha }} -t auditgym .
+      - name: Официальный прогон без сети
+        run: docker run --rm --network none --cpus 2 --memory 4g auditgym

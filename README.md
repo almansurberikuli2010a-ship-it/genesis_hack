@@ -37,6 +37,15 @@ docker build -t auditgym .
 docker run --rm --network none --cpus 2 --memory 4g auditgym
 ```
 
+В образ `.git` не копируется (`.dockerignore`), поэтому коммит для
+`reports/check_report.json → git.commit` передаётся аргументом сборки:
+`docker build --build-arg GIT_COMMIT=$(git rev-parse HEAD) -t auditgym .` (он попадает в
+переменную образа `AUDITGYM_GIT_COMMIT`; `dirty` в образе — `null`). Без аргумента официальная
+команда работает как прежде, коммит — `null`. Отчёты на GitHub собраны workflow из
+`.github/workflows/`: `docker-check.yml` (сборка образа с `--build-arg GIT_COMMIT=${{ github.sha }}`
+и официальный `docker run`) и `update-reports.yml` (`check` на Linux с Landlock и коммит
+`reports/` в `main`); оба запускаются вручную (`workflow_dispatch`) или пушем в свою ветку.
+
 Зависимостей нет: `requirements.txt` пуст намеренно, в `pyproject.toml` указано
 `dependencies = []`. Образ закреплён точной версией `python:3.11.11-slim-bookworm`, UTF-8 задан
 явно, код в образе принадлежит root, писать пользователь прогона может только в `reports/`.
@@ -72,7 +81,7 @@ Python 3.12.10, «ВСЕ ПРОВЕРКИ ПРОЙДЕНЫ» за 183 с), но 
 | `python3 -m auditgym run --policy reconciler --split dev [--mode train\|eval] [--trajectories out.jsonl]` | прогнать политику |
 | `python3 -m auditgym demo > reports/demo_transcript.txt` | пошаговый показ работы среды (записанный показ — в `reports/demo_transcript.txt`) |
 | `python3 -m auditgym export` / `trajectories` | пересобрать `episodes/` и `trajectories/trajectories.jsonl` |
-| `python3 -m unittest discover -s tests -t .` | только тесты (178; на macOS 3 теста Landlock пропускаются) |
+| `python3 -m unittest discover -s tests -t .` | только тесты (188; на macOS 3 теста Landlock пропускаются) |
 | `python3 scripts/mutation_test.py` | мутационный тест самой проверки (около 2 мин) |
 
 ---
@@ -186,26 +195,33 @@ env.close()
 ### D01–D20 конфигом генератора
 
 Только документированными ключами конфига (`auditgym/config.py`); незаданные ключи — по
-умолчанию (в том числе отвлекающие случаи по умолчанию, если `distractors` не указан). Здесь
-`0` — все остальные типы ошибок, сценарии или случаи нулевые. Ровно эти конфиги собирает
-`tests/test_judge_pairs.py` (`D_MATRIX`).
+умолчанию (в том числе отвлекающие случаи по умолчанию, если `distractors` не указан). Каждая
+ячейка `team_config` — полный JSON, который `judge_adapter.generate_episode(seed, config,
+output_dir)` принимает как есть. Ровно эти конфиги собирает `tests/test_judge_pairs.py`
+(`D_MATRIX`).
 
 | Эпизоды | Сценарий | `team_config` |
 |---|---|---|
-| D01 | обычная сверка, чисто | `{"errors": 0, "interactions": 0, "distractors": 0}` |
-| D02 | корректно разбитый платёж | то же + `"distractors": {"split_payment": 3}` |
-| D03 | корректный возврат | `"distractors": {"refund": 2}` |
-| D04 | законные повторяющиеся суммы | `"distractors": {"recurring_amount": 2, "same_day_repeat": 2}` |
-| D05 | валютная и периодная граница | `"distractors": {"tz_boundary": 4, "next_period_doc": 2, "prior_period_doc": 1}, "foreign_share": 1.0` |
-| D06–D08 | дубль счёта | `"errors": {"duplicate_invoice": 1}` (D07: `"foreign_share": 0.0`; D08: `2`) |
-| D09 | пропущенное распределение | `"errors": {"payment_allocation": 1}, "variants": {"payment_allocation": "missing"}` |
-| D10–D11 | частичное распределение | `"variants": {"payment_allocation": "partial"}` (D11: 2 ошибки) |
-| D12 | курс другой даты | `"errors": {"fx_rate": 1}, "variants": {"fx_rate": "wrong_date"}` |
-| D13 | перевёрнутый курс | `"variants": {"fx_rate": "inverted_rate"}` (есть и `rounded_rate`) |
-| D14 | документ прошлого периода проведён поздно | `"errors": {"period_cutoff": 1}, "variants": {"period_cutoff": "prior_period"}` |
-| D15 | документ следующего периода проведён задним числом | `"variants": {"period_cutoff": "next_period"}` |
-| D16–D18 | сценарий 1: частичный валютный платёж на границе периода | `"interactions": {"partial_fx_boundary": 1}` (D17: `"foreign_share": 1.0`; D18: `2`) |
-| D19–D20 | сценарий 2: замаскированный дубль | `"interactions": {"masked_duplicate": 1}` (D20: `2`) |
+| D01 | обычная сверка, чисто | `{"errors": {"duplicate_invoice": 0, "payment_allocation": 0, "fx_rate": 0, "period_cutoff": 0}, "interactions": {"partial_fx_boundary": 0, "masked_duplicate": 0}, "distractors": {"split_payment": 0, "multi_invoice_payment": 0, "partial_open": 0, "refund": 0, "recurring_amount": 0, "tz_boundary": 0, "unremitted_payment": 0, "next_period_doc": 0, "same_day_repeat": 0, "prior_period_doc": 0, "boundary_fx_partial": 0}}` |
+| D02 | корректно разбитый платёж | `{"errors": {"duplicate_invoice": 0, "payment_allocation": 0, "fx_rate": 0, "period_cutoff": 0}, "interactions": {"partial_fx_boundary": 0, "masked_duplicate": 0}, "distractors": {"split_payment": 3, "multi_invoice_payment": 0, "partial_open": 0, "refund": 0, "recurring_amount": 0, "tz_boundary": 0, "unremitted_payment": 0, "next_period_doc": 0, "same_day_repeat": 0, "prior_period_doc": 0, "boundary_fx_partial": 0}}` |
+| D03 | корректный возврат | `{"errors": {"duplicate_invoice": 0, "payment_allocation": 0, "fx_rate": 0, "period_cutoff": 0}, "interactions": {"partial_fx_boundary": 0, "masked_duplicate": 0}, "distractors": {"split_payment": 0, "multi_invoice_payment": 0, "partial_open": 0, "refund": 2, "recurring_amount": 0, "tz_boundary": 0, "unremitted_payment": 0, "next_period_doc": 0, "same_day_repeat": 0, "prior_period_doc": 0, "boundary_fx_partial": 0}}` |
+| D04 | законные повторяющиеся суммы | `{"errors": {"duplicate_invoice": 0, "payment_allocation": 0, "fx_rate": 0, "period_cutoff": 0}, "interactions": {"partial_fx_boundary": 0, "masked_duplicate": 0}, "distractors": {"split_payment": 0, "multi_invoice_payment": 0, "partial_open": 0, "refund": 0, "recurring_amount": 2, "tz_boundary": 0, "unremitted_payment": 0, "next_period_doc": 0, "same_day_repeat": 2, "prior_period_doc": 0, "boundary_fx_partial": 0}}` |
+| D05 | валютная и периодная граница | `{"errors": {"duplicate_invoice": 0, "payment_allocation": 0, "fx_rate": 0, "period_cutoff": 0}, "interactions": {"partial_fx_boundary": 0, "masked_duplicate": 0}, "distractors": {"split_payment": 0, "multi_invoice_payment": 0, "partial_open": 0, "refund": 0, "recurring_amount": 0, "tz_boundary": 4, "unremitted_payment": 0, "next_period_doc": 2, "same_day_repeat": 0, "prior_period_doc": 1, "boundary_fx_partial": 2}, "foreign_share": 1.0}` |
+| D06 | дубль счёта | `{"errors": {"duplicate_invoice": 1, "payment_allocation": 0, "fx_rate": 0, "period_cutoff": 0}, "interactions": {"partial_fx_boundary": 0, "masked_duplicate": 0}}` |
+| D07 | дубль счёта, только базовая валюта | `{"errors": {"duplicate_invoice": 1, "payment_allocation": 0, "fx_rate": 0, "period_cutoff": 0}, "interactions": {"partial_fx_boundary": 0, "masked_duplicate": 0}, "foreign_share": 0.0}` |
+| D08 | дубль счёта, 2 ошибки | `{"errors": {"duplicate_invoice": 2, "payment_allocation": 0, "fx_rate": 0, "period_cutoff": 0}, "interactions": {"partial_fx_boundary": 0, "masked_duplicate": 0}}` |
+| D09 | пропущенное распределение | `{"errors": {"duplicate_invoice": 0, "payment_allocation": 1, "fx_rate": 0, "period_cutoff": 0}, "interactions": {"partial_fx_boundary": 0, "masked_duplicate": 0}, "variants": {"payment_allocation": "missing"}}` |
+| D10 | частичное распределение | `{"errors": {"duplicate_invoice": 0, "payment_allocation": 1, "fx_rate": 0, "period_cutoff": 0}, "interactions": {"partial_fx_boundary": 0, "masked_duplicate": 0}, "variants": {"payment_allocation": "partial"}}` |
+| D11 | частичное распределение, 2 ошибки | `{"errors": {"duplicate_invoice": 0, "payment_allocation": 2, "fx_rate": 0, "period_cutoff": 0}, "interactions": {"partial_fx_boundary": 0, "masked_duplicate": 0}, "variants": {"payment_allocation": "partial"}}` |
+| D12 | курс другой даты | `{"errors": {"duplicate_invoice": 0, "payment_allocation": 0, "fx_rate": 1, "period_cutoff": 0}, "interactions": {"partial_fx_boundary": 0, "masked_duplicate": 0}, "variants": {"fx_rate": "wrong_date"}}` |
+| D13 | перевёрнутый курс (есть и `rounded_rate`) | `{"errors": {"duplicate_invoice": 0, "payment_allocation": 0, "fx_rate": 1, "period_cutoff": 0}, "interactions": {"partial_fx_boundary": 0, "masked_duplicate": 0}, "variants": {"fx_rate": "inverted_rate"}}` |
+| D14 | документ прошлого периода проведён поздно | `{"errors": {"duplicate_invoice": 0, "payment_allocation": 0, "fx_rate": 0, "period_cutoff": 1}, "interactions": {"partial_fx_boundary": 0, "masked_duplicate": 0}, "variants": {"period_cutoff": "prior_period"}}` |
+| D15 | документ следующего периода проведён задним числом | `{"errors": {"duplicate_invoice": 0, "payment_allocation": 0, "fx_rate": 0, "period_cutoff": 1}, "interactions": {"partial_fx_boundary": 0, "masked_duplicate": 0}, "variants": {"period_cutoff": "next_period"}}` |
+| D16 | сценарий 1: частичный валютный платёж на границе периода | `{"errors": {"duplicate_invoice": 0, "payment_allocation": 0, "fx_rate": 0, "period_cutoff": 0}, "interactions": {"partial_fx_boundary": 1, "masked_duplicate": 0}}` |
+| D17 | сценарий 1, только валютные счета | `{"errors": {"duplicate_invoice": 0, "payment_allocation": 0, "fx_rate": 0, "period_cutoff": 0}, "interactions": {"partial_fx_boundary": 1, "masked_duplicate": 0}, "foreign_share": 1.0}` |
+| D18 | сценарий 1, 2 случая | `{"errors": {"duplicate_invoice": 0, "payment_allocation": 0, "fx_rate": 0, "period_cutoff": 0}, "interactions": {"partial_fx_boundary": 2, "masked_duplicate": 0}}` |
+| D19 | сценарий 2: замаскированный дубль | `{"errors": {"duplicate_invoice": 0, "payment_allocation": 0, "fx_rate": 0, "period_cutoff": 0}, "interactions": {"partial_fx_boundary": 0, "masked_duplicate": 1}}` |
+| D20 | сценарий 2, 2 случая | `{"errors": {"duplicate_invoice": 0, "payment_allocation": 0, "fx_rate": 0, "period_cutoff": 0}, "interactions": {"partial_fx_boundary": 0, "masked_duplicate": 2}}` |
 
 Пресеты: `clean`, `clean_hard`, `interacting`, `interacting_partial_fx_boundary`,
 `interacting_masked_duplicate`, `four_types`, `mixed`, `heavy` (12 ошибок), `only_<тип>`.
@@ -298,7 +314,7 @@ episodes/             10 train + 10 dev: public/<id>/*; grader/<id>/truth.json, 
 trajectories/         trajectories.jsonl (train/dev; 104 прогона, из них 12 по лимиту шагов и 18 в режиме eval)
 schemas/              JSON Schema draft-04: action, findings, truth, observation
 scripts/              mutation_test.py
-tests/                178 тестов, в том числе по официальным определениям (test_judge_adapter, test_judge_pairs)
+tests/                188 тестов, в том числе по официальным определениям (test_judge_adapter, test_judge_pairs)
 reports/              check_report, jury_scorecard, demo_transcript
 DESIGN.md             записка о дизайне
 JURY.md               как проверить каждый критерий
@@ -488,6 +504,11 @@ JSON-строкой не длиннее 1 000 000 символов (`MAX_ACTION_
   шаблон — в `policy.json → fx.fx_id_template`. При смене ID он не меняется.
 - `policy.json`: план счетов, выбор даты курса, границы периода, округление, правила проводок,
   определение каждого типа вывода, правила matcher и τ.
+  Правило `policy.json → posting_rules.payment` («платёж, закрывающий счёт в ноль, списывает
+  остаток 1200 целиком; разница — на 7800») действует и для возврата: возврат (отрицательная
+  строка `invoice_refs`), который закрывает счёт в ноль, тоже списывает остаток 1200 целиком, а
+  разница уходит на 7800. Переплата (сумма платежа больше остатка счёта) законна и оставляет
+  кредитовое сальдо 1200 до возврата.
 
 Форматы значений: время — ISO-8601 со смещением, принадлежность к периоду — по моменту
 времени; деньги — целые минимальные единицы, разрядность в `currency_exponents` (JPY=0, KWD=3);
@@ -579,7 +600,7 @@ exp_src))`; отсутствующие ссылки — `null` (в CSV букв�
 
 | Раздел | Критерий | Что именно проверяется |
 |---|---|---|
-| `unit_tests` (178) | все | официальные определения C01–C20, D01–D20, 1–20, M01–M12, P01–P20; reset/step, схемы, лимиты, завершение, неверный ввод, тайм-аут, режимы, атакующие ответы, изоляция политики (sandbox-exec и Landlock), гарантии генератора и отсутствие открытых признаков ошибок. `check` печатает действующую песочницу политики и число пропущенных тестов (на macOS пропускаются 3 теста Landlock, в Docker — ни одного) |
+| `unit_tests` (188) | все | официальные определения C01–C20, D01–D20, 1–20, M01–M12, P01–P20; reset/step, схемы, лимиты, завершение, неверный ввод, тайм-аут, режимы, атакующие ответы, изоляция политики (sandbox-exec и Landlock), гарантии генератора и отсутствие открытых признаков ошибок. `check` печатает действующую песочницу политики и число пропущенных тестов (на macOS пропускаются 3 теста Landlock, в Docker — ни одного) |
 | `determinism` | Воспроизводимость | одинаковые seed+config → побайтно одинаковый эпизод; совпадение с опубликованными `episodes/*/index.json` |
 | `data_and_truth` (220 эпизодов) | Данные и эталон | книги до ошибок **восстанавливаются из provenance.json** и проходят все равенства; у каждого изменения книги есть причина; **независимая перепроводка** совпадает с чистой книгой полностью, а с книгой после внесения — везде, кроме объявленных ошибок; эталонный аудитор не находит ничего на чистых книгах и ровно эталон на книгах с ошибками; каждый набор доказательств сам по себе доказывает ошибку |
 | `baselines` | Надёжность награды | 4 базовые политики и скриптовый аудитор в режиме **eval** в **отдельном процессе**: `flag_all < reconciler < rule_auditor ≤ oracle = 1.0` |
@@ -711,7 +732,10 @@ action, observation, reward, terminated, truncated` и `mode, env_version, gener
   эпизодах каждого split): награда политике 0, `info` пуст; 6 из них — по лимиту шагов.
 
 Прогоны oracle не публикуются: их действия построены из эталона. `check` сканирует все
-наблюдения опубликованного файла на закрытые ключи и issue_id и сверяет версию.
+наблюдения опубликованного файла на закрытые ключи и issue_id и сверяет версию. Слова
+`issue_id` и `expected_amount_minor` в `policy.json` (и в наблюдениях с ним) — текст
+опубликованных правил matcher, а не утечка: сканер `check` ищет значения `issue_id` эталона, а не
+само слово.
 
 ---
 

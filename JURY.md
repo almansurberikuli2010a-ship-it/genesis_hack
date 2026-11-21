@@ -9,6 +9,10 @@ python3 -m auditgym check
 
 В образе: `docker build -t auditgym .` и `docker run --rm --network none --cpus 2 --memory 4g
 auditgym` (запускает `python -m auditgym check`). Через make: `make check PY=python3`.
+Чтобы в `reports/check_report.json → git.commit` был коммит (`.git` в образ не копируется),
+соберите образ с аргументом: `docker build --build-arg GIT_COMMIT=$(git rev-parse HEAD) -t auditgym .`;
+без него коммит — `null`. Workflow, которыми собраны отчёты, — `.github/workflows/docker-check.yml`
+и `update-reports.yml`.
 
 ## Подключение по определениям проверок: `judge_adapter.py`
 

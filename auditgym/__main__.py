@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import random
 import subprocess
 import sys
@@ -64,17 +65,21 @@ def versions() -> dict:
 
 def git_state() -> dict:
     """Коммит, на котором собраны отчёты, и есть ли незакоммиченные правки. Без git или без .git
-    (например, в Docker-образе: .git исключён в .dockerignore) — commit = null."""
+    (например, в Docker-образе: .git исключён в .dockerignore) коммит берётся из переменной
+    AUDITGYM_GIT_COMMIT (её задаёт `docker build --build-arg GIT_COMMIT=...`), dirty = null;
+    без переменной — commit = null."""
+    no_git = {"commit": os.environ.get("AUDITGYM_GIT_COMMIT") or None, "dirty": None}
+
     def git(*a):
         return subprocess.run(["git", "-C", str(ROOT), *a], capture_output=True, text=True, timeout=10)
     try:
         head = git("rev-parse", "HEAD")
         if head.returncode != 0:
-            return {"commit": None, "dirty": None}
+            return no_git
         dirty = git("status", "--porcelain", "--", ".", ":(exclude)reports")  # отчёты пишет сама проверка
         return {"commit": head.stdout.strip(), "dirty": bool(dirty.stdout.strip()) if dirty.returncode == 0 else None}
     except (OSError, subprocess.SubprocessError):
-        return {"commit": None, "dirty": None}
+        return no_git
 
 
 def peak_rss_mb(who: str):
