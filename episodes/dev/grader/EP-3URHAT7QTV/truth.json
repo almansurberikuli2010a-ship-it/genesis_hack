@@ -1,0 +1,41 @@
+{
+  "episode_id": "EP-3URHAT7QTV",
+  "schema_version": "3.2",
+  "base_currency": "GBP",
+  "issues": [
+    {
+      "issue_id": "ISS-FKO72QM3",
+      "type": "duplicate_invoice",
+      "affected_ids": [
+        "INV-EMDMP4N",
+        "INV-JAH5ULP"
+      ],
+      "expected_amount_minor": 751780,
+      "currency": "GBP",
+      "tolerance_minor": 0,
+      "evidence_sets": [
+        [
+          "DOC-5P6FFSN6",
+          "DOC-RGPE6AE4",
+          "L-YWXAUJUE"
+        ],
+        [
+          "DOC-5P6FFSN6",
+          "DOC-RGPE6AE4",
+          "L-KTJEYYER"
+        ],
+        [
+          "DOC-5P6FFSN6",
+          "DOC-RGPE6AE4",
+          "L-EUOK2LV3"
+        ],
+        [
+          "DOC-5P6FFSN6",
+          "DOC-RGPE6AE4",
+          "L-KQUPM7Z2"
+        ]
+      ],
+      "mutation_id": "M01"
+    }
+  ]
+}

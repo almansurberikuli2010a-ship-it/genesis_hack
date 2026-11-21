@@ -1,0 +1,194 @@
+{
+  "episode_id": "EP-KZXB7GNBOU",
+  "schema_version": "3.2",
+  "base_currency": "KZT",
+  "issues": [
+    {
+      "issue_id": "ISS-4QJ4XCJV",
+      "type": "payment_allocation",
+      "affected_ids": [
+        "INV-OAUAQC6",
+        "PAY-V3Y6NZP"
+      ],
+      "expected_amount_minor": 253705912,
+      "currency": "KZT",
+      "tolerance_minor": 0,
+      "evidence_sets": [
+        [
+          "DOC-HVZ77ORY",
+          "L-S6HCRH7X"
+        ]
+      ],
+      "mutation_id": "M02"
+    },
+    {
+      "issue_id": "ISS-5WM6HGDO",
+      "type": "fx_rate",
+      "affected_ids": [
+        "INV-WAFPOPI"
+      ],
+      "expected_amount_minor": 217661,
+      "currency": "KZT",
+      "tolerance_minor": 0,
+      "evidence_sets": [
+        [
+          "DOC-3YZUVCSJ",
+          "FX-2025-03-06-USD-KZT",
+          "L-PLWIOK76"
+        ],
+        [
+          "DOC-3YZUVCSJ",
+          "FX-2025-03-06-USD-KZT",
+          "L-3CGAW57Q"
+        ]
+      ],
+      "mutation_id": "M03"
+    },
+    {
+      "issue_id": "ISS-6HNQJOLX",
+      "type": "duplicate_invoice",
+      "affected_ids": [
+        "INV-NCIYO6C",
+        "INV-PPET3DZ"
+      ],
+      "expected_amount_minor": 59605000,
+      "currency": "KZT",
+      "tolerance_minor": 0,
+      "evidence_sets": [
+        [
+          "DOC-EMPD3VNS",
+          "DOC-FMZEK33W",
+          "L-VANNNMVS"
+        ],
+        [
+          "DOC-EMPD3VNS",
+          "DOC-FMZEK33W",
+          "L-FK6A45W2"
+        ],
+        [
+          "DOC-EMPD3VNS",
+          "DOC-FMZEK33W",
+          "L-WBQTPFF2"
+        ],
+        [
+          "DOC-EMPD3VNS",
+          "DOC-FMZEK33W",
+          "L-E3NQIHDX"
+        ]
+      ],
+      "mutation_id": "M01"
+    },
+    {
+      "issue_id": "ISS-EG5CNJNM",
+      "type": "fx_rate",
+      "affected_ids": [
+        "PAY-TXFYKR3"
+      ],
+      "expected_amount_minor": 588236,
+      "currency": "KZT",
+      "tolerance_minor": 0,
+      "evidence_sets": [
+        [
+          "DOC-DSNK2P3U",
+          "FX-2025-03-22-USD-KZT",
+          "L-2HMLAJDP"
+        ]
+      ],
+      "mutation_id": "M07"
+    },
+    {
+      "issue_id": "ISS-GFMFO27K",
+      "type": "period_cutoff",
+      "affected_ids": [
+        "INV-5LSLYNZ"
+      ],
+      "expected_amount_minor": 224776490,
+      "currency": "KZT",
+      "tolerance_minor": 0,
+      "evidence_sets": [
+        [
+          "DOC-4VHEFDP6",
+          "L-EFHAKR7D"
+        ],
+        [
+          "DOC-4VHEFDP6",
+          "L-QEEFSTFY"
+        ]
+      ],
+      "mutation_id": "M05"
+    },
+    {
+      "issue_id": "ISS-H4OFQPFA",
+      "type": "payment_allocation",
+      "affected_ids": [
+        "INV-JH72LUH",
+        "PAY-WHVYFNY"
+      ],
+      "expected_amount_minor": 318170887,
+      "currency": "KZT",
+      "tolerance_minor": 0,
+      "evidence_sets": [
+        [
+          "DOC-BFESGY6M",
+          "L-ZLSQTAAW"
+        ]
+      ],
+      "mutation_id": "M08"
+    },
+    {
+      "issue_id": "ISS-KZ4KVI4D",
+      "type": "duplicate_invoice",
+      "affected_ids": [
+        "INV-5K24376",
+        "INV-Y5BWLYH"
+      ],
+      "expected_amount_minor": 385878000,
+      "currency": "KZT",
+      "tolerance_minor": 0,
+      "evidence_sets": [
+        [
+          "DOC-C4AD3L63",
+          "DOC-EK3ZUFMK",
+          "L-4J4323DF"
+        ],
+        [
+          "DOC-C4AD3L63",
+          "DOC-EK3ZUFMK",
+          "L-B7F2GT6V"
+        ],
+        [
+          "DOC-C4AD3L63",
+          "DOC-EK3ZUFMK",
+          "L-YKU3JCCF"
+        ],
+        [
+          "DOC-C4AD3L63",
+          "DOC-EK3ZUFMK",
+          "L-I2QMUSZT"
+        ]
+      ],
+      "mutation_id": "M04"
+    },
+    {
+      "issue_id": "ISS-YTNLYHH3",
+      "type": "period_cutoff",
+      "affected_ids": [
+        "INV-V4R5PKL"
+      ],
+      "expected_amount_minor": 891828184,
+      "currency": "KZT",
+      "tolerance_minor": 0,
+      "evidence_sets": [
+        [
+          "DOC-NFQDZTER",
+          "L-CEG5NAAU"
+        ],
+        [
+          "DOC-NFQDZTER",
+          "L-7IN4VAWF"
+        ]
+      ],
+      "mutation_id": "M06"
+    }
+  ]
+}

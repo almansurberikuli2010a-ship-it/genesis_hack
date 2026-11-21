@@ -322,7 +322,13 @@ def cmd_check(args) -> int:
     with open(Path(tempfile.gettempdir()) / "auditgym_unittest.log", "w", encoding=ENC) as log:
         res = unittest.TextTestRunner(verbosity=0, stream=sys.stderr if args.verbose else log).run(suite)
     fails = [str(t[0]) for t in res.failures + res.errors]
-    section("unit_tests", res.wasSuccessful(), {"run": res.testsRun, "failed": len(fails), "failures": fails})
+    section("unit_tests", res.wasSuccessful(), {"run": res.testsRun, "failed": len(fails), "skipped": len(res.skipped),
+                                                "failures": fails})
+    from . import landlock
+    from .adapters import policy_sandbox
+    sandbox = policy_sandbox()
+    report["policy_sandbox"] = sandbox + ("-abi%d" % landlock.abi()[0] if sandbox == "landlock" else "")
+    print("[ИНФО] песочница процесса политики: %s" % report["policy_sandbox"])
 
     train, dev = load_split("train"), load_split("dev")
     # 2. детерминизм и опубликованные эпизоды

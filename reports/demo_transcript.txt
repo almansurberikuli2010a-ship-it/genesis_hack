@@ -1,5 +1,5 @@
-эпизод EP-FVCHCTNWBK | ООО «Орар Холдинг» | база KZT | пояс +03:00 | период 2025-03-01T00:00:00+03:00 … 2025-04-01T00:00:00+03:00
-записи: {"ledger": 494, "journal_entries": 236, "invoices": 86, "payments": 52, "fx": 88, "documents": 138}
+эпизод EP-PVYPGFQHLV | АО «Астикс Системс» | база GBP | пояс -05:00 | период 2026-11-01T00:00:00-05:00 … 2026-12-01T00:00:00-05:00
+записи: {"ledger": 530, "journal_entries": 246, "invoices": 97, "payments": 56, "fx": 86, "documents": 153}
 шаг   1 list_records ledger    строк=50  далее=ledger:50
 шаг   2 list_records ledger    строк=50  далее=ledger:100
 шаг   3 list_records ledger    строк=50  далее=ledger:150
@@ -9,18 +9,19 @@
 шаг   7 list_records ledger    строк=50  далее=ledger:350
 шаг   8 list_records ledger    строк=50  далее=ledger:400
 шаг   9 list_records ledger    строк=50  далее=ledger:450
-шаг  10 list_records ledger    строк=44  далее=None
-шаг  11 list_records invoices  строк=50  далее=invoices:50
-шаг  12 list_records invoices  строк=36  далее=None
-шаг  13 list_records payments  строк=50  далее=payments:50
-шаг  14 list_records payments  строк=2   далее=None
-шаг  15 list_records fx        строк=50  далее=fx:50
-шаг  16 list_records fx        строк=38  далее=None
-шаг  17 submit: 5 выводов
-        duplicate_invoice  INV-6GL7YCV,INV-R4RDTVK         398640000 KZT  доказательства=DOC-UL7GI4OB,DOC-PAKWHYG5,L-URQJ4ZWF
-        fx_rate            PAY-TFMSYL4                        416346 KZT  доказательства=DOC-PF7BWIRU,L-KGJCTZ6J,FX-2025-03-31-KWD-KZT
-        payment_allocation INV-MK42LST,PAY-TFMSYL4         169179554 KZT  доказательства=DOC-PF7BWIRU,L-C3NHEBAX
-        fx_rate            PAY-CS6PLF4                       6475242 KZT  доказательства=DOC-VQ2G242Q,L-S4EIKRHZ,FX-2025-03-14-KWD-KZT
-        payment_allocation INV-R4RDTVK,PAY-ZWKAVZP         398640000 KZT  доказательства=DOC-QKF6HUAK,L-JRGVBJAQ
-terminated=True truncated=False награда=+0.968 info={"grading": {"valid": true, "reward": 0.968, "precision": 1.0, "recall": 1.0, "f1": 1.0, "inspection_steps": 16}}
-оценщик: P=1.00 R=1.00 F1=1.00 награда=+0.968
+шаг  10 list_records ledger    строк=50  далее=ledger:500
+шаг  11 list_records ledger    строк=30  далее=None
+шаг  12 list_records invoices  строк=50  далее=invoices:50
+шаг  13 list_records invoices  строк=47  далее=None
+шаг  14 list_records payments  строк=50  далее=payments:50
+шаг  15 list_records payments  строк=6   далее=None
+шаг  16 list_records fx        строк=50  далее=fx:50
+шаг  17 list_records fx        строк=36  далее=None
+шаг  18 submit: 5 выводов
+        duplicate_invoice  INV-6T3D6O4,INV-LPGLPCL            655602 GBP  доказательства=DOC-NZ33563A,DOC-HWPAUXM4,L-QNXJS5TK
+        payment_allocation INV-6T3D6O4,PAY-SYTFRPM            655602 GBP  доказательства=DOC-AZHP57QY,L-JIXWBFQZ
+        fx_rate            PAY-XHKXBMO                           378 GBP  доказательства=DOC-XKSQM4XK,L-NVSHCK6X,FX-2026-11-30-JPY-GBP
+        payment_allocation INV-RBV3SGP,PAY-XHKXBMO             64819 GBP  доказательства=DOC-XKSQM4XK,L-VTZOUW6E
+        fx_rate            PAY-XIB5UTC                          3759 GBP  доказательства=DOC-RK6TKBJK,L-GV3O4WRH,FX-2026-11-28-JPY-GBP
+terminated=True truncated=False награда=+0.966 info={"grading": {"valid": true, "reward": 0.966, "precision": 1.0, "recall": 1.0, "f1": 1.0, "inspection_steps": 17}}
+оценщик: P=1.00 R=1.00 F1=1.00 награда=+0.966

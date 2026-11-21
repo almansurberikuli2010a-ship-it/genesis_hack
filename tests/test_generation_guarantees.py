@@ -7,7 +7,9 @@ import random
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
+from auditgym import config as config_module
 from auditgym.audit_rules import book_invariants
 from auditgym.config import (DEFAULT_CONFIG, DISTRACTORS, ERROR_TYPES, INTERACTIONS, MAX_ATTEMPTS, MAX_DOCUMENTS,
                              MAX_ISSUES, PRESETS, ConfigError, document_bound, normalize_config)
@@ -111,13 +113,29 @@ class AcceptedConfigsAlwaysGenerate(unittest.TestCase):
 
 
 class ImpossibleConfigsRejected(unittest.TestCase):
+    # Самые тяжёлые допустимые конфиги: все отвлекающие случаи по 12 и MAX_ISSUES самых дорогих ошибок.
+    HEAVIEST = [
+        {"distractors": {k: 12 for k in DISTRACTORS}, "errors": {"fx_rate": MAX_ISSUES}},
+        {"distractors": {k: 12 for k in DISTRACTORS}, "interactions": {"masked_duplicate": MAX_ISSUES // 2}},
+        {"distractors": {k: 12 for k in DISTRACTORS}, "interactions": {"partial_fx_boundary": MAX_ISSUES // 2}},
+    ]
+
+    def test_every_config_in_published_bounds_fits(self):
+        # предел документов не отвергает ни одного конфига в опубликованных границах
+        for cfg in self.HEAVIEST:
+            self.assertLessEqual(document_bound(normalize_config(cfg)), MAX_DOCUMENTS, cfg)
+        for cfg in self.HEAVIEST[:2]:
+            assert_honoured(self, generate(1, cfg), cfg)
+
     def test_too_many_documents_is_config_error(self):
+        # проверка предела сама по себе работает (предел временно ниже границы конфига)
         cfg = {"distractors": {k: 12 for k in DISTRACTORS}}
-        with self.assertRaises(ConfigError) as cm:
-            normalize_config(cfg)
-        self.assertIn("документ", str(cm.exception))
-        with self.assertRaises(ConfigError):
-            generate(1, cfg)
+        with mock.patch.object(config_module, "MAX_DOCUMENTS", document_bound(normalize_config(cfg)) - 1):
+            with self.assertRaises(ConfigError) as cm:
+                normalize_config(cfg)
+            self.assertIn("документ", str(cm.exception))
+            with self.assertRaises(ConfigError):
+                generate(1, cfg)
 
     def test_presets_and_default_fit(self):
         self.assertLessEqual(document_bound(normalize_config(None)), MAX_DOCUMENTS)

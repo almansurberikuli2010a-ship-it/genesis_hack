@@ -56,15 +56,18 @@ import json
 import logging
 import os
 import sys
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from auditgym.adapters import _PolicyProcess  # noqa: E402
 from auditgym.export import load_public_dir, write_flat_episode  # noqa: E402
 from auditgym.generator import generate  # noqa: E402
 from auditgym.matcher import match_context, score  # noqa: E402
+from auditgym.runner import _guarded, _PolicyTimeout  # noqa: E402
 from auditgym.server import RemoteError, SubprocessEnv  # noqa: E402
 
 ACTION_NAMES = ("list_records", "get_record", "get_document", "calculator", "submit")
@@ -286,29 +289,62 @@ class ProtocolBridge:
         return {"name": action.get("type"), "args": {k: v for k, v in action.items() if k != "type"}}
 
 
-def run_on_episode(policy, episode_dir: str, mode: str = "closed", time_limit_s: float = TIME_LIMIT_S) -> dict:
+def run_on_episode(policy, episode_dir: str, mode: str = "closed", time_limit_s: float = TIME_LIMIT_S,
+                   isolated: bool = True) -> dict:
     """Прогон политики протокола жюри (begin(obs) / act(obs) -> {"name", "args"}) на эпизоде из каталога
-    и оценка score_episode — так, как это делает жюри. Политика работает в этом процессе (доверенные
-    базовые политики); среда и оценщик — в отдельном."""
-    with make_env(time_limit_s) as env:
-        obs, _ = env.reset(0, {"mode": mode, "episode_dir": str(episode_dir)})
-        policy.begin(obs)
-        steps, findings, rewards = 0, None, []
-        while True:
-            action = policy.act(obs)
-            obs, r, term, trunc, _ = env.step(action)
-            steps += 1
-            rewards.append(r)
-            if term or trunc:
-                break
-        sent = isinstance(action, dict) and action.get("name") == "submit" and term
-        if sent:
-            findings = (action.get("args") or {}).get("findings")
-        inspection = steps - 1 if sent else steps
-        result = score_episode(episode_dir, findings if sent else None, inspection)
-        report = env.grader_report()["result"]
+    и оценка score_episode — так, как это делает жюри. Среда и оценщик — в отдельном процессе.
+    isolated=True (по умолчанию): политика — в своём ограниченном процессе, как в run_policy
+    (sandbox-exec на macOS, Landlock на Linux): каталог эпизода, файлы оценщика и код среды для записи
+    ей недоступны; исключение или остановка процесса политики — неверное действие (шаг израсходован).
+    isolated=False — доверенный запуск в этом процессе."""
+    host = _PolicyProcess(policy, forbidden=[episode_dir]) if isolated else None
+    pol = host if host is not None else policy
+    try:
+        with make_env(time_limit_s) as env:
+            obs, _ = env.reset(0, {"mode": mode, "episode_dir": str(episode_dir)})
+            # как в run_policy: зависшая политика прерывается в момент deadline, после чего политику
+            # больше не спрашиваем — следующий шаг среда завершает с truncated=true (time_limit)
+            deadline = time.monotonic() + time_limit_s
+            timed_out = False
+            try:
+                _guarded(lambda: pol.begin(obs), deadline)
+            except _PolicyTimeout:
+                timed_out = True
+            except Exception:
+                if not isolated:
+                    raise
+            steps, findings, rewards = 0, None, []
+            while True:
+                if timed_out:
+                    time.sleep(max(0.0, deadline - time.monotonic()) + 0.01)
+                    action = {"name": None}
+                else:
+                    try:
+                        action = _guarded(lambda: pol.act(obs), deadline)
+                    except _PolicyTimeout:
+                        timed_out = True
+                        continue
+                    except Exception:
+                        if not isolated:
+                            raise
+                        action = {"name": None}
+                obs, r, term, trunc, _ = env.step(action)
+                steps += 1
+                rewards.append(r)
+                if term or trunc:
+                    break
+            sent = isinstance(action, dict) and action.get("name") == "submit" and term
+            if sent:
+                findings = (action.get("args") or {}).get("findings")
+            inspection = steps - 1 if sent else steps
+            result = score_episode(episode_dir, findings if sent else None, inspection)
+            report = env.grader_report()["result"]
+    finally:
+        if host is not None:
+            host.close()
     return {"score": result, "inspection_steps": inspection, "steps": steps, "terminated": bool(term),
-            "truncated": bool(trunc), "policy_rewards": rewards, "env_result": report}
+            "truncated": bool(trunc), "policy_rewards": rewards, "env_result": report,
+            "policy_sandbox": host.sandbox if host is not None else "in-process"}
 
 
 class OraclePolicy:

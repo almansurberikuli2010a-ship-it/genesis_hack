@@ -1,10 +1,10 @@
 {
-  "env_version": "3.2.0",
-  "generator_version": "3.2.0",
+  "env_version": "3.3.0",
+  "generator_version": "3.3.0",
   "schema_version": "3.2",
-  "config_version": "3.2",
+  "config_version": "3.3",
   "git": {
-    "commit": "f4bf54b2ea1bd74ae9d3efa8056fe728546b59c8",
+    "commit": "37d67065d71b8e63351e31bad848236ef7bf2eb5",
     "dirty": true
   },
   "python": "3.13.17",
@@ -12,8 +12,9 @@
   "sections": {
     "unit_tests": {
       "passed": true,
-      "run": 166,
+      "run": 177,
       "failed": 0,
+      "skipped": 3,
       "failures": []
     },
     "determinism": {
@@ -26,16 +27,16 @@
       "episodes": 220,
       "problems": [],
       "ledger_rows": [
-        309,
-        729
+        212,
+        704
       ],
       "journal_entries": [
-        142,
-        337
+        102,
+        346
       ],
       "documents": [
-        69,
-        170
+        78,
+        178
       ],
       "issues": [
         0,
@@ -52,8 +53,8 @@
             "recall": 0.0,
             "f1": 0.0,
             "return": -1.0,
-            "experimental_return": -1.0,
-            "steps": 4.5,
+            "experimental_return": -0.996,
+            "steps": 4.6,
             "time_s": 0.02,
             "tp": 0,
             "fp": 300,
@@ -79,27 +80,27 @@
             "precision": 0.0,
             "recall": 0.0,
             "f1": 0.2,
-            "return": -0.605,
-            "experimental_return": -0.605,
-            "steps": 17.9,
-            "time_s": 0.027,
+            "return": -0.606,
+            "experimental_return": -0.606,
+            "steps": 17.2,
+            "time_s": 0.041,
             "tp": 0,
-            "fp": 8,
+            "fp": 10,
             "fn": 39,
             "invalid": 0
           },
           "reconciler": {
             "episodes": 10,
-            "precision": 0.228,
-            "recall": 0.654,
-            "f1": 0.329,
-            "return": -0.369,
-            "experimental_return": -0.369,
-            "steps": 17.3,
+            "precision": 0.222,
+            "recall": 0.683,
+            "f1": 0.327,
+            "return": -0.374,
+            "experimental_return": -0.362,
+            "steps": 18.1,
             "time_s": 0.026,
-            "tp": 33,
-            "fp": 103,
-            "fn": 6,
+            "tp": 35,
+            "fp": 106,
+            "fn": 4,
             "invalid": 0
           },
           "rule_auditor": {
@@ -107,10 +108,10 @@
             "precision": 0.8,
             "recall": 0.8,
             "f1": 1.0,
-            "return": 0.967,
-            "experimental_return": 0.967,
-            "steps": 17.3,
-            "time_s": 0.026,
+            "return": 0.966,
+            "experimental_return": 0.966,
+            "steps": 18.1,
+            "time_s": 0.025,
             "tp": 39,
             "fp": 0,
             "fn": 0,
@@ -124,8 +125,8 @@
             "recall": 0.0,
             "f1": 0.0,
             "return": -1.0,
-            "experimental_return": -0.996,
-            "steps": 4.4,
+            "experimental_return": -1.0,
+            "steps": 4.5,
             "time_s": 0.019,
             "tp": 0,
             "fp": 300,
@@ -151,27 +152,27 @@
             "precision": 0.0,
             "recall": 0.0,
             "f1": 0.1,
-            "return": -0.803,
-            "experimental_return": -0.803,
-            "steps": 18.3,
-            "time_s": 0.026,
+            "return": -0.806,
+            "experimental_return": -0.806,
+            "steps": 22.5,
+            "time_s": 0.041,
             "tp": 0,
-            "fp": 8,
+            "fp": 6,
             "fn": 34,
             "invalid": 0
           },
           "reconciler": {
             "episodes": 10,
-            "precision": 0.225,
-            "recall": 0.658,
-            "f1": 0.314,
-            "return": -0.399,
-            "experimental_return": -0.399,
-            "steps": 17.7,
-            "time_s": 0.025,
-            "tp": 28,
-            "fp": 89,
-            "fn": 6,
+            "precision": 0.2,
+            "recall": 0.708,
+            "f1": 0.295,
+            "return": -0.438,
+            "experimental_return": -0.438,
+            "steps": 18.2,
+            "time_s": 0.026,
+            "tp": 30,
+            "fp": 100,
+            "fn": 4,
             "invalid": 0
           },
           "rule_auditor": {
@@ -179,10 +180,10 @@
             "precision": 0.8,
             "recall": 0.8,
             "f1": 1.0,
-            "return": 0.967,
-            "experimental_return": 0.967,
-            "steps": 17.7,
-            "time_s": 0.024,
+            "return": 0.966,
+            "experimental_return": 0.966,
+            "steps": 18.2,
+            "time_s": 0.025,
             "tp": 34,
             "fp": 0,
             "fn": 0,
@@ -194,9 +195,9 @@
     },
     "no_leakage": {
       "passed": true,
-      "observations_scanned": 1271,
+      "observations_scanned": 1334,
       "published_trajectories": {
-        "rows": 2663,
+        "rows": 2744,
         "runs": 104,
         "runs_truncated": 12,
         "runs_eval": 18
@@ -218,7 +219,7 @@
           "passed": true,
           "rewards": [
             1.0,
-            0.962
+            0.97
           ]
         },
         {
@@ -228,37 +229,6 @@
           "rewards": {
             "a": [
               1.0,
-              0.962,
-              -1.0
-            ],
-            "b": [
-              1.0,
-              0.962,
-              -1.0
-            ]
-          }
-        },
-        {
-          "check": "повтор",
-          "name": "чистая_часовые_пояса",
-          "passed": true
-        },
-        {
-          "check": "новые ID и порядок",
-          "name": "чистая_часовые_пояса",
-          "passed": true,
-          "rewards": [
-            1.0,
-            0.97
-          ]
-        },
-        {
-          "check": "преобразование файлов",
-          "name": "чистая_часовые_пояса",
-          "passed": true,
-          "rewards": {
-            "a": [
-              1.0,
               0.97,
               -1.0
             ],
@@ -271,43 +241,12 @@
         },
         {
           "check": "повтор",
-          "name": "один_дубль",
+          "name": "чистая_часовые_пояса",
           "passed": true
         },
         {
           "check": "новые ID и порядок",
-          "name": "один_дубль",
-          "passed": true,
-          "rewards": [
-            1.0,
-            0.97
-          ]
-        },
-        {
-          "check": "преобразование файлов",
-          "name": "один_дубль",
-          "passed": true,
-          "rewards": {
-            "a": [
-              1.0,
-              0.97,
-              -0.6663636363636364
-            ],
-            "b": [
-              1.0,
-              0.97,
-              -0.6663636363636364
-            ]
-          }
-        },
-        {
-          "check": "повтор",
-          "name": "один_курс",
-          "passed": true
-        },
-        {
-          "check": "новые ID и порядок",
-          "name": "один_курс",
+          "name": "чистая_часовые_пояса",
           "passed": true,
           "rewards": [
             1.0,
@@ -316,80 +255,142 @@
         },
         {
           "check": "преобразование файлов",
+          "name": "чистая_часовые_пояса",
+          "passed": true,
+          "rewards": {
+            "a": [
+              1.0,
+              0.962,
+              -1.0
+            ],
+            "b": [
+              1.0,
+              0.962,
+              -1.0
+            ]
+          }
+        },
+        {
+          "check": "повтор",
+          "name": "один_дубль",
+          "passed": true
+        },
+        {
+          "check": "новые ID и порядок",
+          "name": "один_дубль",
+          "passed": true,
+          "rewards": [
+            1.0,
+            0.962
+          ]
+        },
+        {
+          "check": "преобразование файлов",
+          "name": "один_дубль",
+          "passed": true,
+          "rewards": {
+            "a": [
+              1.0,
+              0.962,
+              -0.638
+            ],
+            "b": [
+              1.0,
+              0.962,
+              -0.638
+            ]
+          }
+        },
+        {
+          "check": "повтор",
+          "name": "один_курс",
+          "passed": true
+        },
+        {
+          "check": "новые ID и порядок",
+          "name": "один_курс",
+          "passed": true,
+          "rewards": [
+            1.0,
+            0.968
+          ]
+        },
+        {
+          "check": "преобразование файлов",
           "name": "один_курс",
           "passed": true,
           "rewards": {
             "a": [
               1.0,
+              0.968,
+              -0.6683636363636364
+            ],
+            "b": [
+              1.0,
+              0.968,
+              -0.6683636363636364
+            ]
+          }
+        },
+        {
+          "check": "повтор",
+          "name": "распределение_и_период",
+          "passed": true
+        },
+        {
+          "check": "новые ID и порядок",
+          "name": "распределение_и_период",
+          "passed": true,
+          "rewards": [
+            1.0,
+            0.97
+          ]
+        },
+        {
+          "check": "преобразование файлов",
+          "name": "распределение_и_период",
+          "passed": true,
+          "rewards": {
+            "a": [
+              1.0,
+              0.97,
+              -0.1878947368421053
+            ],
+            "b": [
+              1.0,
+              0.97,
+              -0.1878947368421053
+            ]
+          }
+        },
+        {
+          "check": "повтор",
+          "name": "четыре_типа",
+          "passed": true
+        },
+        {
+          "check": "новые ID и порядок",
+          "name": "четыре_типа",
+          "passed": true,
+          "rewards": [
+            1.0,
+            0.962
+          ]
+        },
+        {
+          "check": "преобразование файлов",
+          "name": "четыре_типа",
+          "passed": true,
+          "rewards": {
+            "a": [
+              1.0,
               0.962,
-              -0.7303076923076923
+              -0.4665714285714286
             ],
             "b": [
               1.0,
               0.962,
-              -0.7303076923076923
-            ]
-          }
-        },
-        {
-          "check": "повтор",
-          "name": "распределение_и_период",
-          "passed": true
-        },
-        {
-          "check": "новые ID и порядок",
-          "name": "распределение_и_период",
-          "passed": true,
-          "rewards": [
-            1.0,
-            0.968
-          ]
-        },
-        {
-          "check": "преобразование файлов",
-          "name": "распределение_и_период",
-          "passed": true,
-          "rewards": {
-            "a": [
-              1.0,
-              0.968,
-              0.03466666666666665
-            ],
-            "b": [
-              1.0,
-              0.968,
-              0.03466666666666665
-            ]
-          }
-        },
-        {
-          "check": "повтор",
-          "name": "четыре_типа",
-          "passed": true
-        },
-        {
-          "check": "новые ID и порядок",
-          "name": "четыре_типа",
-          "passed": true,
-          "rewards": [
-            1.0,
-            0.968
-          ]
-        },
-        {
-          "check": "преобразование файлов",
-          "name": "четыре_типа",
-          "passed": true,
-          "rewards": {
-            "a": [
-              1.0,
-              0.968,
-              0.03466666666666665
-            ],
-            "b": [
-              1.0,
-              0.968,
-              0.03466666666666665
+              -0.4665714285714286
             ]
           }
         },
@@ -401,99 +402,6 @@
         {
           "check": "новые ID и порядок",
           "name": "взаимодействие_частичный_валютный_платёж",
-          "passed": true,
-          "rewards": [
-            1.0,
-            0.968
-          ]
-        },
-        {
-          "check": "преобразование файлов",
-          "name": "взаимодействие_частичный_валютный_платёж",
-          "passed": true,
-          "rewards": {
-            "a": [
-              1.0,
-              0.968,
-              -0.30472727272727274
-            ],
-            "b": [
-              1.0,
-              0.968,
-              -0.30472727272727274
-            ]
-          }
-        },
-        {
-          "check": "повтор",
-          "name": "взаимодействие_замаскированный_дубль",
-          "passed": true
-        },
-        {
-          "check": "новые ID и порядок",
-          "name": "взаимодействие_замаскированный_дубль",
-          "passed": true,
-          "rewards": [
-            1.0,
-            0.966
-          ]
-        },
-        {
-          "check": "преобразование файлов",
-          "name": "взаимодействие_замаскированный_дубль",
-          "passed": true,
-          "rewards": {
-            "a": [
-              1.0,
-              0.966,
-              -0.7006666666666668
-            ],
-            "b": [
-              1.0,
-              0.966,
-              -0.7006666666666668
-            ]
-          }
-        },
-        {
-          "check": "повтор",
-          "name": "оба_взаимодействия_смесь",
-          "passed": true
-        },
-        {
-          "check": "новые ID и порядок",
-          "name": "оба_взаимодействия_смесь",
-          "passed": true,
-          "rewards": [
-            1.0,
-            0.968
-          ]
-        },
-        {
-          "check": "преобразование файлов",
-          "name": "оба_взаимодействия_смесь",
-          "passed": true,
-          "rewards": {
-            "a": [
-              1.0,
-              0.968,
-              -0.09082352941176472
-            ],
-            "b": [
-              1.0,
-              0.968,
-              -0.09082352941176472
-            ]
-          }
-        },
-        {
-          "check": "повтор",
-          "name": "нагрузка_12",
-          "passed": true
-        },
-        {
-          "check": "новые ID и порядок",
-          "name": "нагрузка_12",
           "passed": true,
           "rewards": [
             1.0,
@@ -502,18 +410,111 @@
         },
         {
           "check": "преобразование файлов",
-          "name": "нагрузка_12",
+          "name": "взаимодействие_частичный_валютный_платёж",
           "passed": true,
           "rewards": {
             "a": [
               1.0,
               0.964,
-              0.43066666666666653
+              -0.23599999999999996
             ],
             "b": [
               1.0,
               0.964,
-              0.43066666666666653
+              -0.23599999999999996
+            ]
+          }
+        },
+        {
+          "check": "повтор",
+          "name": "взаимодействие_замаскированный_дубль",
+          "passed": true
+        },
+        {
+          "check": "новые ID и порядок",
+          "name": "взаимодействие_замаскированный_дубль",
+          "passed": true,
+          "rewards": [
+            1.0,
+            0.962
+          ]
+        },
+        {
+          "check": "преобразование файлов",
+          "name": "взаимодействие_замаскированный_дубль",
+          "passed": true,
+          "rewards": {
+            "a": [
+              1.0,
+              0.962,
+              -0.5046666666666667
+            ],
+            "b": [
+              1.0,
+              0.962,
+              -0.5046666666666667
+            ]
+          }
+        },
+        {
+          "check": "повтор",
+          "name": "оба_взаимодействия_смесь",
+          "passed": true
+        },
+        {
+          "check": "новые ID и порядок",
+          "name": "оба_взаимодействия_смесь",
+          "passed": true,
+          "rewards": [
+            1.0,
+            0.966
+          ]
+        },
+        {
+          "check": "преобразование файлов",
+          "name": "оба_взаимодействия_смесь",
+          "passed": true,
+          "rewards": {
+            "a": [
+              1.0,
+              0.966,
+              -0.14511111111111116
+            ],
+            "b": [
+              1.0,
+              0.966,
+              -0.14511111111111116
+            ]
+          }
+        },
+        {
+          "check": "повтор",
+          "name": "нагрузка_12",
+          "passed": true
+        },
+        {
+          "check": "новые ID и порядок",
+          "name": "нагрузка_12",
+          "passed": true,
+          "rewards": [
+            1.0,
+            0.97
+          ]
+        },
+        {
+          "check": "преобразование файлов",
+          "name": "нагрузка_12",
+          "passed": true,
+          "rewards": {
+            "a": [
+              1.0,
+              0.97,
+              0.47
+            ],
+            "b": [
+              1.0,
+              0.97,
+              0.47
             ]
           }
         }
@@ -533,6 +534,7 @@
       }
     }
   },
+  "policy_sandbox": "sandbox-exec",
   "failure_analysis": {
     "train": {
       "random": {
@@ -544,39 +546,43 @@
         },
         "fn_in_interaction": 8,
         "fp_by_type": {
-          "period_cutoff": 1,
-          "fx_rate": 2,
+          "fx_rate": 5,
           "duplicate_invoice": 3,
           "payment_allocation": 2
         },
         "fp_by_distractor": {
-          "ordinary_record": 6,
-          "same_day_repeat": 1,
+          "real_issue_wrong_fields": 3,
           "recurring_amount": 1,
-          "next_period_doc": 1
+          "ordinary_record": 3,
+          "partial_open": 1,
+          "tz_boundary": 1,
+          "multi_invoice_payment": 1
         }
       },
       "reconciler": {
         "fn_by_type": {
-          "fx_rate": 3,
-          "payment_allocation": 3
+          "fx_rate": 2,
+          "payment_allocation": 2
         },
-        "fn_in_interaction": 5,
+        "fn_in_interaction": 3,
         "fp_by_type": {
-          "duplicate_invoice": 33,
+          "duplicate_invoice": 34,
           "period_cutoff": 25,
-          "fx_rate": 34,
+          "fx_rate": 36,
           "payment_allocation": 11
         },
         "fp_by_distractor": {
           "recurring_amount": 23,
           "same_day_repeat": 11,
           "tz_boundary": 22,
-          "unremitted_payment": 12,
-          "ordinary_record": 29,
+          "ordinary_record": 23,
+          "multi_invoice_payment": 4,
+          "unremitted_payment": 11,
+          "real_issue_wrong_fields": 4,
+          "boundary_fx_partial": 3,
+          "refund": 1,
           "partial_open": 2,
-          "split_payment": 3,
-          "real_issue_wrong_fields": 1
+          "split_payment": 2
         }
       },
       "flag_all": {
@@ -594,16 +600,17 @@
           "period_cutoff": 70
         },
         "fp_by_distractor": {
-          "same_day_repeat": 8,
-          "ordinary_record": 210,
-          "split_payment": 18,
-          "refund": 12,
-          "tz_boundary": 16,
-          "partial_open": 8,
-          "multi_invoice_payment": 12,
-          "real_issue_wrong_fields": 8,
-          "next_period_doc": 4,
-          "recurring_amount": 4
+          "ordinary_record": 224,
+          "tz_boundary": 4,
+          "recurring_amount": 20,
+          "partial_open": 4,
+          "boundary_fx_partial": 2,
+          "next_period_doc": 12,
+          "split_payment": 8,
+          "real_issue_wrong_fields": 10,
+          "refund": 4,
+          "multi_invoice_payment": 6,
+          "same_day_repeat": 6
         }
       },
       "oracle": {
@@ -624,51 +631,51 @@
         "fn_by_type": {
           "duplicate_invoice": 8,
           "fx_rate": 9,
-          "period_cutoff": 7,
-          "payment_allocation": 10
+          "payment_allocation": 10,
+          "period_cutoff": 7
         },
         "fn_in_interaction": 10,
         "fp_by_type": {
-          "duplicate_invoice": 4,
-          "period_cutoff": 3,
-          "payment_allocation": 1
+          "payment_allocation": 1,
+          "period_cutoff": 2,
+          "fx_rate": 2,
+          "duplicate_invoice": 1
         },
         "fp_by_distractor": {
-          "ordinary_record": 5,
-          "multi_invoice_payment": 1,
-          "tz_boundary": 1,
-          "partial_open": 1
+          "ordinary_record": 2,
+          "same_day_repeat": 1,
+          "recurring_amount": 1,
+          "tz_boundary": 2
         }
       },
       "reconciler": {
         "fn_by_type": {
-          "fx_rate": 4,
-          "payment_allocation": 2
+          "payment_allocation": 3,
+          "fx_rate": 1
         },
-        "fn_in_interaction": 5,
+        "fn_in_interaction": 3,
         "fp_by_type": {
-          "duplicate_invoice": 33,
-          "period_cutoff": 23,
-          "fx_rate": 22,
+          "duplicate_invoice": 34,
+          "period_cutoff": 26,
+          "fx_rate": 29,
           "payment_allocation": 11
         },
         "fp_by_distractor": {
-          "recurring_amount": 22,
-          "same_day_repeat": 11,
-          "tz_boundary": 24,
-          "multi_invoice_payment": 3,
+          "same_day_repeat": 12,
+          "recurring_amount": 23,
+          "tz_boundary": 23,
+          "ordinary_record": 26,
           "unremitted_payment": 12,
-          "ordinary_record": 15,
-          "refund": 1,
-          "split_payment": 1
+          "split_payment": 1,
+          "boundary_fx_partial": 3
         }
       },
       "flag_all": {
         "fn_by_type": {
           "duplicate_invoice": 8,
           "fx_rate": 9,
-          "period_cutoff": 7,
-          "payment_allocation": 10
+          "payment_allocation": 10,
+          "period_cutoff": 7
         },
         "fn_in_interaction": 10,
         "fp_by_type": {
@@ -678,15 +685,15 @@
           "period_cutoff": 70
         },
         "fp_by_distractor": {
-          "ordinary_record": 194,
-          "same_day_repeat": 16,
-          "partial_open": 16,
-          "refund": 8,
-          "recurring_amount": 24,
-          "multi_invoice_payment": 12,
-          "next_period_doc": 4,
-          "tz_boundary": 4,
-          "real_issue_wrong_fields": 22
+          "ordinary_record": 214,
+          "next_period_doc": 12,
+          "tz_boundary": 14,
+          "multi_invoice_payment": 20,
+          "same_day_repeat": 10,
+          "recurring_amount": 12,
+          "unremitted_payment": 4,
+          "split_payment": 12,
+          "partial_open": 2
         }
       },
       "oracle": {
@@ -704,16 +711,16 @@
     }
   },
   "resources": {
-    "max_episode_time_s": 0.0832,
-    "max_steps_used": 28,
-    "peak_rss_mb_orchestrator": 136.9,
-    "peak_rss_mb_env_process": 70.8,
+    "max_episode_time_s": 0.0934,
+    "max_steps_used": 31,
+    "peak_rss_mb_orchestrator": 190.6,
+    "peak_rss_mb_env_process": 79.1,
     "limits": {
       "time_per_episode_s": 60,
       "steps": 100,
       "ram_gb": 4
     }
   },
-  "elapsed_s": 62.4,
+  "elapsed_s": 80.1,
   "passed": true
 }

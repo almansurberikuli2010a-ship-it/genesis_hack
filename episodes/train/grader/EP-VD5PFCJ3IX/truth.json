@@ -1,0 +1,59 @@
+{
+  "episode_id": "EP-VD5PFCJ3IX",
+  "schema_version": "3.2",
+  "base_currency": "KZT",
+  "issues": [
+    {
+      "issue_id": "ISS-27B4Z6DS",
+      "type": "payment_allocation",
+      "affected_ids": [
+        "INV-U5GPP6I",
+        "PAY-OC24JZB"
+      ],
+      "expected_amount_minor": 334695817,
+      "currency": "KZT",
+      "tolerance_minor": 0,
+      "evidence_sets": [
+        [
+          "DOC-CNVPUR7S",
+          "L-CUR3JSNX"
+        ]
+      ],
+      "mutation_id": "M01"
+    },
+    {
+      "issue_id": "ISS-ZLF7VCN4",
+      "type": "duplicate_invoice",
+      "affected_ids": [
+        "INV-IAIQZB4",
+        "INV-ZK2CMDF"
+      ],
+      "expected_amount_minor": 251779159,
+      "currency": "KZT",
+      "tolerance_minor": 0,
+      "evidence_sets": [
+        [
+          "DOC-3CKJOHS7",
+          "DOC-ORMISZU7",
+          "L-GHLSLBLG"
+        ],
+        [
+          "DOC-3CKJOHS7",
+          "DOC-ORMISZU7",
+          "L-JED6FSMD"
+        ],
+        [
+          "DOC-3CKJOHS7",
+          "DOC-ORMISZU7",
+          "L-ITRV7JGB"
+        ],
+        [
+          "DOC-3CKJOHS7",
+          "DOC-ORMISZU7",
+          "L-3SOEMF66"
+        ]
+      ],
+      "mutation_id": "M02"
+    }
+  ]
+}

@@ -1,0 +1,99 @@
+{
+  "episode_id": "EP-N5EHY46ELS",
+  "schema_version": "3.2",
+  "base_currency": "GBP",
+  "issues": [
+    {
+      "issue_id": "ISS-3KX64HSL",
+      "type": "period_cutoff",
+      "affected_ids": [
+        "PAY-HW7YUOU"
+      ],
+      "expected_amount_minor": 891187,
+      "currency": "GBP",
+      "tolerance_minor": 0,
+      "evidence_sets": [
+        [
+          "DOC-ECORB42C",
+          "L-TEOZ3SSU"
+        ]
+      ],
+      "mutation_id": "M03"
+    },
+    {
+      "issue_id": "ISS-4JK6L3SA",
+      "type": "fx_rate",
+      "affected_ids": [
+        "INV-HGWTJJN"
+      ],
+      "expected_amount_minor": 10724,
+      "currency": "GBP",
+      "tolerance_minor": 0,
+      "evidence_sets": [
+        [
+          "DOC-KCIZ677P",
+          "FX-2026-09-22-KZT-GBP",
+          "L-T4A5EJEF"
+        ],
+        [
+          "DOC-KCIZ677P",
+          "FX-2026-09-22-KZT-GBP",
+          "L-IIEXQYVG"
+        ]
+      ],
+      "mutation_id": "M02"
+    },
+    {
+      "issue_id": "ISS-JIALQ5DA",
+      "type": "duplicate_invoice",
+      "affected_ids": [
+        "INV-RDH5OY7",
+        "INV-SKOUIAP"
+      ],
+      "expected_amount_minor": 585838,
+      "currency": "GBP",
+      "tolerance_minor": 0,
+      "evidence_sets": [
+        [
+          "DOC-GD7PDWX6",
+          "DOC-IHCMB7ZJ",
+          "L-6EV4NV3S"
+        ],
+        [
+          "DOC-GD7PDWX6",
+          "DOC-IHCMB7ZJ",
+          "L-BNN6ZYDS"
+        ],
+        [
+          "DOC-GD7PDWX6",
+          "DOC-IHCMB7ZJ",
+          "L-X6E4HGS3"
+        ],
+        [
+          "DOC-GD7PDWX6",
+          "DOC-IHCMB7ZJ",
+          "L-AYDRRSOR"
+        ]
+      ],
+      "mutation_id": "M01"
+    },
+    {
+      "issue_id": "ISS-ZCVLUM52",
+      "type": "payment_allocation",
+      "affected_ids": [
+        "INV-AWIKPV5",
+        "PAY-7BAKXJG"
+      ],
+      "expected_amount_minor": 456807,
+      "currency": "GBP",
+      "tolerance_minor": 0,
+      "evidence_sets": [
+        [
+          "DOC-SPZNH5UW",
+          "L-XFIMR4EJ"
+        ]
+      ],
+      "mutation_id": "M04"
+    }
+  ]
+}

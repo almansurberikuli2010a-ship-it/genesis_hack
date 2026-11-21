@@ -1,7 +1,9 @@
 """Изоляция политики в run_policy и канал оценщика: атаки «пробелов 1–4» прошлого аудита
 (стек оркестратора, клиент с токеном в памяти, подмена отчёта, запись в код оценщика), чтение и
-запись файлов эталона на диске, Oracle, токен вне окружения, команды только с токеном, падающие
-действия. Политики-атаки описаны на уровне модуля: в процесс политики они передаются по имени."""
+запись файлов эталона на диске, каталог эпизода через judge_adapter, /proc чужих процессов (Linux),
+Oracle, токен вне окружения, команды только с токеном, падающие действия. Политики-атаки описаны на
+уровне модуля: в процесс политики они передаются по имени. Тесты песочницы выполняются на macOS
+(sandbox-exec) и на Linux с Landlock; без песочницы — пропускаются."""
 import gc
 import hashlib
 import io
@@ -17,7 +19,8 @@ from pathlib import Path
 from unittest import mock
 
 import auditgym
-from auditgym import server
+import judge_adapter as J
+from auditgym import adapters, landlock, server
 from auditgym.adapters import BASELINE_ADAPTERS, POLICY_PROCESS_ENV, policy_sandbox, run_policy
 from auditgym.env import AuditEnv
 from auditgym.export import write_episode
@@ -28,8 +31,12 @@ from auditgym.server import RemoteError, SubprocessEnv, handle
 from tests.helpers import ERRS
 
 ROOT = Path(auditgym.__file__).resolve().parent.parent
-SANDBOX = policy_sandbox() == "sandbox-exec"
-NO_SANDBOX = "полноценная песочница процесса политики есть только на macOS (sandbox-exec)"
+SANDBOX = policy_sandbox() in ("sandbox-exec", "landlock")
+NO_SANDBOX = "песочницы процесса политики нет: нужен sandbox-exec (macOS) или Landlock (Linux ≥ 5.13)"
+LANDLOCK = policy_sandbox() == "landlock"
+NO_LANDLOCK = "Landlock на этой системе недоступен"
+# сигналы чужим процессам: sandbox-exec запрещает всегда, Landlock — с ABI 6
+SIGNALS_SCOPED = policy_sandbox() == "sandbox-exec" or landlock.abi()[0] >= 6
 
 
 def empty(eid):
@@ -136,6 +143,58 @@ class Probe(Cheat):
         res["cwd_private"] = Path(os.getcwd()).name.startswith("auditgym-policy-")
         res["auditgym_env"] = sorted(k for k in os.environ if k.startswith("AUDITGYM"))
         return {"type": "probe", "results": res}
+
+
+class ProcProbe(Cheat):
+    """Linux: /proc и данные других процессов того же пользователя, листинг проекта, запуск shell."""
+
+    def __init__(self, truth_path):
+        self.truth_path = truth_path
+
+    def act(self, obs):
+        if obs["step"]:
+            return empty(self.eid)
+        res = {}
+
+        def attempt(name, fn):
+            try:
+                fn()
+                res[name] = True
+            except Exception:
+                res[name] = False
+        ppid = os.getppid()
+        attempt("parent_environ", lambda: Path("/proc/%d/environ" % ppid).read_bytes())
+        attempt("parent_cmdline", lambda: Path("/proc/%d/cmdline" % ppid).read_bytes())
+        attempt("parent_fd", lambda: os.listdir("/proc/%d/fd" % ppid))
+        attempt("list_proc", lambda: os.listdir("/proc"))
+        attempt("list_project_root", lambda: os.listdir(ROOT))
+        attempt("read_project_data", lambda: (ROOT / "configs" / "train.json").read_bytes())
+        if self.truth_path:
+            attempt("read_open_episode_truth", lambda: Path(self.truth_path).read_bytes())
+        attempt("exec_shell", lambda: subprocess.run(["/bin/sh", "-c", "true"], check=True, capture_output=True))
+        # нужное интерпретатору и коду политики остаётся доступным
+        attempt("ok_own_proc", lambda: Path("/proc/self/status").read_text())
+        attempt("ok_read_code", lambda: (ROOT / "auditgym" / "matcher.py").read_bytes())
+        attempt("ok_devnull", lambda: open(os.devnull, "w").close())
+        attempt("ok_import", lambda: __import__("decimal") and __import__("auditgym.audit_rules"))
+        return {"type": "probe", "results": res}
+
+
+class ReadEpisodeDir:
+    """Политика протокола жюри: читает truth.json каталога эпизода по известному ей пути."""
+
+    def __init__(self, d):
+        self.d = d
+
+    def begin(self, obs):
+        self.eid = obs["manifest"]["episode_id"]
+
+    def act(self, obs):
+        try:
+            truth = json.loads((Path(self.d) / "truth.json").read_text(encoding="utf-8"))
+        except OSError:
+            truth = {"issues": []}
+        return {"name": "submit", "args": {"findings": from_truth(self.eid, truth)["findings"]}}
 
 
 class SubOracle(Oracle):
@@ -251,9 +310,91 @@ class GraderFilesOnDisk(unittest.TestCase):
             self.assertFalse((Path(d) / "grader" / ep.episode_id / "new.json").exists())
             denied = {k: v for k, v in res.items() if k not in ("write_cwd", "write_tmpdir", "cwd_is_tmpdir", "cwd_private",
                                                                 "auditgym_env")}
+            if not SIGNALS_SCOPED:
+                denied.pop("signal_parent")
             self.assertEqual({k for k, v in denied.items() if v}, set(), res)
             self.assertEqual((reward(r), r["grader"]["tp"]), (-1.0, 0))
             self.assertFalse((Path(d) / "public" / "x.txt").exists())
+
+    @unittest.skipUnless(SANDBOX, NO_SANDBOX)
+    def test_judge_adapter_episode_dir_closed_to_policy(self):
+        """run_on_episode: политика знает путь к каталогу эпизода и читает truth.json. В доверенном
+        запуске атака настоящая (1.0), в процессе политики — каталог закрыт (−1)."""
+        with tempfile.TemporaryDirectory() as d:
+            J.generate_episode(22, {"errors": {"duplicate_invoice": 1, "fx_rate": 1}}, d)
+            self.assertEqual(J.run_on_episode(ReadEpisodeDir(d), d, isolated=False)["score"]["return"], 1.0)
+            r = J.run_on_episode(ReadEpisodeDir(d), d, mode="closed")
+            self.assertEqual((r["score"]["return"], r["score"]["tp"]), (-1.0, 0))
+            self.assertIn(r["policy_sandbox"].split("-abi")[0], ("sandbox-exec", "landlock"))
+
+
+@unittest.skipUnless(LANDLOCK, NO_LANDLOCK)
+class LinuxLandlock(unittest.TestCase):
+    def test_other_processes_project_data_and_shell_closed(self):
+        truth = next((ROOT / "episodes").glob("*/grader/*/truth.json"), None)
+        r = run_policy(ProcProbe(str(truth) if truth else None), seed=5, config=ERRS)
+        self.assertTrue(r["policy_sandbox"].startswith("landlock-abi"), r["policy_sandbox"])
+        res = r["trajectory"][1]["action"]["results"]
+        self.assertEqual({k for k, v in res.items() if k.startswith("ok_") and not v}, set(), res)
+        self.assertEqual({k for k, v in res.items() if not k.startswith("ok_") and v}, set(), res)
+        self.assertEqual(reward(r), -1.0)
+
+    def test_without_landlock_policy_runs_and_log_says_so(self):
+        adapters._warned.clear()
+        with mock.patch.object(adapters, "landlock_rules", side_effect=OSError("нет")), \
+                self.assertLogs("auditgym.policy", "WARNING") as logs:
+            r = run_policy(lambda obs: empty(obs["episode_id"]), seed=5, config=ERRS)
+        self.assertEqual((r["policy_sandbox"], reward(r)), ("none: OSError: нет", -1.0))
+        self.assertIn("без песочницы", logs.output[0])
+        adapters._warned.clear()
+
+    @unittest.skipIf(os.geteuid() == 0, "root читает /proc любого процесса")
+    def test_env_process_not_dumpable(self):
+        with SubprocessEnv(mode="eval") as env:
+            env.reset(5, ERRS)
+            with self.assertRaises(PermissionError):
+                Path("/proc/%d/environ" % env._p.pid).read_bytes()
+            self.assertEqual(env.step({"type": "calculator", "expression": "1+1"})[0]["result"], {"value": "2"})
+
+
+class LandlockPlan(unittest.TestCase):
+    """План белого списка (считается на любой системе, применяется на Linux)."""
+
+    def test_plan_keeps_episode_dirs_and_grader_files_out(self):
+        with tempfile.TemporaryDirectory() as d:
+            pkg = Path(d) / "pkg"
+            (pkg / "data" / "EP-1").mkdir(parents=True)
+            (pkg / "__init__.py").write_text("")
+            (pkg / "mod.py").write_text("")
+            (pkg / "data" / "EP-1" / "truth.json").write_text("{}")
+            (Path(d) / "notes.txt").write_text("")
+            ep = Path(d) / "episode"
+            ep.mkdir()
+            plan = adapters.landlock_rules(str(Path(d) / "private"), [d], forbidden=[str(ep)])
+            granted = [p for p, _ in plan["rules"]]
+            real = os.path.realpath(d)
+            for closed in (real, os.path.join(real, "notes.txt"), str(ep.resolve()), os.path.join(real, "pkg", "data", "EP-1"),
+                           str((ROOT / "episodes").resolve())):
+                self.assertFalse(any(adapters._within(closed, g) for g in granted), closed)
+            for opened in (os.path.join(real, "pkg", "mod.py"), str((ROOT / "auditgym" / "matcher.py").resolve())):
+                self.assertTrue(any(adapters._within(opened, g) for g in granted), opened)
+            self.assertIn(d, plan["prefill"])
+
+
+class SandboxFallback(unittest.TestCase):
+    def test_policy_process_without_landlock_is_not_restricted(self):
+        """Landlock недоступен (старое ядро, seccomp): процесс политики не ограничен и сообщает почему."""
+        script = ("import json, sys\n"
+                  "from auditgym import adapters, landlock\n"
+                  "landlock.abi = lambda: (0, 'нет Landlock')\n"
+                  "status = adapters._enter_sandbox({'rules': [], 'prefill': []})\n"
+                  "print(json.dumps([status, len(open(sys.argv[1], 'rb').read()) > 0]))\n")
+        p = subprocess.run([sys.executable, "-c", script, str(ROOT / "README.md")], capture_output=True, text=True,
+                           timeout=60, cwd=str(ROOT))
+        self.assertEqual(p.returncode, 0, p.stderr[-2000:])
+        status, readable = json.loads(p.stdout.strip().splitlines()[-1])
+        self.assertTrue(status.startswith("none: "), status)
+        self.assertTrue(readable)
 
 
 class OraclePrivilege(unittest.TestCase):

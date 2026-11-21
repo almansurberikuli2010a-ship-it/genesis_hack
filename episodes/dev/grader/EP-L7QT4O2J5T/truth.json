@@ -1,0 +1,30 @@
+{
+  "episode_id": "EP-L7QT4O2J5T",
+  "schema_version": "3.2",
+  "base_currency": "GBP",
+  "issues": [
+    {
+      "issue_id": "ISS-3AAEBRVS",
+      "type": "fx_rate",
+      "affected_ids": [
+        "INV-MFRQWIZ"
+      ],
+      "expected_amount_minor": 283,
+      "currency": "GBP",
+      "tolerance_minor": 0,
+      "evidence_sets": [
+        [
+          "DOC-BJJJUC7I",
+          "FX-2026-10-25-CHF-GBP",
+          "L-LUGE2CSV"
+        ],
+        [
+          "DOC-BJJJUC7I",
+          "FX-2026-10-25-CHF-GBP",
+          "L-V52B5B3B"
+        ]
+      ],
+      "mutation_id": "M01"
+    }
+  ]
+}

@@ -2,151 +2,151 @@
   {
     "name": "чистая_компания",
     "seed": 2001,
-    "episode_id": "EP-MWZQC6AITU",
-    "digest": "dd273e7d457d231df4ccd7c92e35a85cafa7d38a709049eec898a524f88c4c3d",
+    "episode_id": "EP-FNUSUB77IA",
+    "digest": "3f7d03f9a24f367318cf7b714211ea3c8d5462a20ee5e1e00eacda206ab7cc9c",
     "n_issues": 0,
     "counts": {
-      "ledger": 569,
-      "journal_entries": 273,
-      "invoices": 93,
-      "payments": 58,
-      "fx": 132,
-      "documents": 151
+      "ledger": 481,
+      "journal_entries": 229,
+      "invoices": 86,
+      "payments": 50,
+      "fx": 86,
+      "documents": 136
     }
   },
   {
     "name": "чистая_часовые_пояса",
     "seed": 2002,
-    "episode_id": "EP-ZT6WI77KFR",
-    "digest": "a98793ecc08f30ada8300d5255f5a0be4e568cfc6bbde620ba2dfb2f1411732c",
+    "episode_id": "EP-SDMN7TYPRY",
+    "digest": "1f387b30d4c0e14f1580a555bcea6552471e92f400c08b09d63c79b96fd1c641",
     "n_issues": 0,
     "counts": {
-      "ledger": 498,
-      "journal_entries": 234,
-      "invoices": 79,
-      "payments": 45,
-      "fx": 88,
-      "documents": 124
+      "ledger": 578,
+      "journal_entries": 270,
+      "invoices": 92,
+      "payments": 54,
+      "fx": 132,
+      "documents": 146
     }
   },
   {
     "name": "один_дубль",
     "seed": 2003,
-    "episode_id": "EP-SKMI2BILBN",
-    "digest": "fab117988e732bc4ea08d8fbc35d087cf0d3b7ad89c8dc1fffe37ba62e66451b",
+    "episode_id": "EP-3URHAT7QTV",
+    "digest": "c4c80bb0066593def90c06b5624ec307fa9468c9c6b438c8a3da3992ed4480ed",
     "n_issues": 1,
     "counts": {
-      "ledger": 495,
-      "journal_entries": 237,
-      "invoices": 80,
-      "payments": 41,
-      "fx": 82,
-      "documents": 121
+      "ledger": 572,
+      "journal_entries": 275,
+      "invoices": 99,
+      "payments": 66,
+      "fx": 132,
+      "documents": 165
     }
   },
   {
     "name": "один_курс",
     "seed": 2004,
-    "episode_id": "EP-KXDNZACLYA",
-    "digest": "1a23a293564a2e020399da51f89196ba01aa6d5cf552c5f38fcda419775ad139",
+    "episode_id": "EP-L7QT4O2J5T",
+    "digest": "c9bf1180bd66f02aae22eb9ff33691e848884c6a7c74aad9214fa00e4dc5e868",
     "n_issues": 1,
     "counts": {
-      "ledger": 555,
-      "journal_entries": 268,
-      "invoices": 95,
-      "payments": 63,
+      "ledger": 495,
+      "journal_entries": 233,
+      "invoices": 76,
+      "payments": 47,
       "fx": 132,
-      "documents": 158
+      "documents": 123
     }
   },
   {
     "name": "распределение_и_период",
     "seed": 2005,
-    "episode_id": "EP-RYY2OQT5IE",
-    "digest": "68f9569502fc48457f706ed335388b5be99b209025b7fbe1b6b04ce5e7927fb5",
+    "episode_id": "EP-77RCZLXVJE",
+    "digest": "8c543955097382aaa60203ea16bec46d2a36951fe32d8f753b2aa18b5741f4c3",
     "n_issues": 4,
     "counts": {
-      "ledger": 474,
-      "journal_entries": 229,
-      "invoices": 86,
+      "ledger": 491,
+      "journal_entries": 236,
+      "invoices": 82,
       "payments": 48,
-      "fx": 123,
-      "documents": 134
-    }
-  },
-  {
-    "name": "четыре_типа",
-    "seed": 2006,
-    "episode_id": "EP-C5QQ3MHQ5B",
-    "digest": "f429317fc312d5e089b76a0cf973a91bc9ccbf3959e447d24622981aecab78c9",
-    "n_issues": 4,
-    "counts": {
-      "ledger": 490,
-      "journal_entries": 234,
-      "invoices": 87,
-      "payments": 50,
-      "fx": 132,
-      "documents": 137
-    }
-  },
-  {
-    "name": "взаимодействие_частичный_валютный_платёж",
-    "seed": 2007,
-    "episode_id": "EP-SZADQBKZ3Q",
-    "digest": "b5c524bff164b7bd6d8c9e4747edb9d43bfa09542a6d474c3567eed6e519aaf7",
-    "n_issues": 3,
-    "counts": {
-      "ledger": 519,
-      "journal_entries": 251,
-      "invoices": 80,
-      "payments": 50,
       "fx": 88,
       "documents": 130
     }
   },
   {
-    "name": "взаимодействие_замаскированный_дубль",
-    "seed": 2008,
-    "episode_id": "EP-TQDX6QM75K",
-    "digest": "db04751268abc04a549d39b3420fa0008d98619c181af9c754607d947c862256",
+    "name": "четыре_типа",
+    "seed": 2006,
+    "episode_id": "EP-N5EHY46ELS",
+    "digest": "b661f004acf6e10def67a400844b98ac59cdccd807fc760a937c4b14a1c14f81",
+    "n_issues": 4,
+    "counts": {
+      "ledger": 552,
+      "journal_entries": 263,
+      "invoices": 91,
+      "payments": 60,
+      "fx": 129,
+      "documents": 151
+    }
+  },
+  {
+    "name": "взаимодействие_частичный_валютный_платёж",
+    "seed": 2007,
+    "episode_id": "EP-ASZNKLMHDV",
+    "digest": "c7e6099b342448697c36778df396867104cc2f37cd0f06513eebdb8b02475aaa",
     "n_issues": 3,
     "counts": {
-      "ledger": 512,
-      "journal_entries": 239,
-      "invoices": 79,
-      "payments": 52,
-      "fx": 88,
-      "documents": 131
+      "ledger": 528,
+      "journal_entries": 255,
+      "invoices": 100,
+      "payments": 56,
+      "fx": 132,
+      "documents": 156
+    }
+  },
+  {
+    "name": "взаимодействие_замаскированный_дубль",
+    "seed": 2008,
+    "episode_id": "EP-SKE6UNY6XO",
+    "digest": "771678f45d9c3c256e7c28764278be0c419c032cc52efcebf6891399ea1c8617",
+    "n_issues": 3,
+    "counts": {
+      "ledger": 599,
+      "journal_entries": 280,
+      "invoices": 94,
+      "payments": 60,
+      "fx": 129,
+      "documents": 154
     }
   },
   {
     "name": "оба_взаимодействия_смесь",
     "seed": 2009,
-    "episode_id": "EP-4Y4JPHYXKA",
-    "digest": "f7c6ff1e98827ff441de2c73db7863a4a9f5d663da8ce14e37acb0a16f3d4846",
+    "episode_id": "EP-H3GKCDY7XZ",
+    "digest": "11f2f86a6725b4fe033ff725174872b0aa23f54734aa90676219be56edadb718",
     "n_issues": 6,
     "counts": {
-      "ledger": 491,
-      "journal_entries": 233,
-      "invoices": 77,
-      "payments": 45,
+      "ledger": 510,
+      "journal_entries": 245,
+      "invoices": 78,
+      "payments": 42,
       "fx": 132,
-      "documents": 122
+      "documents": 120
     }
   },
   {
     "name": "нагрузка_12",
     "seed": 2010,
-    "episode_id": "EP-RKCIGG5ZGQ",
-    "digest": "c74e65da53f87f5d37835d2f1df527c943ae7e085de71d6d1d249bcbab059053",
+    "episode_id": "EP-4F6XDFAAF6",
+    "digest": "d0d6b8295ed0b94197b87ebd0db0f95185ed351a04c1da85393924cca18f9b4e",
     "n_issues": 12,
     "counts": {
-      "ledger": 552,
-      "journal_entries": 258,
-      "invoices": 100,
-      "payments": 62,
-      "fx": 88,
-      "documents": 162
+      "ledger": 453,
+      "journal_entries": 215,
+      "invoices": 73,
+      "payments": 48,
+      "fx": 86,
+      "documents": 121
     }
   }
 ]

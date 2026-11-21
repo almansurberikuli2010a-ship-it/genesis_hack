@@ -28,7 +28,7 @@ from .generator import generate
 from .matcher import match_context, score
 from .policy_text import ACTIONS_HELP, TASK_TEXT
 
-ENV_VERSION = "3.2.0"
+ENV_VERSION = "3.3.0"
 MAX_STEPS = 100
 PAGE_MAX = 50
 MAX_ACTION_CHARS = 1_000_000  # длина действия, переданного JSON-строкой

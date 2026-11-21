@@ -1,0 +1,69 @@
+{
+  "episode_id": "EP-FST4IRQ4MD",
+  "schema_version": "3.2",
+  "base_currency": "EUR",
+  "issues": [
+    {
+      "issue_id": "ISS-DSJYXY5J",
+      "type": "fx_rate",
+      "affected_ids": [
+        "PAY-NWLGJV6"
+      ],
+      "expected_amount_minor": 10288,
+      "currency": "EUR",
+      "tolerance_minor": 0,
+      "evidence_sets": [
+        [
+          "DOC-JV5QD4GA",
+          "FX-2026-01-12-CHF-EUR",
+          "L-HIJBKJEO"
+        ]
+      ],
+      "mutation_id": "M01"
+    },
+    {
+      "issue_id": "ISS-FRBCGREP",
+      "type": "period_cutoff",
+      "affected_ids": [
+        "INV-KZ5C65R"
+      ],
+      "expected_amount_minor": 964079,
+      "currency": "EUR",
+      "tolerance_minor": 0,
+      "evidence_sets": [
+        [
+          "DOC-SWF6RHMV",
+          "L-QVIMZXPQ"
+        ],
+        [
+          "DOC-SWF6RHMV",
+          "L-OZLM3XZ5"
+        ]
+      ],
+      "mutation_id": "M02"
+    },
+    {
+      "issue_id": "ISS-OOAUTVYQ",
+      "type": "fx_rate",
+      "affected_ids": [
+        "INV-WXHUV7V"
+      ],
+      "expected_amount_minor": 2957,
+      "currency": "EUR",
+      "tolerance_minor": 0,
+      "evidence_sets": [
+        [
+          "DOC-RTF7D6LO",
+          "FX-2026-01-25-GBP-EUR",
+          "L-Z75DQ4XU"
+        ],
+        [
+          "DOC-RTF7D6LO",
+          "FX-2026-01-25-GBP-EUR",
+          "L-64YQD4IS"
+        ]
+      ],
+      "mutation_id": "M03"
+    }
+  ]
+}

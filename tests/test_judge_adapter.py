@@ -622,7 +622,27 @@ class OpenExamplesM(unittest.TestCase):
 
 # ================================================================== базовые политики через адаптер
 
+class _HangingPolicy:
+    """Политика протокола жюри, которая «думает» дольше лимита времени эпизода."""
+
+    def begin(self, obs):
+        pass
+
+    def act(self, obs):
+        time.sleep(30)
+        return {"name": "submit", "args": {"findings": {"episode_id": "x", "findings": []}}}
+
+
 class BaselinesThroughAdapter(unittest.TestCase):
+    def test_hanging_policy_stopped_at_time_limit(self):
+        for isolated in (True, False):
+            t0 = time.monotonic()
+            r = J.run_on_episode(_HangingPolicy(), str(E), time_limit_s=2.0, isolated=isolated)
+            self.assertLess(time.monotonic() - t0, 8.0, isolated)
+            self.assertTrue(r["truncated"], isolated)
+            self.assertEqual(r["env_result"]["end_reason"], "time_limit", isolated)
+            self.assertEqual(r["score"]["return"], -1.0, isolated)
+
     def test_oracle_and_flag_all(self):
         for d in (C, E):
             for k in (0, 4):

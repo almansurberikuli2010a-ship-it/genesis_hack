@@ -1,0 +1,43 @@
+{
+  "schema_version": "3.2",
+  "generator_version": "3.3.0",
+  "config_version": "3.3",
+  "episode_id": "EP-VHBGLJTJZX",
+  "company_name": "ТОО «Селар Снаб»",
+  "base_currency": "EUR",
+  "currency_exponents": {
+    "EUR": 2,
+    "KWD": 3,
+    "USD": 2
+  },
+  "period_start": "2026-01-01T00:00:00-03:00",
+  "period_end": "2026-02-01T00:00:00-03:00",
+  "period_end_exclusive": true,
+  "timezone": "-03:00",
+  "counts": {
+    "ledger": 510,
+    "journal_entries": 240,
+    "invoices": 82,
+    "payments": 51,
+    "fx": 88,
+    "documents": 133
+  },
+  "rounding": {
+    "mode": "ROUND_HALF_EVEN",
+    "unit": "минимальная единица базовой валюты, по каждой строке книги"
+  },
+  "money_format": "целые минимальные единицы; основные единицы = значение / 10**currency_exponents[currency]",
+  "fx_format": "десятичная строка: 1 единица source_currency = rate единиц target_currency",
+  "fx_id_format": {
+    "template": "FX-{date}-{source_currency}-{target_currency}",
+    "fields": [
+      "date",
+      "source_currency",
+      "target_currency"
+    ],
+    "rule": "в fx.csv столбца fx_id нет: ID строки курса собирается по шаблону из её date, source_currency и target_currency; этот ID используют доказательства, get_record и list_records"
+  },
+  "timestamp_format": "ISO-8601 со смещением UTC",
+  "csv_null_token": "null",
+  "fictional": "все компании, лица, счета и суммы вымышлены"
+}

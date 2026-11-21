@@ -12,13 +12,17 @@
     счёте);
   * ``n_customers`` и ``background_entries`` выполняются точно;
   * ``n_invoices`` — число ОБЫЧНЫХ счетов до отвлекающих случаев и ошибок; оно уменьшается,
-    если иначе документов было бы больше MAX_DOCUMENTS (фактическое число — в
+    чтобы эпизод остался около предлагаемого ТЗ размера TARGET_DOCUMENTS = 200 документов
+    (отвлекающие случаи и ошибки при этом выполняются точно и могут увести эпизод выше 200),
+    и в любом случае — чтобы документов было не больше MAX_DOCUMENTS (фактическое число — в
     provenance.actual.regular_invoices);
   * ``foreign_share`` — вероятность для каждого клиента вести счета в иностранной валюте; если
     заказаны fx_rate или partial_fx_boundary, а иностранного клиента не выпало, первый клиент
     становится иностранным (фактическая доля — в provenance.actual);
-  * документов не больше MAX_DOCUMENTS. Конфиг, которому даже без обычных счетов может
-    понадобиться больше (см. ``document_bound``), отвергается ConfigError;
+  * документов не больше MAX_DOCUMENTS = 400. Конфиг, которому даже без обычных счетов может
+    понадобиться больше (см. ``document_bound``), отвергается ConfigError; при нынешних ценах
+    случаев (DISTRACTOR_DOCS, ISSUE_DOCS) граница самого тяжёлого допустимого конфига — ровно 400,
+    поэтому принимается любой конфиг в опубликованных границах;
   * ``variants`` задаёт вариант каждой НЕЗАВИСИМОЙ ошибки типа (``errors``; сценарии
     взаимодействия свои варианты не меняют), например
     ``{"errors": {"payment_allocation": 1}, "variants": {"payment_allocation": "partial"}}``:
@@ -36,9 +40,9 @@ from __future__ import annotations
 import copy
 import json
 
-GENERATOR_VERSION = "3.2.0"
+GENERATOR_VERSION = "3.3.0"
 SCHEMA_VERSION = "3.2"
-CONFIG_VERSION = "3.2"
+CONFIG_VERSION = "3.3"
 
 ERROR_TYPES = ("duplicate_invoice", "payment_allocation", "fx_rate", "period_cutoff")
 INTERACTIONS = ("partial_fx_boundary", "masked_duplicate")
@@ -53,6 +57,8 @@ DISTRACTORS = (
     "next_period_doc",        # документ следующего периода, правильно НЕ проведён
     "same_day_repeat",        # два одинаковых заказа в один день с разными PO
     "prior_period_doc",       # счёт прошлого периода, правильно НЕ проведён
+    "boundary_fx_partial",    # частичный валютный платёж в последний день периода, у смены даты по UTC;
+                              # проведён верно (двойник сценария partial_fx_boundary без ошибок)
 )
 # Варианты независимых ошибок (ключ конфига "variants"); "random" — случайный выбор генератора.
 VARIANTS = {
@@ -62,7 +68,8 @@ VARIANTS = {
 }
 RANDOM_VARIANT = "random"
 MAX_ISSUES = 12
-MAX_DOCUMENTS = 200
+MAX_DOCUMENTS = 400              # жёсткий предел документов эпизода
+TARGET_DOCUMENTS = 200           # предлагаемый ТЗ размер: под него подбирается число обычных счетов
 MAX_ATTEMPTS = 12
 
 # Наибольшее число документов, которое может добавить один случай сверх обычных счетов (обычный
@@ -79,6 +86,7 @@ DISTRACTOR_DOCS = {
     "next_period_doc": 2,        # счёт следующего периода или счёт + оплата после конца
     "same_day_repeat": 4,        # 2 счёта + их оплаты
     "prior_period_doc": 1,       # счёт прошлого периода
+    "boundary_fx_partial": 2,    # свой счёт + частичный платёж
 }
 ISSUE_DOCS = {
     "duplicate_invoice": 2,      # копия (+ счёт-цель, если подходящего нет)
@@ -109,6 +117,7 @@ DEFAULT_CONFIG = {
         "next_period_doc": 2,
         "same_day_repeat": 1,
         "prior_period_doc": 1,
+        "boundary_fx_partial": 1,
     },
     "variants": {t: RANDOM_VARIANT for t in VARIANTS},
     "id_salt": "default",
@@ -125,7 +134,8 @@ PRESETS = {
     "clean_hard": {"errors": dict(_NO_ERRORS), "interactions": dict(_NO_INTER), "foreign_share": 0.6,
                    "distractors": {"split_payment": 3, "multi_invoice_payment": 3, "partial_open": 3, "refund": 2,
                                    "recurring_amount": 2, "tz_boundary": 4, "unremitted_payment": 2,
-                                   "next_period_doc": 3, "same_day_repeat": 2, "prior_period_doc": 2}},
+                                   "next_period_doc": 3, "same_day_repeat": 2, "prior_period_doc": 2,
+                                   "boundary_fx_partial": 2}},
     # оба сценария взаимодействующих ошибок (4 ошибки) + одна независимая
     "interacting": {"errors": dict(_NO_ERRORS, fx_rate=1), "interactions": {"partial_fx_boundary": 1, "masked_duplicate": 1}},
     "interacting_partial_fx_boundary": {"errors": dict(_NO_ERRORS), "interactions": {"partial_fx_boundary": 1, "masked_duplicate": 0}},

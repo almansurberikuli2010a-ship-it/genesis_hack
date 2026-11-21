@@ -236,6 +236,11 @@ class SubprocessEnv:
 if __name__ == "__main__":
     import argparse
 
+    from .landlock import set_non_dumpable
+
+    # Linux: /proc/<pid>/{environ,fd,mem} процесса с эталоном и токеном закрыты для других процессов того
+    # же пользователя (в том числе для политики без песочницы), ptrace к нему запрещён
+    set_non_dumpable()
     ap = argparse.ArgumentParser(description="Среда и оценщик AuditGym в отдельном процессе (JSON lines)")
     ap.add_argument("--mode", default="eval", choices=["train", "eval"])
     ap.add_argument("--time-limit", type=float, default=60.0)

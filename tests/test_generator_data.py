@@ -8,12 +8,14 @@ from decimal import Decimal
 from pathlib import Path
 
 from auditgym.audit_rules import book_invariants, rule_audit
-from auditgym.config import DISTRACTORS, ERROR_TYPES, INTERACTIONS, ConfigError
+from auditgym.config import DISTRACTORS, ERROR_TYPES, GENERATOR_VERSION, INTERACTIONS, MAX_DOCUMENTS, ConfigError, normalize_config, story_part
 from auditgym.datachecks import check_episode, check_records
 from auditgym.export import load_episode_files, load_public_dir, write_episode
 from auditgym.generator import generate
-from auditgym.money import convert_minor, in_period, local_date
+from auditgym.money import convert_minor, in_period, local_date, parse_ts, tz_from_offset
 from auditgym.provenance_tools import reconstruct_pre_injection, same_books, unattributed_changes
+from auditgym.story import StoryBuilder
+from auditgym.util import SLOW_KDF, canonical_json, slow_h
 
 
 class ErrorTypes(unittest.TestCase):
@@ -141,7 +143,7 @@ class Robustness(unittest.TestCase):
                 if not sum(cfg["errors"].values()):
                     cfg["interactions"] = {t: 0 for t in INTERACTIONS}
             ep = generate(70000 + i, cfg)
-            self.assertLessEqual(ep.public["manifest"]["counts"]["documents"], 200)
+            self.assertLessEqual(ep.public["manifest"]["counts"]["documents"], MAX_DOCUMENTS)
             self.assertEqual(check_episode(ep), [], cfg)
 
     def test_all_fx_errors_without_foreign_customers(self):
@@ -186,6 +188,80 @@ class Transformations(unittest.TestCase):
         a = generate(5, {"preset": "four_types", "errors": {"fx_rate": 2}})
         b = generate(5, {"errors": {"duplicate_invoice": 1, "payment_allocation": 1, "fx_rate": 2, "period_cutoff": 1}})
         self.assertEqual(a.digest(), b.digest())
+
+
+def _boundary_like(ep):
+    """Платежи, похожие на сценарий partial_fx_boundary по открытым документам (без книги):
+    частичный валютный платёж в последний локальный день периода, у смены даты по UTC."""
+    m = ep.public["manifest"]
+    tot = {i["invoice_id"]: i["total_minor"] for i in ep.public["invoices"]}
+    last = local_date(m["period_end"], m["timezone"]).toordinal() - 1
+    out = set()
+    for p in ep.public["payments"]:
+        refs = p["invoice_refs"]
+        if p["currency"] == m["base_currency"] or not refs or len(refs) != 1:
+            continue
+        ts = parse_ts(p["timestamp"])
+        if 0 < p["amount_minor"] < tot[refs[0]["invoice_id"]] and local_date(ts, m["timezone"]).toordinal() == last:
+            out.add(p["payment_id"])
+    return out
+
+
+class SurfaceFeatures(unittest.TestCase):
+    """Документы ошибок не выдаются поверхностными признаками: время, секунды и смещение платежа
+    сценария partial_fx_boundary — из общего распределения, у него есть корректный двойник."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.eps = [generate(seed, {"preset": "interacting_partial_fx_boundary"}) for seed in range(24)]
+
+    def test_boundary_payments_not_marked_by_seconds_or_offset(self):
+        scen = []
+        for ep in self.eps:
+            pids = {m["document"]["id"] for m in ep.provenance["mutations"] if m.get("scenario") == "partial_fx_boundary"}
+            scen += [p["timestamp"] for p in ep.public["payments"] if p["payment_id"] in pids]
+        self.assertEqual(len(scen), len(self.eps))
+        self.assertLess(sum(parse_ts(t).second == 0 for t in scen), len(scen) // 4)          # секунды не всегда :00
+        self.assertLess(sum(t.endswith("+00:00") for t in scen), len(scen) * 3 // 4)       # смещение не всегда UTC
+
+    def test_correct_twin_makes_surface_rule_imprecise(self):
+        tp = fp = 0
+        for ep in self.eps:
+            twins = set(ep.provenance["distractors"].get("boundary_fx_partial", []))
+            self.assertTrue(twins)
+            pids = {m["document"]["id"] for m in ep.provenance["mutations"] if m.get("scenario") == "partial_fx_boundary"}
+            like = _boundary_like(ep)
+            self.assertLessEqual(pids, like)                                    # правило находит сценарий...
+            self.assertTrue({x for x in twins if x.startswith("PAY-")} <= like)  # ...и всех двойников
+            tp, fp = tp + len(like & pids), fp + len(like - pids)
+            flagged = {a for f in rule_audit(ep.public) for a in f["affected_ids"]}
+            self.assertFalse(flagged & twins)                                   # двойник корректен
+            self.assertEqual(check_episode(ep), [])
+        self.assertLessEqual(tp / (tp + fp), 0.6)
+
+    def test_ordinary_payments_reach_period_end_and_night(self):
+        late = night = 0
+        for seed in range(12):
+            ep = generate(seed, {"preset": "clean"})
+            m = ep.public["manifest"]
+            end, tz = parse_ts(m["period_end"]), tz_from_offset(m["timezone"])
+            for p in ep.public["payments"]:
+                ts = parse_ts(p["timestamp"])
+                late += end.timestamp() - 6 * 3600 <= ts.timestamp() < end.timestamp()
+                night += ts.astimezone(tz).hour < 7
+        self.assertGreater(late, 0)
+        self.assertGreater(night, 0)
+
+
+class SeedRecovery(unittest.TestCase):
+    def test_story_key_is_slow_kdf_of_economics_only(self):
+        cfg = normalize_config({"preset": "mixed"})
+        b = StoryBuilder(7, cfg)
+        self.assertEqual(b.story_key, slow_h("story-key", GENERATOR_VERSION, 7, canonical_json(story_part(cfg))))
+        salted = normalize_config({"preset": "mixed", "id_salt": "x", "order_seed": 5})
+        self.assertEqual(StoryBuilder(7, salted).story_key, b.story_key)  # id_salt и order_seed экономику не меняют
+        self.assertNotEqual(StoryBuilder(8, cfg).story_key, b.story_key)
+        self.assertGreaterEqual(128 * SLOW_KDF["r"] * SLOW_KDF["n"], 8 * 2 ** 20)  # память-ёмкая: от 8 МиБ на вызов
 
 
 class Export(unittest.TestCase):

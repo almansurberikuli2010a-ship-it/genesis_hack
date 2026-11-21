@@ -16,6 +16,17 @@ posted — должен ли документ проводиться в этом
 время оплаты не помещается в период, случай строится на своём счёте в начале периода.
 Фактические числа (обычные счета, клиенты в валюте, случаи, добавленные цели) собирает
 ``actual()``; они попадают в provenance.actual.
+
+Документы, на которые потом вносятся ошибки, по открытым признакам (время, смещение, секунды,
+сумма, количество, позиция) не отличаются от корректных: у всех платежей одна модель времени
+(``pay_time``: рабочие часы или, с долей ROUND_THE_CLOCK, любое время суток, вплоть до конца
+периода), секунды у всех моментов случайны, смещение печати выбирает ``display`` для всех,
+документы-цели берут обычные дату и строки. Сценарий partial_fx_boundary и его корректный
+двойник boundary_fx_partial строятся одним конструктором (``boundary_pair``).
+
+Ключ истории — медленная KDF (util.slow_h, scrypt, 8 МиБ, ~15 мс) от версии, seed и экономической
+части конфига (без id_salt и order_seed): перебор seed по открытому наблюдению стоит столько же на
+кандидата.
 """
 from __future__ import annotations
 
@@ -23,10 +34,10 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal
 
 from . import money
-from .config import (DISTRACTORS, FX_RESERVE, GENERATOR_VERSION, MAX_ATTEMPTS, MAX_DOCUMENTS, safe_regular_invoices,
+from .config import (DISTRACTORS, FX_RESERVE, GENERATOR_VERSION, MAX_ATTEMPTS, TARGET_DOCUMENTS, safe_regular_invoices,
                      story_part)
 from .money import convert_minor, sig_round, tz_from_offset
-from .util import canonical_json, h, rng
+from .util import canonical_json, h, rng, slow_h
 
 
 class GenerationError(RuntimeError):
@@ -36,6 +47,8 @@ class GenerationError(RuntimeError):
 # Последние попытки генерации берут число обычных счетов, при котором предел документов
 # гарантирован (config.safe_regular_invoices).
 GUARANTEED_ATTEMPTS = 4
+# Доля платежей «в любое время суток» (интернет-банк, автоплатежи); остальные — в рабочие часы.
+ROUND_THE_CLOCK = 0.25
 
 
 BASE_CHOICES = ["USD", "EUR", "KZT", "GBP"]
@@ -77,7 +90,9 @@ class StoryBuilder:
         self.seed = seed
         self.cfg = cfg
         self.attempt = attempt
-        self.story_hash = h(GENERATOR_VERSION, seed, canonical_json(story_part(cfg)), attempt)
+        # медленная KDF один раз на (версия, seed, экономика); попытки различаются дешёвым хэшем
+        self.story_key = slow_h("story-key", GENERATOR_VERSION, seed, canonical_json(story_part(cfg)))
+        self.story_hash = h(self.story_key, attempt)
         self.rng = rng("story", self.story_hash)
         self._keys = {"inv": 0, "pay": 0, "ent": 0, "bg": 0}
         self.invoices: list[dict] = []
@@ -214,15 +229,33 @@ class StoryBuilder:
         return next(c for c in self.customers if c["key"] == key)
 
     def pay_time(self, after: datetime, dmin: int = 1, dmax: int = 18):
-        """Время оплаты после ``after`` внутри периода (рабочие часы) или None."""
+        """Время оплаты после ``after`` внутри периода или None. Время суток — рабочие часы или,
+        с долей ROUND_THE_CLOCK, любое (в том числе ночь и последние часы периода); секунды
+        случайны и не связаны с секундами счёта."""
         r = self.rng
         t = after + timedelta(days=r.randint(dmin, dmax), hours=r.randint(-3, 5), minutes=r.randint(0, 59))
         loc = t.astimezone(self.tzc)
-        if loc.hour < 7 or loc.hour > 20:
-            t = loc.replace(hour=r.randint(8, 18))
-        if t >= self.p_end - timedelta(hours=6) or t <= after:
+        if r.random() < ROUND_THE_CLOCK:
+            loc = loc.replace(hour=r.randint(0, 23), minute=r.randint(0, 59))
+        elif loc.hour < 7 or loc.hour > 20:
+            loc = loc.replace(hour=r.randint(8, 18))
+        t = loc.replace(second=r.randint(0, 59))
+        if t >= self.p_end or t <= after:
             return None
         return t
+
+    def boundary_instant(self) -> datetime:
+        """Момент в последний локальный день периода, когда дата по UTC отличается от даты
+        компании (для UTC+0 — вечер, который банк валютирует следующим днём). Внутри окна время
+        равномерно до секунды, как у платежей «в любое время суток» в ``pay_time``."""
+        off_h = int(self.offset[:3])
+        if off_h > 0:      # ранние часы: по UTC это ещё предыдущий день
+            lo, hi = 0, off_h
+        elif off_h < 0:    # поздний вечер: по UTC уже следующий день
+            lo, hi = 24 + off_h, 24
+        else:              # UTC+0: дата валютирования банка — следующий день
+            lo, hi = 16, 23
+        return self.p_end - timedelta(days=1) + timedelta(seconds=self.rng.randrange(lo * 3600, hi * 3600))
 
     def free_invoices(self, latest_day=None) -> list[dict]:
         out = []
@@ -235,20 +268,23 @@ class StoryBuilder:
         return out
 
     def next_period_instant(self) -> datetime:
-        return self.p_end + timedelta(hours=self.rng.randint(2, 96), minutes=self.rng.randint(0, 59))
+        r = self.rng
+        return self.p_end + timedelta(hours=r.randint(2, 96), minutes=r.randint(0, 59), seconds=r.randint(0, 59))
 
     def prior_period_instant(self) -> datetime:
-        return self.p_start - timedelta(hours=self.rng.randint(2, 60), minutes=self.rng.randint(0, 59))
+        r = self.rng
+        return self.p_start - timedelta(hours=r.randint(2, 60), minutes=r.randint(0, 59), seconds=r.randint(0, 59))
 
     # ------------------------------------------------------------ сборка истории
     def build_story(self) -> None:
         r = self.rng
         d, e, it = self.cfg["distractors"], self.cfg["errors"], self.cfg["interactions"]
         n_inv = r.randint(*self.cfg["n_invoices"])
-        # держим эпизод в пределах MAX_DOCUMENTS: ~1.8 документа на базовый счёт + прочее
+        # держим эпизод около предлагаемых ТЗ TARGET_DOCUMENTS: ~1.8 документа на базовый счёт + прочее
+        # (жёсткий предел MAX_DOCUMENTS проверяет generate; последние попытки его гарантируют)
         extras = (2 * sum(d.values()) + 2 * d["recurring_amount"] + 2 * sum(it.values())
                   + 3 * it["masked_duplicate"] + e["duplicate_invoice"] + e["period_cutoff"] + 4)
-        n_inv = max(10, min(n_inv, int((MAX_DOCUMENTS - extras) / 1.8)))
+        n_inv = max(10, min(n_inv, int((TARGET_DOCUMENTS - extras) / 1.8)))
         if self.attempt:  # повторная попытка — компания меньше; последние — с гарантией предела
             safe = safe_regular_invoices(self.cfg)
             if self.attempt >= MAX_ATTEMPTS - GUARANTEED_ATTEMPTS:
@@ -315,7 +351,8 @@ class StoryBuilder:
         а если его нет или оплата не помещается в период — на своём счёте в начале периода."""
         d = self.cfg["distractors"]
         for kind in ("split_payment", "multi_invoice_payment", "partial_open", "refund", "recurring_amount",
-                     "tz_boundary", "unremitted_payment", "same_day_repeat", "next_period_doc", "prior_period_doc"):
+                     "tz_boundary", "unremitted_payment", "same_day_repeat", "next_period_doc", "prior_period_doc",
+                     "boundary_fx_partial"):
             self.role = kind
             fn = getattr(self, "d_" + kind)
             for i in range(d[kind]):
@@ -434,10 +471,10 @@ class StoryBuilder:
         as_payment = i % 2 == 1
         end_side = as_payment or r.random() < 0.5
         if end_side:
-            instant = self.p_end - timedelta(minutes=r.randint(25, 170))
+            instant = self.p_end - timedelta(minutes=r.randint(25, 170), seconds=r.randint(0, 59))
             want = self.p_end.date()
         else:
-            instant = self.p_start + timedelta(minutes=r.randint(25, 170))
+            instant = self.p_start + timedelta(minutes=r.randint(25, 170), seconds=r.randint(0, 59))
             want = self.p_start.date() - timedelta(days=1)
         offs = list(DISPLAY_OFFSETS)
         r.shuffle(offs)
@@ -523,70 +560,87 @@ class StoryBuilder:
         self.locked_inv.add(inv["key"])
         return True
 
-    # ------------------------------------------------------------ документы-цели для внесения ошибок
-    @staticmethod
-    def ensure_min_total(inv: dict, usd: int) -> None:
-        """Увеличить количество в первой строке, пока сумма не станет не меньше ``usd`` в долларах."""
-        floor_minor = Decimal(usd) / money.REF_USD_VALUE[inv["currency"]] * (Decimal(10) ** money.exponent(inv["currency"]))
-        while inv["total"] < floor_minor:
-            ln = inv["lines"][0]
-            ln["quantity"] += 3
-            ln["amount_minor"] = ln["quantity"] * ln["unit_price_minor"]
-            inv["total"] = sum(l["amount_minor"] for l in inv["lines"])
+    def d_boundary_fx_partial(self, i, fresh=False):
+        """Корректный двойник сценария partial_fx_boundary: тот же конструктор (``boundary_pair``),
+        но платёж проведён верно — курс даты компании, вся расписанная сумма зачтена на счёт.
+        Без клиентов в иностранной валюте — в базовой валюте (частичный платёж у границы)."""
+        fents = [c for c in self.customers if c["currency"] != self.base] or self.customers
+        self.boundary_pair(self.rng.choice(fents))
+        return True
 
-    def supply_invoice(self, foreign: bool = False, min_usd: int = 0, currencies=None) -> dict:
-        """Корректный обычный счёт в начале периода — цель ошибки, если подходящей в истории нет.
-        Документ принадлежит истории (есть и в книгах до внесения) и записывается в provenance.
-        ``currencies`` — ограничить клиентов этими валютами."""
+    # ------------------------------------------------------------ документы-цели для внесения ошибок
+    def large_lines(self, cur: str, usd: int) -> list[dict]:
+        """Строки обычного счёта (``make_lines``) с суммой не меньше ``usd`` в долларах: выборка из
+        того же распределения повторяется, количество и цены остаются в обычных диапазонах товаров."""
+        floor_minor = Decimal(usd) / money.REF_USD_VALUE[cur] * (Decimal(10) ** money.exponent(cur))
+        for _ in range(64):
+            lines = self.make_lines(cur)
+            if sum(l["amount_minor"] for l in lines) >= floor_minor:
+                return lines
+        raise GenerationError("не удалось подобрать строки счёта на сумму от %d USD" % usd)
+
+    def supply_invoice(self, foreign: bool = False, min_usd: int = 0, currencies=None, issued=None) -> dict:
+        """Корректный обычный счёт — цель ошибки, если подходящей в истории нет. Дата и строки —
+        из того же распределения, что у обычных счетов. Документ принадлежит истории (есть и в
+        книгах до внесения) и записывается в provenance. ``currencies`` — ограничить клиентов
+        этими валютами; ``issued`` — заданный момент выставления."""
         r = self.rng
         pool = [c for c in self.customers if c["currency"] != self.base] if foreign else self.customers
         if currencies is not None:
             pool = [c for c in pool if c["currency"] in currencies]
         if not pool:
             raise GenerationError("нет клиента в иностранной валюте для ошибки курса")
-        inv = self.new_invoice(r.choice(pool), self.local_dt(r.randint(1, 5)))
-        if min_usd:
-            self.ensure_min_total(inv, min_usd)
+        ent = r.choice(pool)
+        if issued is None:
+            issued = self.local_dt(r.randint(1, self.last_day))
+        inv = self.new_invoice(ent, issued, lines=self.large_lines(ent["currency"], min_usd) if min_usd else None)
         self.invoices.append(inv)
         self.assigned.add(inv["key"])
         self.supplied.append(("inv", inv["key"]))
         return inv
 
     def supply_paid_invoice(self) -> tuple:
-        """Корректные счёт и его полная оплата одним платежом — цель ошибки распределения."""
-        inv = self.supply_invoice()
-        t = self.pay_time(inv["issued"], 1, 5)
+        """Корректные счёт и его полная оплата одним платежом — цель ошибки распределения. Дата
+        счёта — обычная, при которой оплата помещается в период (иначе — начало периода)."""
+        r = self.rng
+        for _ in range(8):
+            issued = self.local_dt(r.randint(1, self.last_day))
+            t = self.pay_time(issued, 1, 5)
+            if t is not None:
+                break
+        else:
+            issued = self.local_dt(r.randint(1, 5))
+            t = self.pay_time(issued, 1, 5)
         if t is None:
             raise GenerationError("оплата счёта-цели не помещается в период")
+        inv = self.supply_invoice(issued=issued)
         p = self.new_payment(inv["entity"], inv["currency"], t, inv["total"], [(inv["key"], inv["total"])])
         self.payments.append(p)
         self.supplied.append(("pay", p["key"]))
         return inv, p
 
-    # ------------------------------------------------------------ документы сценария partial_fx_boundary
-    def build_boundary_pairs(self) -> None:
-        """Валютный счёт и частичная оплата в последний локальный день периода в такое время,
-        что дата по UTC отличается от даты компании. Сами документы корректны; ошибки на этом
-        платеже вносит injection.py."""
+    # ------------------------------------------------------------ сценарий partial_fx_boundary и его двойник
+    def boundary_pair(self, ent: dict) -> tuple:
+        """Счёт в первой половине периода на существенную сумму и его частичная оплата в последний
+        день периода у смены даты по UTC (``boundary_instant``); смещение печати — общее
+        (``display``). Один конструктор для сценария partial_fx_boundary (ошибки на платеже вносит
+        injection.py) и для корректного двойника boundary_fx_partial: открытые признаки у них из
+        одного распределения, отличает их только проводка."""
         r = self.rng
+        inv = self.new_invoice(ent, self.local_dt(r.randint(1, max(1, self.last_day - 12))),
+                               lines=self.large_lines(ent["currency"], 2000))  # сумма должна быть существенной
+        self.invoices.append(inv)
+        self.assigned.add(inv["key"])
+        amt = max(1, int(inv["total"] * Decimal(str(r.uniform(0.35, 0.75)))))
+        p = self.new_payment(inv["entity"], inv["currency"], self.boundary_instant(), amt, [(inv["key"], amt)])
+        self.payments.append(p)
+        return inv, p
+
+    def build_boundary_pairs(self) -> None:
+        """Документы сценария partial_fx_boundary. Сами документы корректны; ошибки на этом
+        платеже вносит injection.py."""
         fents = [c for c in self.customers if c["currency"] != self.base]
         for _ in range(self.cfg["interactions"]["partial_fx_boundary"]):
-            ent = r.choice(fents)
-            inv = self.new_invoice(ent, self.local_dt(r.randint(1, max(1, self.last_day - 12))))
-            self.ensure_min_total(inv, 2000)  # сумма должна быть существенной
-            self.invoices.append(inv)
-            self.assigned.add(inv["key"])
-            off_h = int(self.offset[:3])
-            y, m, last = self.p_start.year, self.p_start.month, self.last_day
-            if off_h > 0:      # ранние часы: по UTC это ещё предыдущий день
-                ts = datetime(y, m, last, r.randint(0, max(0, off_h - 1)), r.randint(5, 55), 0, tzinfo=self.tzc)
-            elif off_h < 0:    # поздний вечер: по UTC уже следующий день
-                ts = datetime(y, m, last, r.randint(24 + off_h, 23), r.randint(5, 55), 0, tzinfo=self.tzc)
-            else:              # UTC+0: дата валютирования банка — следующий день
-                ts = datetime(y, m, last, r.randint(16, 22), r.randint(5, 55), 0, tzinfo=self.tzc)
-            amt = max(1, int(inv["total"] * Decimal(str(r.uniform(0.35, 0.75)))))
-            p = self.new_payment(inv["entity"], inv["currency"], ts.astimezone(tz_from_offset("+00:00")), amt,
-                                 [(inv["key"], amt)], display=False)
-            self.payments.append(p)
+            inv, p = self.boundary_pair(self.rng.choice(fents))
             self.locked_inv.add(inv["key"])
             self.boundary_pairs.append((inv, p))

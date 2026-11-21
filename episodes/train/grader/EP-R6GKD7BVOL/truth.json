@@ -1,0 +1,103 @@
+{
+  "episode_id": "EP-R6GKD7BVOL",
+  "schema_version": "3.2",
+  "base_currency": "USD",
+  "issues": [
+    {
+      "issue_id": "ISS-26LKTHCW",
+      "type": "payment_allocation",
+      "affected_ids": [
+        "INV-L2OU3JB",
+        "PAY-A5VA76E"
+      ],
+      "expected_amount_minor": 77692,
+      "currency": "USD",
+      "tolerance_minor": 0,
+      "evidence_sets": [
+        [
+          "DOC-CJ7MBHZH",
+          "L-HE5PVUIW"
+        ]
+      ],
+      "mutation_id": "M01"
+    },
+    {
+      "issue_id": "ISS-AC6CD4R3",
+      "type": "duplicate_invoice",
+      "affected_ids": [
+        "INV-ATZU4F5",
+        "INV-DIVMBVF"
+      ],
+      "expected_amount_minor": 2122400,
+      "currency": "USD",
+      "tolerance_minor": 0,
+      "evidence_sets": [
+        [
+          "DOC-MU3A6FYB",
+          "DOC-QJ7526JP",
+          "L-ZDFPPILZ"
+        ],
+        [
+          "DOC-MU3A6FYB",
+          "DOC-QJ7526JP",
+          "L-HMZTAYHA"
+        ],
+        [
+          "DOC-MU3A6FYB",
+          "DOC-QJ7526JP",
+          "L-GSX7WIN7"
+        ],
+        [
+          "DOC-MU3A6FYB",
+          "DOC-QJ7526JP",
+          "L-J2S7MKA6"
+        ]
+      ],
+      "mutation_id": "M04"
+    },
+    {
+      "issue_id": "ISS-CIDNFTJN",
+      "type": "period_cutoff",
+      "affected_ids": [
+        "INV-SSZANQL"
+      ],
+      "expected_amount_minor": 742300,
+      "currency": "USD",
+      "tolerance_minor": 0,
+      "evidence_sets": [
+        [
+          "DOC-54NIJXIZ",
+          "L-LMJ6BN5I"
+        ],
+        [
+          "DOC-54NIJXIZ",
+          "L-N56DM6YH"
+        ]
+      ],
+      "mutation_id": "M02"
+    },
+    {
+      "issue_id": "ISS-WWCOSCHY",
+      "type": "fx_rate",
+      "affected_ids": [
+        "INV-UEGJSMP"
+      ],
+      "expected_amount_minor": 47992,
+      "currency": "USD",
+      "tolerance_minor": 0,
+      "evidence_sets": [
+        [
+          "DOC-CL7QZM23",
+          "FX-2025-10-30-JPY-USD",
+          "L-G6WMDLU3"
+        ],
+        [
+          "DOC-CL7QZM23",
+          "FX-2025-10-30-JPY-USD",
+          "L-ZN5KQ35L"
+        ]
+      ],
+      "mutation_id": "M03"
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 # Отчёт проверки
 
-среда 3.2.0, генератор 3.2.0, схемы 3.2, конфиг 3.2; коммит f4bf54b2ea1b + незакоммиченные правки; python 3.13.17 (darwin), 62.4 с
+среда 3.3.0, генератор 3.3.0, схемы 3.2, конфиг 3.3; коммит 37d67065d71b + незакоммиченные правки; python 3.13.17 (darwin), 80.1 с
 
 - **unit_tests**: ПРОЙДЕНО
 - **determinism**: ПРОЙДЕНО
@@ -14,30 +14,30 @@
 
 | политика | P | R | F1 | возврат | эксп. возврат | шаги | время, с | TP | FP | FN |
 |---|---|---|---|---|---|---|---|---|---|---|
-| flag_all | 0.000 | 0.000 | 0.000 | -1.000 | -1.000 | 4.5 | 0.020 | 0 | 300 | 39 |
+| flag_all | 0.000 | 0.000 | 0.000 | -1.000 | -0.996 | 4.6 | 0.020 | 0 | 300 | 39 |
 | oracle | 0.800 | 0.800 | 1.000 | 1.000 | 1.000 | 1.0 | 0.018 | 39 | 0 | 0 |
-| random | 0.000 | 0.000 | 0.200 | -0.605 | -0.605 | 17.9 | 0.027 | 0 | 8 | 39 |
-| reconciler | 0.228 | 0.654 | 0.329 | -0.369 | -0.369 | 17.3 | 0.026 | 33 | 103 | 6 |
-| rule_auditor | 0.800 | 0.800 | 1.000 | 0.967 | 0.967 | 17.3 | 0.026 | 39 | 0 | 0 |
+| random | 0.000 | 0.000 | 0.200 | -0.606 | -0.606 | 17.2 | 0.041 | 0 | 10 | 39 |
+| reconciler | 0.222 | 0.683 | 0.327 | -0.374 | -0.362 | 18.1 | 0.026 | 35 | 106 | 4 |
+| rule_auditor | 0.800 | 0.800 | 1.000 | 0.966 | 0.966 | 18.1 | 0.025 | 39 | 0 | 0 |
 
 ## Базовые политики на dev (режим eval, отдельный процесс)
 
 | политика | P | R | F1 | возврат | эксп. возврат | шаги | время, с | TP | FP | FN |
 |---|---|---|---|---|---|---|---|---|---|---|
-| flag_all | 0.000 | 0.000 | 0.000 | -1.000 | -0.996 | 4.4 | 0.019 | 0 | 300 | 34 |
+| flag_all | 0.000 | 0.000 | 0.000 | -1.000 | -1.000 | 4.5 | 0.019 | 0 | 300 | 34 |
 | oracle | 0.800 | 0.800 | 1.000 | 1.000 | 1.000 | 1.0 | 0.017 | 34 | 0 | 0 |
-| random | 0.000 | 0.000 | 0.100 | -0.803 | -0.803 | 18.3 | 0.026 | 0 | 8 | 34 |
-| reconciler | 0.225 | 0.658 | 0.314 | -0.399 | -0.399 | 17.7 | 0.025 | 28 | 89 | 6 |
-| rule_auditor | 0.800 | 0.800 | 1.000 | 0.967 | 0.967 | 17.7 | 0.024 | 34 | 0 | 0 |
+| random | 0.000 | 0.000 | 0.100 | -0.806 | -0.806 | 22.5 | 0.041 | 0 | 6 | 34 |
+| reconciler | 0.200 | 0.708 | 0.295 | -0.438 | -0.438 | 18.2 | 0.026 | 30 | 100 | 4 |
+| rule_auditor | 0.800 | 0.800 | 1.000 | 0.966 | 0.966 | 18.2 | 0.025 | 34 | 0 | 0 |
 
 ## Ресурсы
 
 ```json
 {
-  "max_episode_time_s": 0.0832,
-  "max_steps_used": 28,
-  "peak_rss_mb_orchestrator": 136.9,
-  "peak_rss_mb_env_process": 70.8,
+  "max_episode_time_s": 0.0934,
+  "max_steps_used": 31,
+  "peak_rss_mb_orchestrator": 190.6,
+  "peak_rss_mb_env_process": 79.1,
   "limits": {
     "time_per_episode_s": 60,
     "steps": 100,
@@ -54,51 +54,51 @@
     "fn_by_type": {
       "duplicate_invoice": 8,
       "fx_rate": 9,
-      "period_cutoff": 7,
-      "payment_allocation": 10
+      "payment_allocation": 10,
+      "period_cutoff": 7
     },
     "fn_in_interaction": 10,
     "fp_by_type": {
-      "duplicate_invoice": 4,
-      "period_cutoff": 3,
-      "payment_allocation": 1
+      "payment_allocation": 1,
+      "period_cutoff": 2,
+      "fx_rate": 2,
+      "duplicate_invoice": 1
     },
     "fp_by_distractor": {
-      "ordinary_record": 5,
-      "multi_invoice_payment": 1,
-      "tz_boundary": 1,
-      "partial_open": 1
+      "ordinary_record": 2,
+      "same_day_repeat": 1,
+      "recurring_amount": 1,
+      "tz_boundary": 2
     }
   },
   "reconciler": {
     "fn_by_type": {
-      "fx_rate": 4,
-      "payment_allocation": 2
+      "payment_allocation": 3,
+      "fx_rate": 1
     },
-    "fn_in_interaction": 5,
+    "fn_in_interaction": 3,
     "fp_by_type": {
-      "duplicate_invoice": 33,
-      "period_cutoff": 23,
-      "fx_rate": 22,
+      "duplicate_invoice": 34,
+      "period_cutoff": 26,
+      "fx_rate": 29,
       "payment_allocation": 11
     },
     "fp_by_distractor": {
-      "recurring_amount": 22,
-      "same_day_repeat": 11,
-      "tz_boundary": 24,
-      "multi_invoice_payment": 3,
+      "same_day_repeat": 12,
+      "recurring_amount": 23,
+      "tz_boundary": 23,
+      "ordinary_record": 26,
       "unremitted_payment": 12,
-      "ordinary_record": 15,
-      "refund": 1,
-      "split_payment": 1
+      "split_payment": 1,
+      "boundary_fx_partial": 3
     }
   },
   "flag_all": {
     "fn_by_type": {
       "duplicate_invoice": 8,
       "fx_rate": 9,
-      "period_cutoff": 7,
-      "payment_allocation": 10
+      "payment_allocation": 10,
+      "period_cutoff": 7
     },
     "fn_in_interaction": 10,
     "fp_by_type": {
@@ -108,15 +108,15 @@
       "period_cutoff": 70
     },
     "fp_by_distractor": {
-      "ordinary_record": 194,
-      "same_day_repeat": 16,
-      "partial_open": 16,
-      "refund": 8,
-      "recurring_amount": 24,
-      "multi_invoice_payment": 12,
-      "next_period_doc": 4,
-      "tz_boundary": 4,
-      "real_issue_wrong_fields": 22
+      "ordinary_record": 214,
+      "next_period_doc": 12,
+      "tz_boundary": 14,
+      "multi_invoice_payment": 20,
+      "same_day_repeat": 10,
+      "recurring_amount": 12,
+      "unremitted_payment": 4,
+      "split_payment": 12,
+      "partial_open": 2
     }
   },
   "oracle": {
