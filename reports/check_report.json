@@ -4,7 +4,7 @@
   "schema_version": "3.2",
   "config_version": "3.3",
   "git": {
-    "commit": "a0dd0791a0bb15a4290d63ba81edcf2cc5daca3c",
+    "commit": "c72f07c803018c4a078a25c101755853c7a42387",
     "dirty": false
   },
   "python": "3.11.18",
@@ -12,7 +12,7 @@
   "sections": {
     "unit_tests": {
       "passed": true,
-      "run": 178,
+      "run": 188,
       "failed": 0,
       "skipped": 0,
       "failures": []
@@ -83,7 +83,7 @@
             "return": -0.606,
             "experimental_return": -0.606,
             "steps": 17.2,
-            "time_s": 0.062,
+            "time_s": 0.063,
             "tp": 0,
             "fp": 10,
             "fn": 39,
@@ -127,7 +127,7 @@
             "return": -1.0,
             "experimental_return": -1.0,
             "steps": 4.5,
-            "time_s": 0.035,
+            "time_s": 0.037,
             "tp": 0,
             "fp": 300,
             "fn": 34,
@@ -155,7 +155,7 @@
             "return": -0.806,
             "experimental_return": -0.806,
             "steps": 22.5,
-            "time_s": 0.066,
+            "time_s": 0.064,
             "tp": 0,
             "fp": 6,
             "fn": 34,
@@ -183,7 +183,7 @@
             "return": 0.966,
             "experimental_return": 0.966,
             "steps": 18.2,
-            "time_s": 0.045,
+            "time_s": 0.046,
             "tp": 34,
             "fp": 0,
             "fn": 0,
@@ -711,16 +711,16 @@
     }
   },
   "resources": {
-    "max_episode_time_s": 0.1013,
+    "max_episode_time_s": 0.1034,
     "max_steps_used": 31,
-    "peak_rss_mb_orchestrator": 181.1,
-    "peak_rss_mb_env_process": 112.3,
+    "peak_rss_mb_orchestrator": 181.0,
+    "peak_rss_mb_env_process": 113.0,
     "limits": {
       "time_per_episode_s": 60,
       "steps": 100,
       "ram_gb": 4
     }
   },
-  "elapsed_s": 119.7,
+  "elapsed_s": 124.3,
   "passed": true
 }
