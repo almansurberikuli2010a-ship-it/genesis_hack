@@ -1,7 +1,6 @@
 """Общие помощники тестов."""
 import copy
 
-from auditgym.env import AuditEnv
 from auditgym.generator import generate
 from auditgym.matcher import match_context, score
 

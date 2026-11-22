@@ -277,7 +277,6 @@ def is_grader_oracle(policy) -> bool:
 
 
 BASELINES = ("random", "reconciler", "flag_all", "oracle")
-ALL_POLICIES = BASELINES + ("rule_auditor",)
 
 
 def make_policy(name: str, seed: int = 0) -> Policy:

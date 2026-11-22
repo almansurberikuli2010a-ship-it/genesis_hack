@@ -1,6 +1,6 @@
 """Сценарии исправлений по аудиту (selfai-request.md, часть 4, сценарии 1–6).
 
-1. Каждый `team_config` из таблицы README «D01–D20 конфигом генератора» принимается
+1. Каждый `team_config` из таблицы JURY.md «D01–D20 конфигом генератора» принимается
    `judge_adapter.generate_episode` как есть.
 2. Тот же JSON совпадает по значению с `D_MATRIX` из tests/test_judge_pairs.py (D05 — с
    `boundary_fx_partial: 2`).
@@ -29,13 +29,14 @@ from tests.test_judge_pairs import D_MATRIX, D_SEED0
 
 ROOT = Path(__file__).resolve().parent.parent
 README = ROOT / "README.md"
+JURY = ROOT / "JURY.md"
 DESIGN = ROOT / "DESIGN.md"
 WORKFLOWS = ROOT / ".github" / "workflows"
 
 
 def readme_d_table() -> list[tuple[str, str]]:
     """Строки таблицы «D01–D20 конфигом генератора»: (метка эпизода, текст ячейки team_config)."""
-    lines = README.read_text(encoding="utf-8").splitlines()
+    lines = JURY.read_text(encoding="utf-8").splitlines()
     start = next(i for i, l in enumerate(lines) if l.startswith("###") and "D01–D20 конфигом генератора" in l)
     rows = []
     for line in lines[start + 1:]:

@@ -58,7 +58,7 @@ def _utf8_console():
 # ------------------------------------------------------------------ вспомогательное
 
 def versions() -> dict:
-    """Версии, от которых зависят эпизоды, переходы и награды (см. README, «Версии»)."""
+    """Версии, от которых зависят эпизоды, переходы и награды (см. DETAILS.md, «Версии»)."""
     return {"env_version": ENV_VERSION, "generator_version": C.GENERATOR_VERSION,
             "schema_version": C.SCHEMA_VERSION, "config_version": C.CONFIG_VERSION}
 
