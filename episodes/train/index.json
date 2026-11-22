@@ -3,7 +3,7 @@
     "name": "чистая_компания",
     "seed": 1001,
     "episode_id": "EP-VHBGLJTJZX",
-    "digest": "cc61ff9bb0bcbbf9cd148b73c33089cc01405fa4185605cae5385ae10d99fc7a",
+    "digest": "c88010b2d55a822af272270ec20339f6f406bfc62bd49a2c3e65c3642bdde2ac",
     "n_issues": 0,
     "counts": {
       "ledger": 510,
@@ -18,7 +18,7 @@
     "name": "чистая_много_ловушек",
     "seed": 1002,
     "episode_id": "EP-EZG34U6A5D",
-    "digest": "c68ed986537d9c38ef249b9b9001e8fdaa9ca2c4f269601d45b0c6d8a1d5fb4f",
+    "digest": "538e0e882bacafd54c0a30d7cdc5e43d0b941ae35a63ddc054ece82aedc450c0",
     "n_issues": 0,
     "counts": {
       "ledger": 548,
@@ -33,7 +33,7 @@
     "name": "дубль_и_распределение",
     "seed": 1003,
     "episode_id": "EP-VD5PFCJ3IX",
-    "digest": "6fa1c67e9128e7e6d1b3e985fb39a7b41720ccb52d8b87f9faf9e5ae907fe0ab",
+    "digest": "cc3c381bd713a3c2c190f418478d6f76777d36c5b1e393665b67b5cf928c4f23",
     "n_issues": 2,
     "counts": {
       "ledger": 611,
@@ -48,7 +48,7 @@
     "name": "курс_и_период",
     "seed": 1004,
     "episode_id": "EP-FST4IRQ4MD",
-    "digest": "dc1205bdaa36b7cf9e4df26f17a33bbac167fb2f095716363c4f5c796c78bbe3",
+    "digest": "06fed322be95689a72219012da9f920698214baff66f13610564498964312071",
     "n_issues": 3,
     "counts": {
       "ledger": 568,
@@ -63,7 +63,7 @@
     "name": "четыре_типа",
     "seed": 1005,
     "episode_id": "EP-R6GKD7BVOL",
-    "digest": "ff8459c9fbfe2d49407aa17cd758c4e62a08ee36e828663f9b21a4347d9aa54c",
+    "digest": "6aeeaa512fdbd8d6285529a1bfc5bd39f16ad99234d8111db25738e7b09a447e",
     "n_issues": 4,
     "counts": {
       "ledger": 482,
@@ -78,7 +78,7 @@
     "name": "четыре_типа_x2",
     "seed": 1006,
     "episode_id": "EP-KZXB7GNBOU",
-    "digest": "5dd839b3e94410ba2b7ea75007a5e7074b825a051db2c679f8d7457091c189d7",
+    "digest": "882e97d140bb2d0e663880206002111230ba910efbe107116fbc509d5596d7bb",
     "n_issues": 8,
     "counts": {
       "ledger": 623,
@@ -93,7 +93,7 @@
     "name": "взаимодействие_частичный_валютный_платёж",
     "seed": 1007,
     "episode_id": "EP-PSHECNRVZF",
-    "digest": "abbb05d94a56016690aa91d8b70e3058f99d0577daf392b472e120ade3becbf6",
+    "digest": "63dc7076cd028e930b28536014ae7f5b5abdd86a14fd04afbaf0191131457567",
     "n_issues": 3,
     "counts": {
       "ledger": 532,
@@ -108,7 +108,7 @@
     "name": "взаимодействие_замаскированный_дубль",
     "seed": 1008,
     "episode_id": "EP-JML6UDQ7JL",
-    "digest": "0bcc6dad042b0bf79e63c1dd0a9920a1bb052a14fb163f52b68718b9b4c1be47",
+    "digest": "278f1a598326a01e99df48b9c79eaace304bbe6772c5b711d36ad79bb0cb2b11",
     "n_issues": 3,
     "counts": {
       "ledger": 484,
@@ -123,7 +123,7 @@
     "name": "оба_взаимодействия",
     "seed": 1009,
     "episode_id": "EP-USYKQJ72LY",
-    "digest": "e27acc1ea934ce18cc12830dd41b3ba84e969de20be6673b95803c5f9c2dc3f3",
+    "digest": "1728a50944551290bd3a38c2350ebb6a41c8e3bad3a22efd154d182cee6beb4c",
     "n_issues": 6,
     "counts": {
       "ledger": 477,
@@ -138,7 +138,7 @@
     "name": "нагрузка_10",
     "seed": 1010,
     "episode_id": "EP-GWP6FLDUJ2",
-    "digest": "363fd3cb34ebfb3640058e2482007e8dcedb4539093b9286fa26ab4759089374",
+    "digest": "57dd1ef359c2c60916dd4d4e339093f051f1d4650d6ead5050dd3f68440c2afc",
     "n_issues": 10,
     "counts": {
       "ledger": 508,
